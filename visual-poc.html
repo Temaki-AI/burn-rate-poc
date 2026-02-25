@@ -402,6 +402,37 @@
     box-shadow: 0 4px 20px rgba(0,255,136,0.4) !important;
     transform: translateY(-1px) !important;
   }
+
+  /* Event Feed — bottom-left */
+  #event-feed {
+    position: absolute; bottom: 80px; left: 12px; z-index: 120;
+    width: 280px; max-height: 180px; overflow: hidden;
+    pointer-events: none; display: flex; flex-direction: column-reverse;
+  }
+  .event-item {
+    padding: 6px 12px; margin-bottom: 4px;
+    background: rgba(8,8,20,0.85); border-left: 3px solid #00D4FF;
+    border-radius: 0 8px 8px 0; backdrop-filter: blur(8px);
+    font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.3;
+    animation: eventSlideIn 0.4s cubic-bezier(0.16,1,0.3,1);
+    transition: opacity 0.5s;
+  }
+  .event-item.warning { border-left-color: #FFB347; }
+  .event-item.danger { border-left-color: #FF6B6B; }
+  .event-item.success { border-left-color: #00FF88; }
+  .event-item .event-time {
+    font-size: 8px; color: rgba(255,255,255,0.3); font-family: 'JetBrains Mono', monospace;
+    margin-bottom: 2px;
+  }
+  @keyframes eventSlideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* Day/Time display */
+  #game-clock {
+    position: absolute; top: 65px; right: 16px; z-index: 110;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: rgba(255,255,255,0.4); text-align: right;
+  }
+  #game-clock .day { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.6); }
 </style>
 </head>
 <body>
@@ -470,6 +501,15 @@
     <div class="speed-btn" data-speed="2" title="Fast">2×</div>
     <div class="speed-btn" data-speed="3" title="Turbo">3×</div>
   </div>
+</div>
+
+<!-- Event Feed -->
+<div id="event-feed"></div>
+
+<!-- Game Clock -->
+<div id="game-clock">
+  <div class="day">Day 47</div>
+  Q2 2024
 </div>
 
 <!-- Slide Panels -->
@@ -2646,22 +2686,25 @@ function buildCharacters() {
   createStatusBubble(walker2, "On LinkedIn 📱", 9);
 }
 
+const MAX_VISIBLE_BUBBLES = 4;
 function createStatusBubble(parent, text, index) {
   const div = document.createElement('div');
   div.className = 'status-bubble';
   div.textContent = text;
-  div.style.opacity = '1';
+  // Only show first few bubbles initially, rest start hidden
+  const startVisible = index < MAX_VISIBLE_BUBBLES;
+  div.style.opacity = startVisible ? '1' : '0';
 
   const label = new THREE.CSS2DObject(div);
-  label.position.set(0, 1.15, 0);
+  label.position.set(0, 1.3, 0);
   parent.add(label);
 
   statusBubbles.push({
     element: div,
     label: label,
     currentText: text,
-    timer: Math.random() * 5 + 3, // Random initial delay
-    fadeState: 'visible', // visible, fading-out, hidden, fading-in
+    timer: startVisible ? (3 + Math.random() * 3) : (1 + Math.random() * 5),
+    fadeState: startVisible ? 'visible' : 'hidden',
     fadeTimer: 0,
   });
 }
@@ -2803,19 +2846,20 @@ function animate() {
     screen.material.emissiveIntensity = pulse;
   });
 
-  // Status bubble cycling
+  // Status bubble cycling — max 4 visible at once
+  const visibleCount = statusBubbles.filter(s => s.fadeState === 'visible' || s.fadeState === 'fading-in').length;
   statusBubbles.forEach((sb, i) => {
     sb.timer -= dt;
 
     if (sb.fadeState === 'visible' && sb.timer <= 0) {
       sb.fadeState = 'fading-out';
-      sb.fadeTimer = 0.5;
+      sb.fadeTimer = 0.6;
     } else if (sb.fadeState === 'fading-out') {
       sb.fadeTimer -= dt;
-      sb.element.style.opacity = Math.max(0, sb.fadeTimer / 0.5);
+      sb.element.style.opacity = Math.max(0, sb.fadeTimer / 0.6);
       if (sb.fadeTimer <= 0) {
         sb.fadeState = 'hidden';
-        sb.fadeTimer = 0.3;
+        sb.fadeTimer = 2 + Math.random() * 4; // Stay hidden longer
         // Change text
         let newText;
         do {
@@ -2826,20 +2870,24 @@ function animate() {
       }
     } else if (sb.fadeState === 'hidden') {
       sb.fadeTimer -= dt;
-      if (sb.fadeTimer <= 0) {
+      // Only show if under the max visible limit
+      if (sb.fadeTimer <= 0 && visibleCount < MAX_VISIBLE_BUBBLES) {
         sb.fadeState = 'fading-in';
-        sb.fadeTimer = 0.5;
+        sb.fadeTimer = 0.6;
       }
     } else if (sb.fadeState === 'fading-in') {
       sb.fadeTimer -= dt;
-      sb.element.style.opacity = Math.min(1, 1 - sb.fadeTimer / 0.5);
+      sb.element.style.opacity = Math.min(1, 1 - sb.fadeTimer / 0.6);
       if (sb.fadeTimer <= 0) {
         sb.fadeState = 'visible';
-        sb.timer = 4 + Math.random() * 4;
+        sb.timer = 3 + Math.random() * 3;
         sb.element.style.opacity = '1';
       }
     }
   });
+
+  // Event feed
+  tickEvents(dt);
 
   controls.update();
   renderer.render(scene, camera);
@@ -2847,6 +2895,73 @@ function animate() {
 }
 
 // =============================================
+// EVENT FEED SYSTEM
+const EVENT_TEMPLATES = [
+  { text: "🎉 New user milestone: {users} users!", type: "success" },
+  { text: "💰 MRR grew 12% this month!", type: "success" },
+  { text: "🐛 Critical bug found in production", type: "danger" },
+  { text: "☕ Office coffee machine is broken again", type: "warning" },
+  { text: "📈 Featured on Hacker News!", type: "success" },
+  { text: "🔥 Competitor raised $20M Series B", type: "warning" },
+  { text: "👋 New hire started: Meet the team!", type: "success" },
+  { text: "⚠️ AWS bill increased 34% this month", type: "danger" },
+  { text: "🎯 Sprint velocity up 15%", type: "success" },
+  { text: "😴 Team morale dropping — buy more snacks?", type: "warning" },
+  { text: "🚀 Deploy #247 shipped to production", type: "success" },
+  { text: "💸 Investor asked for board seat", type: "warning" },
+  { text: "🏓 Ping pong tournament finals today!", type: "success" },
+  { text: "📊 Weekly metrics report ready", type: "" },
+  { text: "🍕 Pizza Friday budget approved", type: "success" },
+  { text: "⏰ Standup running 45 mins again...", type: "warning" },
+  { text: "🤖 New AI feature getting great feedback", type: "success" },
+  { text: "💀 Prod database needs migration ASAP", type: "danger" },
+  { text: "🎪 Company offsite planned for next month", type: "" },
+  { text: "📱 App Store review: ★★★★☆", type: "success" },
+];
+
+let gameDay = 47;
+let eventTimer = 3;
+
+function addEvent(text, type) {
+  const feed = document.getElementById('event-feed');
+  if (!feed) return;
+  const item = document.createElement('div');
+  item.className = 'event-item' + (type ? ' ' + type : '');
+  item.innerHTML = `<div class="event-time">Day ${gameDay}</div>${text}`;
+  feed.insertBefore(item, feed.firstChild);
+  
+  // Remove old events (keep max 5)
+  while (feed.children.length > 5) {
+    feed.removeChild(feed.lastChild);
+  }
+  
+  // Fade out after 8 seconds
+  setTimeout(() => {
+    item.style.opacity = '0';
+    setTimeout(() => item.remove(), 500);
+  }, 8000);
+}
+
+function updateGameClock() {
+  const clockEl = document.getElementById('game-clock');
+  if (!clockEl) return;
+  const quarter = Math.floor((gameDay - 1) / 90) + 1;
+  const year = 2024 + Math.floor((gameDay - 1) / 360);
+  clockEl.innerHTML = `<div class="day">Day ${gameDay}</div>Q${((quarter - 1) % 4) + 1} ${year}`;
+}
+
+// Fire events periodically in the animate loop
+function tickEvents(dt) {
+  eventTimer -= dt;
+  if (eventTimer <= 0) {
+    const evt = EVENT_TEMPLATES[Math.floor(Math.random() * EVENT_TEMPLATES.length)];
+    addEvent(evt.text.replace('{users}', (2847 + gameDay * 12).toLocaleString()), evt.type);
+    eventTimer = 6 + Math.random() * 8; // Every 6-14 seconds
+    gameDay++;
+    updateGameClock();
+  }
+}
+
 // PANEL SYSTEM
 // =============================================
 
