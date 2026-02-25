@@ -1401,6 +1401,73 @@ function buildFurniture() {
   standGroup.position.set(FLOOR_W*TILE/2 - 1.5, 0, -FLOOR_H*TILE/2 + 1.5);
   group.add(standGroup);
 
+  // Printer/copier near meeting area
+  const printerGroup = new THREE.Group();
+  const prBody = new THREE.Mesh(
+    roundedBox(0.6, 0.4, 0.5, 0.02, 2),
+    toonMat(0xE8E8E8, { roughness: 0.4 })
+  );
+  prBody.position.y = 0.65;
+  prBody.castShadow = true;
+  printerGroup.add(prBody);
+  // Paper tray
+  const pTray = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35, 0.015, 0.25),
+    toonMat(0xCCCCCC)
+  );
+  pTray.position.set(0, 0.44, 0.2);
+  printerGroup.add(pTray);
+  // Paper in tray
+  const paper = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.02, 0.2),
+    toonMat(0xFFFFF0)
+  );
+  paper.position.set(0, 0.455, 0.2);
+  printerGroup.add(paper);
+  // Stand/cabinet under printer
+  const prStand = new THREE.Mesh(
+    roundedBox(0.55, 0.44, 0.45, 0.02, 2),
+    toonMat(0xDDDDDD, { roughness: 0.5 })
+  );
+  prStand.position.y = 0.22;
+  prStand.castShadow = true;
+  printerGroup.add(prStand);
+  // Control panel
+  const panel = new THREE.Mesh(
+    new THREE.BoxGeometry(0.15, 0.03, 0.08),
+    toonMat(0x333333, { emissive: 0x00AA44, emissiveIntensity: 0.3 })
+  );
+  panel.position.set(0.15, 0.86, 0.2);
+  printerGroup.add(panel);
+  printerGroup.position.set(-FLOOR_W*TILE/2 + 0.6, 0, 0);
+  group.add(printerGroup);
+
+  // Stack of moving boxes (startup vibes)
+  const boxColors = [0xC8A060, 0xB89050, 0xD0B070];
+  const boxPositions = [
+    [FLOOR_W*TILE/2 - 0.5, 0.15, 0.3, 0.3, 0.3, 0.3],
+    [FLOOR_W*TILE/2 - 0.5, 0.45, 0.25, 0.28, 0.3, 0.28],
+    [FLOOR_W*TILE/2 - 0.7, 0.15, 0.6, 0.25, 0.3, 0.35],
+  ];
+  boxPositions.forEach(([bx, by, bz, bw, bh, bd], bi) => {
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(bw, bh, bd),
+      toonMat(boxColors[bi], { roughness: 0.9 })
+    );
+    box.position.set(bx, by, bz);
+    box.rotation.y = (bi - 1) * 0.2;
+    box.castShadow = true;
+    group.add(box);
+    // Tape line on box
+    const tape = new THREE.Mesh(
+      new THREE.BoxGeometry(bw + 0.01, 0.015, 0.02),
+      toonMat(0xAA8844)
+    );
+    tape.position.set(bx, by + bh/2, bz);
+    tape.rotation.y = (bi - 1) * 0.2;
+    group.add(tape);
+  });
+
   // Meeting table
   const mtGroup = new THREE.Group();
   const mtw = 2.0, mtd = 1.0, mth = 0.72;
