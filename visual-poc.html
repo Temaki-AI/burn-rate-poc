@@ -1946,6 +1946,51 @@ function buildDecorations() {
   umbrella.rotation.z = 0.15;
   group.add(umbrella);
 
+  // Whiteboard on back wall
+  const wbGroup = new THREE.Group();
+  const wbBoard = new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 1.0, 0.04),
+    toonMat(0xF5F5F0, { roughness: 0.3 })
+  );
+  wbBoard.castShadow = true;
+  wbGroup.add(wbBoard);
+  // Frame
+  const frameMat = toonMat(0x808080, { metalness: 0.5 });
+  [[-0.9, 0, 0.021, 0.04, 1.0, 0.02], [0.9, 0, 0.021, 0.04, 1.0, 0.02],
+   [0, 0.5, 0.021, 1.84, 0.04, 0.02], [0, -0.5, 0.021, 1.84, 0.04, 0.02]].forEach(f => {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(f[3], f[4], f[5]), frameMat);
+    bar.position.set(f[0], f[1], f[2]);
+    wbGroup.add(bar);
+  });
+  // Scribbles (colored lines)
+  [0xE74C3C, 0x3498DB, 0x2ECC71, 0xF39C12].forEach((c, i) => {
+    const line = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6 + Math.random() * 0.5, 0.02, 0.005),
+      new THREE.MeshBasicMaterial({ color: c })
+    );
+    line.position.set(-0.2 + Math.random() * 0.4, 0.25 - i * 0.15, 0.025);
+    wbGroup.add(line);
+  });
+  // Tray
+  const tray = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.06), frameMat);
+  tray.position.set(0, -0.52, 0.04);
+  wbGroup.add(tray);
+  wbGroup.position.set(-1.5, 1.8, -FLOOR_H*TILE/2 + 0.03);
+  group.add(wbGroup);
+
+  // Wall posters (back wall)
+  const posterColors = [0xFF6B6B, 0x4ECDC4, 0xFFE66D];
+  const posterTexts = ['SHIP IT', 'MVP', '10x'];
+  posterColors.forEach((c, i) => {
+    const poster = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.55, 0.01),
+      toonMat(c, { roughness: 0.8 })
+    );
+    poster.position.set(2.5 + i * 0.7, 1.9, -FLOOR_H*TILE/2 + 0.02);
+    poster.castShadow = true;
+    group.add(poster);
+  });
+
   // Potted plants
   function createPlant(x, z, scale) {
     const pGroup = new THREE.Group();
