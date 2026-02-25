@@ -177,9 +177,9 @@
 
 <div id="canvas-container"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.162.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.162.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/renderers/CSS2DRenderer.js"></script>
 <script>
 // =============================================
 // BURN RATE — Visual PoC — Three.js Isometric Office
@@ -301,7 +301,7 @@ function init() {
     dist * Math.cos(elevation) * Math.cos(azimuth)
   );
   camera.lookAt(0, 0, 0);
-  camera.zoom = 0.3; // Start zoomed out for intro animation
+  camera.zoom = 0.15; // Start zoomed out for intro animation
   camera.updateProjectionMatrix();
 
   // Renderer
@@ -310,7 +310,7 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
   container.appendChild(renderer.domElement);
@@ -1473,7 +1473,7 @@ function animate() {
     }
     // Ease out
     const t = 1 - Math.pow(1 - introProgress, 3);
-    camera.zoom = 0.3 + t * 0.7; // 0.3 → 1.0
+    camera.zoom = 0.15 + t * 0.45; // 0.15 → 0.6
     camera.updateProjectionMatrix();
   }
 
