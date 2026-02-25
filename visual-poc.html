@@ -472,7 +472,7 @@ function init() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.9;
+  renderer.toneMappingExposure = 0.75;
   container.appendChild(renderer.domElement);
 
   // CSS2D Renderer for status bubbles
@@ -529,7 +529,7 @@ function setupLighting() {
   scene.add(hemi);
 
   // Main sun — warm, strong, from upper-right
-  const sun = new THREE.DirectionalLight(0xFFEEDD, 1.8);
+  const sun = new THREE.DirectionalLight(0xFFEEDD, 2.2);
   sun.position.set(10, 16, 8);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
@@ -1881,21 +1881,30 @@ function createCharacter(color, skinColor) {
   const headY = baseY + bodyH + headR * 0.85;
 
   // === LEGS ===
+  const pantsColor = clothingType === 3 ? shirtColor : pick([0x2C3E50, 0x1A1A2E, 0x3E2723, 0x263238, 0x424242]);
   [-1, 1].forEach(side => {
     const leg = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.03, 0.028, 0.22, 6),
-      toonMat(clothingType === 3 ? shirtColor : 0x2C3E50)
+      new THREE.CylinderGeometry(0.04, 0.035, 0.24, 6),
+      toonMat(pantsColor, { roughness: 0.85 })
     );
-    leg.position.set(side * 0.04, baseY - 0.08, 0);
+    leg.position.set(side * 0.05, baseY - 0.08, 0);
     leg.castShadow = true;
     group.add(leg);
-    // Shoe
+    // Shoe — chunky sneakers
+    const shoeColor = pick([0x222222, 0xEEEEEE, 0xDD3333, 0x3366CC, 0xFF8800]);
     const shoe = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 0.025, 0.07),
-      toonMat(rng() < 0.5 ? 0x222222 : 0xEEEEEE)
+      roundedBox(0.06, 0.035, 0.09, 0.01, 2),
+      toonMat(shoeColor, { roughness: 0.7 })
     );
-    shoe.position.set(side * 0.04, baseY - 0.19, 0.01);
+    shoe.position.set(side * 0.05, baseY - 0.2, 0.015);
     group.add(shoe);
+    // Sole
+    const sole = new THREE.Mesh(
+      new THREE.BoxGeometry(0.062, 0.01, 0.092),
+      toonMat(darkenColor(shoeColor, 0.2))
+    );
+    sole.position.set(side * 0.05, baseY - 0.215, 0.015);
+    group.add(sole);
   });
 
   // === BODY ===
@@ -2030,6 +2039,24 @@ function createCharacter(color, skinColor) {
   head.position.y = headY;
   head.castShadow = true;
   group.add(head);
+
+  // Ears
+  [-1, 1].forEach(side => {
+    const ear = new THREE.Mesh(
+      new THREE.SphereGeometry(0.035, 6, 6),
+      toonMat(skin)
+    );
+    ear.position.set(side * (headR * 0.95), headY, 0);
+    group.add(ear);
+  });
+
+  // Neck
+  const neck = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.05, 0.06, 6),
+    toonMat(skin)
+  );
+  neck.position.y = baseY + bodyH + 0.02;
+  group.add(neck);
 
   // === HAIR STYLES ===
   const hairMat = toonMat(hairColor);
@@ -2178,13 +2205,37 @@ function createCharacter(color, skinColor) {
     group.add(highlight);
   });
 
-  // Mouth — simple line
-  const mouth = new THREE.Mesh(
-    new THREE.BoxGeometry(0.04, 0.006, 0.005),
-    new THREE.MeshBasicMaterial({ color: 0x993333 })
-  );
-  mouth.position.set(0, headY - 0.045, headR * 0.9);
-  group.add(mouth);
+  // Eyebrows
+  [-1, 1].forEach(side => {
+    const brow = new THREE.Mesh(
+      new THREE.BoxGeometry(0.035, 0.008, 0.006),
+      toonMat(darkenColor(hairColor, 0.1))
+    );
+    brow.position.set(side * 0.05, headY + 0.05, headR * 0.88);
+    brow.rotation.z = side * (rng() * 0.15 - 0.05); // Slight random angle for expression
+    group.add(brow);
+  });
+
+  // Mouth — smile or neutral
+  const mouthType = rng();
+  if (mouthType < 0.5) {
+    // Smile — arc
+    const smile = new THREE.Mesh(
+      new THREE.TorusGeometry(0.025, 0.005, 4, 8, Math.PI),
+      new THREE.MeshBasicMaterial({ color: 0x993333 })
+    );
+    smile.position.set(0, headY - 0.04, headR * 0.88);
+    smile.rotation.x = 0.1;
+    group.add(smile);
+  } else {
+    // Neutral line
+    const mouth = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.006, 0.005),
+      new THREE.MeshBasicMaterial({ color: 0x993333 })
+    );
+    mouth.position.set(0, headY - 0.045, headR * 0.9);
+    group.add(mouth);
+  }
 
   // Nose
   const nose = new THREE.Mesh(
