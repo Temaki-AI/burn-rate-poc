@@ -694,6 +694,102 @@ function buildWalls() {
   frontWall.castShadow = true;
   group.add(frontWall);
 
+  // Ceiling — partial, just back and left edges (don't block isometric view)
+  const ceilMat = toonMat(0xE8E0D8, { roughness: 0.9 });
+  const ceilH = 3.2;
+  // Back edge ceiling strip
+  const ceilBack = new THREE.Mesh(
+    new THREE.BoxGeometry(FLOOR_W * TILE + wallThick*2, 0.06, 2),
+    ceilMat
+  );
+  ceilBack.position.set(0, ceilH, -FLOOR_H*TILE/2 + 1);
+  ceilBack.receiveShadow = true;
+  group.add(ceilBack);
+  // Left edge ceiling strip
+  const ceilLeft = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.06, FLOOR_H * TILE),
+    ceilMat
+  );
+  ceilLeft.position.set(-FLOOR_W*TILE/2 + 1, ceilH, 0);
+  ceilLeft.receiveShadow = true;
+  group.add(ceilLeft);
+
+  // Window blinds on glass wall (horizontal slats)
+  const blindMat = toonMat(0xCCCCCC, { roughness: 0.6 });
+  for (let b = 0; b < 8; b++) {
+    const blind = new THREE.Mesh(
+      new THREE.BoxGeometry(0.008, 0.02, FLOOR_H * TILE * 0.9),
+      blindMat
+    );
+    blind.position.set(FLOOR_W*TILE/2 + wallThick/2 + 0.01, ceilH - 0.3 - b * 0.12, 0);
+    group.add(blind);
+  }
+
+  // TV screen in meeting area on back wall
+  const tvGroup = new THREE.Group();
+  const tvBezel = new THREE.Mesh(
+    new THREE.BoxGeometry(1.2, 0.7, 0.04),
+    toonMat(0x1A1A1A, { roughness: 0.3, metalness: 0.2 })
+  );
+  tvBezel.position.y = 2.2;
+  tvGroup.add(tvBezel);
+  // TV screen with dashboard
+  const tvScreen = new THREE.Mesh(
+    new THREE.BoxGeometry(1.12, 0.62, 0.01),
+    toonMat(0x0A1628, { emissive: 0x0A1628, emissiveIntensity: 0.8 })
+  );
+  tvScreen.position.set(0, 2.2, 0.026);
+  tvGroup.add(tvScreen);
+  // Dashboard "chart" bars
+  const barColors = [0x00D4FF, 0x00FF88, 0xFF6B6B, 0xFFAA00, 0x9B59B6];
+  for (let b = 0; b < 5; b++) {
+    const barH = 0.1 + Math.random() * 0.3;
+    const bar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, barH, 0.005),
+      new THREE.MeshBasicMaterial({ color: barColors[b] })
+    );
+    bar.position.set(-0.35 + b * 0.18, 1.95 + barH/2, 0.032);
+    tvGroup.add(bar);
+  }
+  // "Burn Rate" text — simplified as a bright bar
+  const titleBar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.04, 0.005),
+    new THREE.MeshBasicMaterial({ color: 0xFF6B6B })
+  );
+  titleBar.position.set(0, 2.48, 0.032);
+  tvGroup.add(titleBar);
+
+  tvGroup.position.set(-FLOOR_W*TILE/2 + 2.5, 0, -FLOOR_H*TILE/2 + 0.08);
+  group.add(tvGroup);
+
+  // AC vent on back wall
+  const acGroup = new THREE.Group();
+  const acBody = new THREE.Mesh(
+    new THREE.BoxGeometry(0.8, 0.2, 0.12),
+    toonMat(0xF5F5F5, { roughness: 0.4 })
+  );
+  acBody.position.y = 2.8;
+  acGroup.add(acBody);
+  // Vent slats
+  for (let v = 0; v < 4; v++) {
+    const slat = new THREE.Mesh(
+      new THREE.BoxGeometry(0.7, 0.005, 0.08),
+      toonMat(0xDDDDDD)
+    );
+    slat.position.set(0, 2.74 + v * 0.04, 0.06);
+    slat.rotation.x = 0.2;
+    acGroup.add(slat);
+  }
+  // Status LED
+  const acLed = new THREE.Mesh(
+    new THREE.SphereGeometry(0.008, 4, 4),
+    new THREE.MeshBasicMaterial({ color: 0x00FF00 })
+  );
+  acLed.position.set(0.35, 2.82, 0.065);
+  acGroup.add(acLed);
+  acGroup.position.set(FLOOR_W*TILE/2 - 2, 0, -FLOOR_H*TILE/2 + 0.08);
+  group.add(acGroup);
+
   scene.add(group);
 }
 
@@ -1373,6 +1469,57 @@ function buildDecorations() {
   rugBorder.position.set(-FLOOR_W*TILE/2 + 2.5, 0.005, FLOOR_H*TILE/2 - 2);
   rugBorder.receiveShadow = true;
   group.add(rugBorder);
+
+  // Cable cover running across floor (behind desk row)
+  const cableCover = new THREE.Mesh(
+    new THREE.BoxGeometry(FLOOR_W * TILE * 0.7, 0.02, 0.06),
+    toonMat(0x555555, { roughness: 0.7 })
+  );
+  cableCover.position.set(0, 0.01, -FLOOR_H*TILE/2 + 1.8);
+  group.add(cableCover);
+
+  // Filing cabinet near meeting area
+  const fcGroup = new THREE.Group();
+  const fcBody = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35, 0.9, 0.35),
+    toonMat(0x777788, { metalness: 0.2, roughness: 0.5 })
+  );
+  fcBody.position.y = 0.45;
+  fcBody.castShadow = true;
+  fcGroup.add(fcBody);
+  for (let d = 0; d < 3; d++) {
+    const drawerFace = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.18, 0.008),
+      toonMat(0x888899, { metalness: 0.3 })
+    );
+    drawerFace.position.set(0, 0.22 + d * 0.25, 0.176);
+    fcGroup.add(drawerFace);
+    const handle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.06, 0.015, 0.01),
+      toonMat(0xAAAAAA, { metalness: 0.5 })
+    );
+    handle.position.set(0, 0.22 + d * 0.25, 0.185);
+    fcGroup.add(handle);
+  }
+  fcGroup.position.set(-FLOOR_W*TILE/2 + 0.4, 0, FLOOR_H*TILE/2 - 0.5);
+  group.add(fcGroup);
+
+  // Coat/bag hooks on left wall
+  for (let h = 0; h < 3; h++) {
+    const hook = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.02, 0.06),
+      toonMat(0x888888, { metalness: 0.4 })
+    );
+    hook.position.set(-FLOOR_W*TILE/2 + 0.06, 1.4, -1 + h * 0.5);
+    group.add(hook);
+  }
+  // A bag hanging from one hook
+  const bag = new THREE.Mesh(
+    new THREE.BoxGeometry(0.12, 0.2, 0.05),
+    toonMat(0x8B4513, { roughness: 0.9 })
+  );
+  bag.position.set(-FLOOR_W*TILE/2 + 0.08, 1.2, -0.5);
+  group.add(bag);
 
   // Potted plants
   function createPlant(x, z, scale) {
