@@ -90,6 +90,115 @@
   .speed-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
   .speed-btn.active { background: rgba(124,185,255,0.25); border-color: rgba(124,185,255,0.4); color: #7CB9FF; }
 
+  /* ─── Slide Panels ─── */
+  .slide-panel {
+    position: fixed; top: 54px; right: 0; width: 440px; bottom: 64px;
+    background: rgba(10,15,30,0.97); border-left: 2px solid #00D4FF;
+    z-index: 90; overflow-y: auto; padding: 16px;
+    transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+    backdrop-filter: blur(12px);
+  }
+  .slide-panel.open { transform: translateX(0); }
+  .slide-panel::-webkit-scrollbar { width: 4px; }
+  .slide-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+  .panel-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .panel-title { font-size: 16px; font-weight: bold; color: #00D4FF; }
+  .panel-close {
+    width: 28px; height: 28px; background: rgba(255,255,255,0.1);
+    border: 1px solid #555; border-radius: 50%; color: #888;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; transition: all 0.2s;
+  }
+  .panel-close:hover { color: #fff; border-color: #FF4444; background: rgba(255,68,68,0.15); }
+
+  /* Cards */
+  .panel-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 12px; margin-bottom: 10px;
+    transition: border-color 0.2s; animation: panelFadeIn 0.3s ease;
+  }
+  .panel-card:hover { border-color: rgba(0,212,255,0.3); }
+  @keyframes panelFadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  /* Candidate */
+  .cand-layout { display: flex; gap: 12px; }
+  .cand-avatar {
+    width: 50px; height: 50px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+  }
+  .cand-info { flex: 1; }
+  .cand-name { font-size: 13px; font-weight: bold; color: #fff; }
+  .cand-role { font-size: 10px; color: #00D4FF; margin: 2px 0; }
+  .cand-bio { font-size: 10px; color: #999; line-height: 1.4; margin-bottom: 6px; }
+  .cand-salary { position: absolute; top: 12px; right: 12px; font-size: 12px; font-weight: bold; color: #FFB347; }
+  .cand-traits { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .trait { font-size: 8px; padding: 2px 6px; border-radius: 8px; background: rgba(255,255,255,0.05); }
+  .trait-good { color: #00FF88; border: 1px solid #00FF88; }
+  .trait-bad { color: #FF4444; border: 1px solid #FF4444; }
+  .trait-neutral { color: #FFB347; border: 1px solid #FFB347; }
+  .skill-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+  .skill-name { width: 50px; font-size: 9px; color: #aaa; }
+  .skill-track { flex: 1; height: 6px; background: #1a1a2e; border-radius: 3px; overflow: hidden; }
+  .skill-fill { height: 100%; border-radius: 3px; transition: width 0.5s; }
+  .cand-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .cand-btn { flex: 1; padding: 6px; border-radius: 6px; text-align: center; cursor: pointer; font-weight: bold; font-size: 11px; border: none; transition: all 0.2s; }
+  .btn-hire { background: #00FF88; color: #000; }
+  .btn-hire:hover { background: #33ffaa; }
+  .btn-pass { background: #333; color: #888; border: 1px solid #555; }
+  .btn-pass:hover { color: #fff; border-color: #FF4444; }
+
+  /* Features */
+  .feat-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .feat-name { font-size: 13px; font-weight: bold; color: #fff; }
+  .feat-impact { font-size: 10px; color: #00FF88; }
+  .feat-meta { display: flex; gap: 12px; font-size: 10px; color: #888; margin-bottom: 6px; }
+  .feat-desc { font-size: 10px; color: #666; margin-bottom: 6px; }
+  .feat-progress-track { height: 8px; background: #1a1a2e; border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+  .feat-progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00D4FF, #00FF88); transition: width 0.5s; }
+  .feat-btn { display: inline-block; padding: 4px 10px; background: rgba(0,212,255,0.1); border: 1px solid #00D4FF; border-radius: 4px; font-size: 10px; color: #00D4FF; cursor: pointer; transition: all 0.2s; }
+  .feat-btn:hover { background: rgba(0,212,255,0.2); }
+
+  /* Metrics */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .metric-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px; text-align: center; }
+  .metric-val { font-size: 18px; font-weight: bold; }
+  .metric-lbl { font-size: 9px; color: #888; text-transform: uppercase; }
+  .chart-container { margin-bottom: 16px; }
+  .chart-title { font-size: 12px; font-weight: bold; color: #00D4FF; margin-bottom: 8px; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 80px; padding: 0 4px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .bar { width: 100%; min-width: 8px; border-radius: 2px 2px 0 0; transition: height 0.3s; }
+  .bar-label { font-size: 7px; color: #666; margin-top: 2px; }
+
+  /* VC card */
+  .vc-header { display: flex; gap: 10px; margin-bottom: 10px; }
+  .vc-avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; border: 2px solid rgba(255,255,255,0.1); }
+  .vc-name { font-size: 14px; font-weight: bold; color: #fff; }
+  .vc-firm { font-size: 10px; color: #00D4FF; }
+  .vc-question { background: rgba(255,170,0,0.1); border: 1px solid #FFB347; border-radius: 8px; padding: 10px; margin: 10px 0; }
+  .vc-answer { background: rgba(255,255,255,0.05); border: 1px solid #555; border-radius: 6px; padding: 8px 10px; font-size: 10px; color: #ccc; cursor: pointer; margin-bottom: 4px; transition: all 0.2s; }
+  .vc-answer:hover { border-color: #00D4FF; color: #fff; }
+
+  /* Build rooms */
+  .room-card { display: flex; gap: 12px; align-items: center; }
+  .room-icon { font-size: 28px; width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); flex-shrink: 0; }
+  .room-name { font-size: 13px; font-weight: bold; color: #fff; }
+  .room-cost { font-size: 11px; color: #FFB347; }
+  .room-desc { font-size: 10px; color: #888; margin-top: 2px; }
+  .room-effect { font-size: 9px; color: #00FF88; margin-top: 4px; }
+
+  /* Toolbar active state */
+  .toolbar-btn.active {
+    background: rgba(0,212,255,0.2) !important;
+    border-color: rgba(0,212,255,0.5) !important;
+  }
+  .toolbar-btn.active .toolbar-btn-label { color: #00D4FF !important; }
+
   /* Status bubbles */
   .status-bubble {
     background: rgba(255,255,255,0.95); color: #333; padding: 4px 10px;
@@ -142,27 +251,27 @@
 
 <!-- Bottom Toolbar -->
 <div id="hud-bottom">
-  <div class="toolbar-btn" title="Build & expand office">
+  <div class="toolbar-btn" title="Build & expand office" onclick="togglePanel('build')">
     <div class="toolbar-btn-icon">🏗️</div>
     <div class="toolbar-btn-label">Build</div>
   </div>
-  <div class="toolbar-btn" title="Hire team members">
+  <div class="toolbar-btn" title="Hire team members" onclick="togglePanel('hire')">
     <div class="toolbar-btn-icon">👥</div>
     <div class="toolbar-btn-label">Hire</div>
   </div>
-  <div class="toolbar-btn" title="Product roadmap">
+  <div class="toolbar-btn" title="Product roadmap" onclick="togglePanel('product')">
     <div class="toolbar-btn-icon">💡</div>
     <div class="toolbar-btn-label">Product</div>
   </div>
-  <div class="toolbar-btn" title="Raise funding">
+  <div class="toolbar-btn" title="Raise funding" onclick="togglePanel('fundraise')">
     <div class="toolbar-btn-icon">💰</div>
     <div class="toolbar-btn-label">Fundraise</div>
   </div>
-  <div class="toolbar-btn highlight" title="Pivot your business">
+  <div class="toolbar-btn highlight" title="Pivot your business" onclick="togglePanel('pivot')">
     <div class="toolbar-btn-icon">🔄</div>
     <div class="toolbar-btn-label">Pivot</div>
   </div>
-  <div class="toolbar-btn" title="View metrics">
+  <div class="toolbar-btn" title="View metrics" onclick="togglePanel('metrics')">
     <div class="toolbar-btn-icon">📊</div>
     <div class="toolbar-btn-label">Metrics</div>
   </div>
@@ -173,6 +282,55 @@
     <div class="speed-btn" data-speed="2" title="Fast">2×</div>
     <div class="speed-btn" data-speed="3" title="Turbo">3×</div>
   </div>
+</div>
+
+<!-- Slide Panels -->
+<div class="slide-panel" id="buildPanel">
+  <div class="panel-header">
+    <div class="panel-title">🏗️ Build & Expand</div>
+    <div class="panel-close" onclick="closePanel()">✕</div>
+  </div>
+  <div id="buildContent"></div>
+</div>
+
+<div class="slide-panel" id="hirePanel">
+  <div class="panel-header">
+    <div class="panel-title">👥 Hiring — Available Candidates</div>
+    <div class="panel-close" onclick="closePanel()">✕</div>
+  </div>
+  <div id="hireContent"></div>
+</div>
+
+<div class="slide-panel" id="productPanel">
+  <div class="panel-header">
+    <div class="panel-title">💡 Product Roadmap</div>
+    <div class="panel-close" onclick="closePanel()">✕</div>
+  </div>
+  <div id="productContent"></div>
+</div>
+
+<div class="slide-panel" id="fundraisePanel">
+  <div class="panel-header">
+    <div class="panel-title">💰 Fundraising</div>
+    <div class="panel-close" onclick="closePanel()">✕</div>
+  </div>
+  <div id="fundraiseContent"></div>
+</div>
+
+<div class="slide-panel" id="pivotPanel">
+  <div class="panel-header">
+    <div class="panel-title">🔄 Pivot Strategy</div>
+    <div class="panel-close" onclick="closePanel()">✕</div>
+  </div>
+  <div id="pivotContent"></div>
+</div>
+
+<div class="slide-panel" id="metricsPanel">
+  <div class="panel-header">
+    <div class="panel-title">📊 Metrics Dashboard</div>
+    <div class="panel-close" onclick="closePanel()">✕</div>
+  </div>
+  <div id="metricsContent"></div>
 </div>
 
 <div id="canvas-container"></div>
@@ -1943,6 +2101,357 @@ function animate() {
   controls.update();
   renderer.render(scene, camera);
   cssRenderer.render(scene, camera);
+}
+
+// =============================================
+// PANEL SYSTEM
+// =============================================
+
+let activePanel = null;
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const fmt = n => n >= 1e6 ? '$' + (n/1e6).toFixed(1) + 'M' : n >= 1e3 ? '$' + (n/1e3).toFixed(0) + 'K' : '$' + n;
+
+function togglePanel(name) {
+  if (activePanel === name) { closePanel(); return; }
+  closePanel();
+  activePanel = name;
+  
+  // Render content
+  if (name === 'build') renderBuildPanel();
+  else if (name === 'hire') renderHirePanel();
+  else if (name === 'product') renderProductPanel();
+  else if (name === 'fundraise') renderFundraisePanel();
+  else if (name === 'pivot') renderPivotPanel();
+  else if (name === 'metrics') renderMetricsPanel();
+  
+  document.getElementById(name + 'Panel').classList.add('open');
+  
+  // Highlight active toolbar button
+  document.querySelectorAll('.toolbar-btn').forEach((btn, i) => {
+    const names = ['build','hire','product','fundraise','pivot','metrics'];
+    btn.classList.toggle('active', names[i] === name);
+  });
+}
+
+function closePanel() {
+  document.querySelectorAll('.slide-panel').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.toolbar-btn').forEach(b => b.classList.remove('active'));
+  activePanel = null;
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+// ─── DATA ───
+const ROLES = ['Engineer','Designer','Growth Hacker','Sales','DevRel','PM','Data Scientist'];
+const ROLE_EMOJIS = {'Engineer':'👨‍💻','Designer':'🎨','Growth Hacker':'📣','Sales':'💼','DevRel':'🎤','PM':'📋','Data Scientist':'📊'};
+const TRAITS = [
+  {name:'10x Engineer',type:'good'},{name:'Buzzword Addicted',type:'bad'},{name:'Flight Risk',type:'bad'},
+  {name:'LinkedIn Thought Leader',type:'neutral'},{name:'Remote or Quit',type:'neutral'},{name:'Oat Milk Only',type:'neutral'},
+  {name:'Strong Opinions™',type:'bad'},{name:'Stack Overflow Dependent',type:'bad'},{name:'Conference Addict',type:'neutral'},
+  {name:'Refuses to Write Tests',type:'bad'},{name:'Actually Ships',type:'good'},{name:'Mentors Others',type:'good'},
+  {name:'Over-Engineers Everything',type:'bad'},{name:'Writes Docs',type:'good'},{name:'Dark Mode Evangelist',type:'neutral'},
+  {name:'Rubber Duck Debug',type:'good'},{name:'Standup Monologuer',type:'bad'},{name:'Ping Pong Pro',type:'neutral'}
+];
+const BIOS = {
+  'Engineer':['Ex-FAANG. Insists on Rust for everything, including the landing page.','Self-taught. Ships fast, breaks things faster. Types at 200 WPM.','GitHub graph looks like a forest fire. Commits at 3am.','PhD who can explain monads but can\'t center a div.'],
+  'Designer':['Takes 3 weeks for a button redesign. Strong opinions about white space.','Can detect a 1px misalignment from across the room.','Ex-Apple. 47 Figma files for your landing page.'],
+  'Growth Hacker':['Grew a DTC brand from 0 to $2M ARR with TikTok. Will A/B test the thermostat.','More Twitter followers than your company has users.'],
+  'Sales':['Could sell ice to penguins. Expense reports are... creative.','Has a Rolodex. An actual physical Rolodex. It works.'],
+  'DevRel':['Speaks at 14 conferences/year. More airline miles than code commits.','Built a personal brand larger than your startup.'],
+  'PM':['Has 12 Jira boards. Can\'t find the actual requirements in any of them.','Writes PRDs at the speed of light. Nobody reads them.'],
+  'Data Scientist':['PhD in something. Makes dashboards that are beautiful and unactionable.','80% cleaning data, 15% complaining about data quality, 5% actual analysis.']
+};
+const FIRST_NAMES = ['Alex','Jordan','Sam','Taylor','Morgan','Casey','Quinn','Riley','Avery','Dakota','Kai','Rowan','Sage','Phoenix','Skyler','Drew','Blake','Charlie','Harper','Emery'];
+const LAST_NAMES = ['Chen','Patel','Kim','Nguyen','Okafor','Rossi','Santos','Müller','Tanaka','Johansson','Cohen','Ali','O\'Brien','Lopez','Zhang','Kowalski','Sato','Williams','Garcia','Park'];
+
+function generateName() { return pick(FIRST_NAMES) + ' ' + pick(LAST_NAMES); }
+function skillColor(v) { return v > 75 ? '#00FF88' : v > 50 ? '#00D4FF' : v > 30 ? '#FFB347' : '#FF7B7B'; }
+
+function generateCandidates() {
+  const count = 3 + Math.floor(Math.random() * 2);
+  return Array.from({length: count}, () => {
+    const role = pick(ROLES);
+    const skills = {};
+    const skillNames = role === 'Engineer' ? ['Coding','System Design','Speed'] :
+                       role === 'Designer' ? ['UI Design','UX Research','Figma'] :
+                       role === 'Sales' ? ['Closing','Pipeline','Charisma'] :
+                       ['Strategy','Execution','Communication'];
+    skillNames.forEach(s => skills[s] = 15 + Math.floor(Math.random() * 80));
+    const numTraits = 2 + Math.floor(Math.random() * 2);
+    const traits = [];
+    while (traits.length < numTraits) { const t = pick(TRAITS); if (!traits.includes(t)) traits.push(t); }
+    return {
+      name: generateName(), role, emoji: ROLE_EMOJIS[role] || '🧑',
+      bio: pick(BIOS[role] || BIOS['Engineer']),
+      salary: Math.floor((5000 + Math.random() * 12000) / 500) * 500,
+      skills, traits
+    };
+  });
+}
+
+const FEATURE_POOL = [
+  {name:'AI-Powered Everything',months:3,mrrImpact:5000,techDebt:15,desc:'Slap AI on it. Investors love AI.',progress:0.65},
+  {name:'Dark Mode (Critical)',months:1,mrrImpact:500,techDebt:2,desc:'P0 blocker. Users literally can\'t use the product without it.',progress:1},
+  {name:'SSO for Enterprise',months:2,mrrImpact:8000,techDebt:5,desc:'Enterprise customers want it. They\'ll pay 10x.',progress:0.3},
+  {name:'Slack Integration',months:2,mrrImpact:3000,techDebt:5,desc:'Because every SaaS needs to be in Slack.',progress:0},
+  {name:'AI Chatbot Support',months:3,mrrImpact:4000,techDebt:12,desc:'Replace your support team with a bot.',progress:0},
+  {name:'Gamification Layer',months:2,mrrImpact:2500,techDebt:8,desc:'Add badges. Users love badges.',progress:0},
+  {name:'Real-time Collaboration',months:4,mrrImpact:5000,techDebt:15,desc:'Like Google Docs but for your product.',progress:0},
+  {name:'Analytics Dashboard',months:2,mrrImpact:1500,techDebt:8,desc:'Beautiful charts. Zero decisions made from them.',progress:0.82},
+];
+
+const ROOMS = [
+  {icon:'🖥️',name:'Server Room',cost:'$8K',desc:'More compute, fewer outages',effect:'+10% uptime, -5% tech debt'},
+  {icon:'🎮',name:'Game Room',cost:'$5K',desc:'Ping pong, arcade, bean bags',effect:'+15% morale'},
+  {icon:'☕',name:'Coffee Lab',cost:'$3K',desc:'Artisan espresso & kombucha on tap',effect:'+8% productivity'},
+  {icon:'🧘',name:'Zen Room',cost:'$4K',desc:'Meditation pods & nap stations',effect:'+10% morale, -5% burnout'},
+  {icon:'📞',name:'Phone Booths',cost:'$6K',desc:'Soundproof pods for calls & deep work',effect:'+12% focus'},
+  {icon:'🎨',name:'Design Studio',cost:'$7K',desc:'Whiteboards, Wacom tablets, mood boards',effect:'+15% design speed'},
+  {icon:'🏋️',name:'Mini Gym',cost:'$10K',desc:'Pelotons & dumbbells. Culture fit guaranteed.',effect:'+12% morale, +5% retention'},
+  {icon:'🌿',name:'Rooftop Garden',cost:'$8K',desc:'Plants, fresh air, "spontaneous collaboration"',effect:'+10% creativity'},
+];
+
+const VC_FIRMS = [
+  {name:'Andreessen Borrowed',emoji:'🦈'},{name:'Sequoia Copycat',emoji:'🎩'},
+  {name:'First Round Reject',emoji:'🧐'},{name:'Benchmark Wannabe',emoji:'💎'},
+  {name:'Y Combinator Dropout',emoji:'🎓'},{name:'SoftBankrupt',emoji:'🏦'}
+];
+
+const PIVOTS = [
+  {text:'🤖 We\'re an AI company now!',desc:'Rewrite everything with GPT. The product is now a prompt.'},
+  {text:'⛓️ Pivoting to Web3!',desc:'Nobody asked for this but the board mentioned blockchain.'},
+  {text:'🏢 Going enterprise!',desc:'Suits, SOC2, and 18-month sales cycles.'},
+  {text:'🛒 It\'s a marketplace now!',desc:'Two-sided! That means double the problems.'},
+  {text:'🔌 We\'re a platform!',desc:'Let other people build the features we can\'t.'},
+  {text:'📱 Mobile-first pivot!',desc:'React Native wrapper. Ship it.'},
+];
+
+// ─── MOCK GAME STATE ───
+const G = {
+  mrr: 48200, users: 2847, burn: -32000, cash: 224000, runway: 7,
+  morale: 82, valuation: 5200000, dilution: 18, employees: 12,
+  churn: 4.2, arr: 578400, featuresShipped: 8, totalFundraised: 750000,
+  history: {
+    mrr: [12000,15000,18000,22000,25000,28000,32000,35000,38000,40000,42500,45000,48200],
+    users: [200,350,520,680,900,1100,1400,1700,2000,2200,2450,2650,2847],
+    burn: [-18000,-20000,-22000,-24000,-26000,-28000,-29000,-30000,-31000,-32000,-32000,-32000,-32000],
+    cash: [500000,480000,458000,434000,408000,380000,352000,322000,291000,274000,256000,238000,224000],
+  }
+};
+
+// ─── RENDER FUNCTIONS ───
+
+function renderBuildPanel() {
+  document.getElementById('buildContent').innerHTML = `
+    <div style="font-size:11px;color:#888;margin-bottom:12px;">
+      Expand your office with new rooms. Each unlocks perks for your team.
+    </div>
+    ${ROOMS.map((r, i) => `
+      <div class="panel-card" style="position:relative;">
+        <div class="room-card">
+          <div class="room-icon">${r.icon}</div>
+          <div>
+            <div class="room-name">${r.name}</div>
+            <div class="room-cost">${r.cost}</div>
+            <div class="room-desc">${r.desc}</div>
+            <div class="room-effect">⚡ ${r.effect}</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;">
+          <span class="feat-btn" onclick="this.textContent='✅ Built!';this.style.borderColor='#00FF88';this.style.color='#00FF88';this.style.cursor='default'">🏗️ Build (${r.cost})</span>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderHirePanel() {
+  const candidates = generateCandidates();
+  document.getElementById('hireContent').innerHTML = `
+    <div style="font-size:11px;color:#888;margin-bottom:10px;">
+      👥 Team: ${G.employees} • Monthly Payroll: ~$96K
+      • <span style="color:#FFB347">Morale: ${G.morale}%</span>
+    </div>
+    ${candidates.map((c, i) => `
+      <div class="panel-card" style="position:relative;">
+        <div class="cand-layout">
+          <div class="cand-avatar" style="background:linear-gradient(135deg,hsl(${(i*80+120)%360},30%,25%),hsl(${(i*80+120)%360},30%,15%));">
+            ${c.emoji}
+          </div>
+          <div class="cand-info">
+            <div class="cand-name">${c.name}</div>
+            <div class="cand-role">${c.role}</div>
+            <div class="cand-bio">${c.bio}</div>
+            <div class="cand-traits">
+              ${c.traits.map(t => `<span class="trait trait-${t.type}">${t.name}</span>`).join('')}
+            </div>
+            <div style="margin-top:6px;">
+              ${Object.entries(c.skills).map(([k,v]) => `
+                <div class="skill-row">
+                  <div class="skill-name">${k}</div>
+                  <div class="skill-track"><div class="skill-fill" style="width:${v}%;background:${skillColor(v)}"></div></div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="cand-actions">
+              <button class="cand-btn btn-hire" onclick="this.closest('.panel-card').style.borderColor='#00FF88';this.textContent='✅ Hired!';this.disabled=true">Hire ✅</button>
+              <button class="cand-btn btn-pass" onclick="this.closest('.panel-card').style.opacity='0.3';this.closest('.panel-card').style.pointerEvents='none'">Pass ❌</button>
+            </div>
+          </div>
+        </div>
+        <div class="cand-salary">${fmt(c.salary)}/mo</div>
+      </div>
+    `).join('')}
+    <div style="text-align:center;margin-top:12px;">
+      <span class="feat-btn" onclick="renderHirePanel()">🔄 Refresh Candidates</span>
+    </div>
+  `;
+}
+
+function renderProductPanel() {
+  const building = FEATURE_POOL.filter(f => f.progress > 0 && f.progress < 1);
+  const available = FEATURE_POOL.filter(f => f.progress === 0);
+  const complete = FEATURE_POOL.filter(f => f.progress >= 1);
+
+  let html = `<div style="font-size:11px;color:#888;margin-bottom:10px;">🔧 Available Engineers: 4 / 6</div>`;
+
+  if (building.length > 0) {
+    html += `<div style="font-size:13px;font-weight:bold;color:#00D4FF;margin:10px 0 6px;">🔨 In Progress</div>`;
+    building.forEach(f => {
+      const pct = Math.round(f.progress * 100);
+      html += `<div class="panel-card" style="border-color:rgba(0,212,255,0.3);">
+        <div class="feat-header"><div class="feat-name">${f.name}</div><div class="feat-impact">${pct}%</div></div>
+        <div class="feat-meta"><span>⏱ ${f.months}mo</span><span>💰 +${fmt(f.mrrImpact)} MRR</span><span>🔧 +${f.techDebt}% debt</span></div>
+        <div class="feat-progress-track"><div class="feat-progress-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    });
+  }
+  if (available.length > 0) {
+    html += `<div style="font-size:13px;font-weight:bold;color:#FFB347;margin:10px 0 6px;">📋 Available to Build</div>`;
+    available.forEach(f => {
+      html += `<div class="panel-card">
+        <div class="feat-header"><div class="feat-name">${f.name}</div><div class="feat-impact">+${fmt(f.mrrImpact)} MRR</div></div>
+        <div class="feat-meta"><span>⏱ ${f.months}mo</span><span>🔧 +${f.techDebt}% debt</span></div>
+        <div class="feat-desc">${f.desc}</div>
+        <span class="feat-btn" onclick="this.textContent='🔨 Building...';this.style.borderColor='#00FF88';this.style.color='#00FF88'">🔨 Start Building</span>
+      </div>`;
+    });
+  }
+  if (complete.length > 0) {
+    html += `<div style="font-size:13px;font-weight:bold;color:#00FF88;margin:10px 0 6px;">✅ Shipped</div>`;
+    complete.forEach(f => {
+      html += `<div class="panel-card" style="opacity:0.6;border-color:rgba(0,255,136,0.2);">
+        <div class="feat-name">${f.name} ✅</div>
+        <div class="feat-meta"><span>💰 +${fmt(f.mrrImpact)} MRR</span></div>
+      </div>`;
+    });
+  }
+  document.getElementById('productContent').innerHTML = html;
+}
+
+function renderFundraisePanel() {
+  const vc = pick(VC_FIRMS);
+  const vcName = pick(FIRST_NAMES) + ' ' + pick(['Capital','Ventures','Partners','Fund']);
+  const askAmount = 500000;
+  document.getElementById('fundraiseContent').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:bold;color:#FFB347;margin-bottom:8px;">📊 Your Metrics</div>
+      <div class="metric-grid">
+        <div class="metric-box"><div class="metric-val" style="color:#00FF88">${fmt(G.mrr)}</div><div class="metric-lbl">MRR</div></div>
+        <div class="metric-box"><div class="metric-val" style="color:#00D4FF">${fmt(G.arr)}</div><div class="metric-lbl">ARR</div></div>
+        <div class="metric-box"><div class="metric-val" style="color:#FFB347">${G.users.toLocaleString()}</div><div class="metric-lbl">Users</div></div>
+        <div class="metric-box"><div class="metric-val" style="color:#FF7B7B">${G.churn}%</div><div class="metric-lbl">Churn</div></div>
+      </div>
+      <div style="font-size:11px;color:#888;text-align:center;">
+        Stage: <strong style="color:#00D4FF">Series A</strong> •
+        Dilution: <strong style="color:#FFB347">${G.dilution}%</strong> •
+        Ask: <strong style="color:#00FF88">${fmt(askAmount)}</strong>
+      </div>
+    </div>
+    <div class="panel-card">
+      <div class="vc-header">
+        <div class="vc-avatar" style="background:linear-gradient(135deg,hsl(${Math.random()*360},30%,25%),hsl(${Math.random()*360},30%,15%))">${vc.emoji}</div>
+        <div>
+          <div class="vc-name">${vcName}</div>
+          <div class="vc-firm">${vc.name} • Partner</div>
+          <div style="font-size:11px;color:#ccc;margin-top:4px;">
+            Offering <strong style="color:#00FF88">${fmt(askAmount)}</strong> at
+            <strong style="color:#FFB347">${fmt(G.valuation)}</strong> pre-money
+          </div>
+        </div>
+      </div>
+      <div class="vc-question">
+        <div style="font-size:11px;font-weight:bold;color:#FFB347;margin-bottom:4px;">❓ ${vcName.split(' ')[0]} asks:</div>
+        <div style="font-size:11px;color:#ccc;margin-bottom:8px;">"What's your moat?"</div>
+        <div class="vc-answer" onclick="this.style.borderColor='#00FF88';this.style.color='#00FF88';document.getElementById('vcResult').innerHTML='<div style=\\'text-align:center;padding:12px;font-size:14px;font-weight:bold;background:rgba(0,255,136,0.1);color:#00FF88;border:1px solid #00FF88;border-radius:8px;margin-top:8px\\'>🎉 FUNDED! +${fmt(askAmount)} in the bank!</div>'">
+          📊 "Network effects — every user makes it better for others."
+        </div>
+        <div class="vc-answer" onclick="this.style.borderColor='#FF4444';this.style.color='#FF4444';document.getElementById('vcResult').innerHTML='<div style=\\'text-align:center;padding:12px;font-size:14px;font-weight:bold;background:rgba(255,68,68,0.1);color:#FF4444;border:1px solid #FF4444;border-radius:8px;margin-top:8px\\'>😬 \\'We\\\\'ll circle back.\\'</div>'">
+          🤥 "We have proprietary AI nobody can replicate."
+        </div>
+        <div class="vc-answer" onclick="this.style.borderColor='#FF4444';this.style.color='#FF4444';document.getElementById('vcResult').innerHTML='<div style=\\'text-align:center;padding:12px;font-size:14px;font-weight:bold;background:rgba(255,68,68,0.1);color:#FF4444;border:1px solid #FF4444;border-radius:8px;margin-top:8px\\'>😬 They ghosted you after the meeting.</div>'">
+          🙄 "First mover advantage."
+        </div>
+      </div>
+      <div id="vcResult"></div>
+    </div>
+    <div style="text-align:center;margin-top:12px;">
+      <span class="feat-btn" onclick="renderFundraisePanel()">🤙 Find Another VC</span>
+    </div>
+  `;
+}
+
+function renderPivotPanel() {
+  document.getElementById('pivotContent').innerHTML = `
+    <div style="font-size:11px;color:#FF7B7B;margin-bottom:12px;padding:10px;border:1px solid rgba(255,68,68,0.3);border-radius:8px;background:rgba(255,68,68,0.05);">
+      ⚠️ Pivoting resets 50% of feature progress, shuffles your user base, and changes your valuation. Use wisely.
+    </div>
+    ${PIVOTS.map((p, i) => `
+      <div class="panel-card">
+        <div style="font-size:14px;font-weight:bold;color:#fff;margin-bottom:4px;">${p.text}</div>
+        <div style="font-size:10px;color:#888;margin-bottom:8px;">${p.desc}</div>
+        <span class="feat-btn" style="border-color:#FF7B7B;color:#FF7B7B;" onclick="this.textContent='🔄 Pivoted!';this.style.borderColor='#00FF88';this.style.color='#00FF88'">
+          🔄 Execute Pivot
+        </span>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderMetricsPanel() {
+  const h = G.history;
+  function barChart(data, color, label) {
+    const max = Math.max(1, ...data.map(Math.abs));
+    return `<div class="chart-container">
+      <div class="chart-title">${label}</div>
+      <div class="bar-chart">
+        ${data.map((v, i) => {
+          const height = Math.max(2, Math.abs(v) / max * 70);
+          const c = v < 0 ? '#FF7B7B' : color;
+          return `<div class="bar-col"><div class="bar" style="height:${height}px;background:${c}"></div><div class="bar-label">${i+1}</div></div>`;
+        }).join('')}
+      </div>
+      <div style="border-top:1px solid #333;margin-top:2px;"></div>
+    </div>`;
+  }
+
+  document.getElementById('metricsContent').innerHTML = `
+    <div class="metric-grid">
+      <div class="metric-box"><div class="metric-val" style="color:#00FF88">${fmt(G.arr)}</div><div class="metric-lbl">ARR</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:#00D4FF">${fmt(G.cash)}</div><div class="metric-lbl">Cash</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:#FFB347">${G.employees}</div><div class="metric-lbl">Team</div></div>
+      <div class="metric-box"><div class="metric-val" style="color:#00FF88">${G.featuresShipped}</div><div class="metric-lbl">Shipped</div></div>
+    </div>
+    ${barChart(h.mrr, '#00FF88', '📈 MRR History')}
+    ${barChart(h.users, '#00D4FF', '👥 User Growth')}
+    ${barChart(h.burn, '#FFB347', '🔥 Net Burn Rate')}
+    ${barChart(h.cash, '#00FF88', '💰 Cash Balance')}
+    <div style="font-size:10px;color:#666;margin-top:10px;">
+      Total Fundraised: ${fmt(G.totalFundraised)} • Dilution: ${G.dilution}% •
+      Valuation: ${fmt(G.valuation)} • Churn: ${G.churn}%
+    </div>
+  `;
 }
 
 // --- GO ---
