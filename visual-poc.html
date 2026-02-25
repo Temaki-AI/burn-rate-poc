@@ -199,26 +199,26 @@ let statusBubbles = [];
 const FLOOR_W = 12, FLOOR_H = 8;
 const TILE = 1.0;
 const COLORS = {
-  floor: 0xE8DCC8, floorLine: 0xD4C8B0,
-  wall: 0xF5F0E8, wallEdge: 0xC8BFA8,
-  glass: 0xCCE8FF,
-  desk: 0xE0E0E0, deskLeg: 0x4A4A4A,
+  floor: 0x2A2A3E, floorLine: 0x3A3A50,
+  wall: 0x353550, wallEdge: 0x4A4A65,
+  glass: 0x4488AA,
+  desk: 0x5A5A70, deskLeg: 0x3A3A4A,
   plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
-  whiteboard: 0xFAFAFA,
+  whiteboard: 0x8888AA,
   pingPong: 0x2E7D32, pingPongLine: 0xFFFFFF,
   kombucha: 0xBCAAA4, cup: 0xFFF8E1,
   beanBag1: 0xFF8A80, beanBag2: 0x82B1FF, beanBag3: 0xB9F6CA,
-  napPod: 0xCFD8DC,
-  neonSign: 0x7CB9FF,
-  monitor: 0x263238, monitorScreen: 0x1A237E,
-  keyboard: 0x37474F,
+  napPod: 0x4A5A6A,
+  neonSign: 0x00D4FF,
+  monitor: 0x1A1A2E, monitorScreen: 0x00D4FF,
+  keyboard: 0x2A2A3E,
   mug: 0xFFF3E0, mugHandle: 0xFFCC80,
   espresso: 0x5D4037, steam: 0xFFFFFF,
   poster1: 0xFFCDD2, poster2: 0xC5E1A5, poster3: 0xB3E5FC, poster4: 0xFFF9C4,
   engineer: 0x42A5F5, designer: 0xF48FB1, sales: 0x66BB6A,
   pm: 0xFFA726, ceo: 0xAB47BC,
   skin: 0xFFDBAC, skinAlt: 0xE8B88A,
-  chair: 0x546E7A,
+  chair: 0x3A4A5A,
 };
 
 const STATUS_TEXTS = [
@@ -281,8 +281,8 @@ function init() {
 
   // Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xD4E6F1);
-  scene.fog = new THREE.FogExp2(0xD4E6F1, 0.012);
+  scene.background = new THREE.Color(0x1a1a2e);
+  // No fog — let the office pop
 
   // Camera — Orthographic Isometric
   const aspect = window.innerWidth / window.innerHeight;
@@ -311,8 +311,7 @@ function init() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.toneMapping = THREE.NoToneMapping;
   container.appendChild(renderer.domElement);
 
   // CSS2D Renderer for status bubbles
@@ -361,7 +360,7 @@ function init() {
 // --- LIGHTING ---
 function setupLighting() {
   // Ambient — warm fill
-  const ambient = new THREE.AmbientLight(0xFFF5E6, 0.7);
+  const ambient = new THREE.AmbientLight(0xFFF5E6, 1.0);
   scene.add(ambient);
 
   // Hemisphere for sky/ground contrast
@@ -369,7 +368,7 @@ function setupLighting() {
   scene.add(hemi);
 
   // Main directional — upper right, warm
-  const dir = new THREE.DirectionalLight(0xFFF8F0, 1.2);
+  const dir = new THREE.DirectionalLight(0xFFF8F0, 1.6);
   dir.position.set(8, 14, 6);
   dir.castShadow = true;
   dir.shadow.mapSize.set(2048, 2048);
