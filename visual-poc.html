@@ -358,19 +358,42 @@
     box-shadow: 0 0 16px rgba(0,212,255,0.2) !important;
   }
 
-  /* Status Bubbles — glass morphism */
+  /* Status Bubbles — compact icon style */
   .status-bubble {
-    background: rgba(255,255,255,0.92) !important;
-    border: 1px solid rgba(255,255,255,0.5) !important;
-    border-radius: 16px !important; padding: 5px 12px !important;
-    font-size: 11px !important; font-weight: 600 !important;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08) !important;
-    backdrop-filter: blur(8px) !important;
-    letter-spacing: 0.2px !important;
+    background: rgba(8,8,20,0.85) !important;
+    border: 1px solid rgba(0,212,255,0.15) !important;
+    border-radius: 20px !important; padding: 2px 8px !important;
+    font-size: 9px !important; font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+    backdrop-filter: blur(6px) !important;
+    letter-spacing: 0.1px !important;
+    color: rgba(255,255,255,0.7) !important;
+    max-width: 120px !important; overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   .status-bubble::after {
-    border-top-color: rgba(255,255,255,0.92) !important;
+    border-top-color: rgba(8,8,20,0.85) !important;
+    border-left-width: 3px !important; border-right-width: 3px !important;
+    border-top-width: 3px !important; bottom: -3px !important;
   }
+
+  /* Cash pulse warning */
+  @keyframes cashPulse {
+    0%, 100% { opacity: 1; text-shadow: 0 0 16px rgba(255,107,107,0.4); }
+    50% { opacity: 0.5; text-shadow: 0 0 24px rgba(255,107,107,0.8); }
+  }
+  .cash-danger { animation: cashPulse 1.2s ease-in-out infinite !important; }
+
+  /* HUD tooltips */
+  .hud-stat { position: relative !important; }
+  .hud-stat .hud-tooltip {
+    display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    margin-top: 6px; padding: 5px 10px; border-radius: 6px; white-space: nowrap;
+    background: rgba(8,8,20,0.95); border: 1px solid rgba(0,212,255,0.2);
+    font-size: 9px; color: rgba(255,255,255,0.7); z-index: 200;
+    pointer-events: none;
+  }
+  .hud-stat:hover .hud-tooltip { display: block; }
 
   /* Panel overrides */
   .slide-panel {
@@ -426,6 +449,35 @@
   }
   @keyframes eventSlideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
 
+  /* Panel slide-in animation */
+  .slide-panel { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1) !important; }
+
+  /* Animated bar charts */
+  @keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  .bar-chart .bar { transform-origin: bottom; animation: barGrow 0.5s cubic-bezier(0.16,1,0.3,1) backwards; }
+  .bar-chart .bar-col:nth-child(1) .bar { animation-delay: 0.02s; }
+  .bar-chart .bar-col:nth-child(2) .bar { animation-delay: 0.04s; }
+  .bar-chart .bar-col:nth-child(3) .bar { animation-delay: 0.06s; }
+  .bar-chart .bar-col:nth-child(4) .bar { animation-delay: 0.08s; }
+  .bar-chart .bar-col:nth-child(5) .bar { animation-delay: 0.10s; }
+  .bar-chart .bar-col:nth-child(6) .bar { animation-delay: 0.12s; }
+  .bar-chart .bar-col:nth-child(7) .bar { animation-delay: 0.14s; }
+  .bar-chart .bar-col:nth-child(8) .bar { animation-delay: 0.16s; }
+  .bar-chart .bar-col:nth-child(9) .bar { animation-delay: 0.18s; }
+  .bar-chart .bar-col:nth-child(10) .bar { animation-delay: 0.20s; }
+  .bar-chart .bar-col:nth-child(11) .bar { animation-delay: 0.22s; }
+  .bar-chart .bar-col:nth-child(12) .bar { animation-delay: 0.24s; }
+  .bar-chart .bar-col:nth-child(13) .bar { animation-delay: 0.26s; }
+
+  /* Hire confirmation overlay */
+  .hire-confirmed {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3);
+    border-radius: 12px; z-index: 10; animation: hireFlash 0.4s ease-out;
+  }
+  .hire-confirmed span { font-size: 16px; font-weight: 800; color: #00FF88; text-shadow: 0 0 20px rgba(0,255,136,0.5); }
+  @keyframes hireFlash { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
   /* Day/Time display */
   #game-clock {
     position: absolute; top: 65px; right: 16px; z-index: 110;
@@ -445,26 +497,31 @@
   <div class="hud-stat">
     <div class="hud-stat-label">MRR</div>
     <div class="hud-stat-value green">$48.2K</div>
+    <div class="hud-tooltip">Monthly Recurring Revenue — income from subscriptions each month</div>
   </div>
   <div class="hud-divider"></div>
   <div class="hud-stat">
     <div class="hud-stat-label">Users</div>
     <div class="hud-stat-value blue">2,847</div>
+    <div class="hud-tooltip">Total active users on your platform</div>
   </div>
   <div class="hud-divider"></div>
   <div class="hud-stat">
     <div class="hud-stat-label">Burn</div>
-    <div class="hud-stat-value red">-$32K/mo</div>
+    <div class="hud-stat-value red" id="burnValue">-$32K/mo</div>
+    <div class="hud-tooltip">Net monthly cash burn — how fast you're spending money</div>
   </div>
   <div class="hud-divider"></div>
   <div class="hud-stat">
     <div class="hud-stat-label">Runway</div>
-    <div class="hud-stat-value orange">7 months</div>
+    <div class="hud-stat-value orange" id="runwayValue">7 months</div>
+    <div class="hud-tooltip">Months of cash remaining at current burn rate</div>
   </div>
   <div class="hud-divider"></div>
   <div class="hud-stat">
     <div class="hud-stat-label">Morale</div>
     <div class="hud-stat-value purple">82%</div>
+    <div class="hud-tooltip">Team happiness — affects productivity and retention</div>
   </div>
 </div>
 
@@ -2686,7 +2743,7 @@ function buildCharacters() {
   createStatusBubble(walker2, "On LinkedIn 📱", 9);
 }
 
-const MAX_VISIBLE_BUBBLES = 4;
+const MAX_VISIBLE_BUBBLES = 3;
 function createStatusBubble(parent, text, index) {
   const div = document.createElement('div');
   div.className = 'status-bubble';
@@ -3153,7 +3210,7 @@ function renderHirePanel() {
               `).join('')}
             </div>
             <div class="cand-actions">
-              <button class="cand-btn btn-hire" onclick="this.closest('.panel-card').style.borderColor='#00FF88';this.textContent='✅ Hired!';this.disabled=true">Hire ✅</button>
+              <button class="cand-btn btn-hire" onclick="hireCandidate(this,'${c.name}','${c.role}')">Hire ✅</button>
               <button class="cand-btn btn-pass" onclick="this.closest('.panel-card').style.opacity='0.3';this.closest('.panel-card').style.pointerEvents='none'">Pass ❌</button>
             </div>
           </div>
@@ -3311,6 +3368,33 @@ function renderMetricsPanel() {
     </div>
   `;
 }
+
+// ─── HIRE CONFIRMATION ───
+function hireCandidate(btn, name, role) {
+  const card = btn.closest('.panel-card');
+  card.style.position = 'relative';
+  const overlay = document.createElement('div');
+  overlay.className = 'hire-confirmed';
+  overlay.innerHTML = `<span>✅ ${name} hired as ${role}!</span>`;
+  card.appendChild(overlay);
+  G.employees++;
+  addEvent(`👋 New hire: ${name} joined as ${role}!`, 'success');
+  // Close panel after brief delay
+  setTimeout(() => closePanel(), 1200);
+}
+
+// ─── CASH DANGER PULSE ───
+function updateCashPulse() {
+  const el = document.getElementById('runwayValue');
+  if (!el) return;
+  if (G.runway <= 3) {
+    el.classList.add('cash-danger');
+    const burnEl = document.getElementById('burnValue');
+    if (burnEl) burnEl.classList.add('cash-danger');
+  }
+}
+// Check on load
+setTimeout(updateCashPulse, 2000);
 
 // --- GO ---
 init();
