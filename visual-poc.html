@@ -256,6 +256,7 @@
     border-top: 5px solid rgba(16,16,32,0.92);
   }
 </style>
+<script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -327,7 +328,11 @@
     transform: translateY(-3px) !important;
     box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
   }
-  .toolbar-btn-icon { font-size: 22px !important; filter: drop-shadow(0 0 4px rgba(255,255,255,0.2)) !important; }
+  .toolbar-btn-icon { font-size: 22px !important; filter: drop-shadow(0 0 4px rgba(255,255,255,0.2)) !important; line-height: 1 !important; }
+  .toolbar-btn-icon svg { width: 22px !important; height: 22px !important; stroke: rgba(255,255,255,0.7) !important; transition: stroke 0.2s !important; }
+  .toolbar-btn:hover .toolbar-btn-icon svg { stroke: #00D4FF !important; }
+  .toolbar-btn.highlight .toolbar-btn-icon svg { stroke: #FF6B6B !important; }
+  .toolbar-btn.highlight:hover .toolbar-btn-icon svg { stroke: #FF8888 !important; }
   .toolbar-btn-label {
     font-size: 9px !important; font-weight: 700 !important;
     letter-spacing: 1.2px !important; margin-top: 4px !important;
@@ -528,27 +533,27 @@
 <!-- Bottom Toolbar -->
 <div id="hud-bottom">
   <div class="toolbar-btn" title="Build & expand office" onclick="togglePanel('build')">
-    <div class="toolbar-btn-icon">🏗️</div>
+    <div class="toolbar-btn-icon"><i data-lucide="building-2" stroke-width="1.5"></i></div>
     <div class="toolbar-btn-label">Build</div>
   </div>
   <div class="toolbar-btn" title="Hire team members" onclick="togglePanel('hire')">
-    <div class="toolbar-btn-icon">👥</div>
+    <div class="toolbar-btn-icon"><i data-lucide="users" stroke-width="1.5"></i></div>
     <div class="toolbar-btn-label">Hire</div>
   </div>
   <div class="toolbar-btn" title="Product roadmap" onclick="togglePanel('product')">
-    <div class="toolbar-btn-icon">💡</div>
+    <div class="toolbar-btn-icon"><i data-lucide="lightbulb" stroke-width="1.5"></i></div>
     <div class="toolbar-btn-label">Product</div>
   </div>
   <div class="toolbar-btn" title="Raise funding" onclick="togglePanel('fundraise')">
-    <div class="toolbar-btn-icon">💰</div>
+    <div class="toolbar-btn-icon"><i data-lucide="banknote" stroke-width="1.5"></i></div>
     <div class="toolbar-btn-label">Fundraise</div>
   </div>
   <div class="toolbar-btn highlight" title="Pivot your business" onclick="togglePanel('pivot')">
-    <div class="toolbar-btn-icon">🔄</div>
+    <div class="toolbar-btn-icon"><i data-lucide="refresh-cw" stroke-width="1.5"></i></div>
     <div class="toolbar-btn-label">Pivot</div>
   </div>
   <div class="toolbar-btn" title="View metrics" onclick="togglePanel('metrics')">
-    <div class="toolbar-btn-icon">📊</div>
+    <div class="toolbar-btn-icon"><i data-lucide="bar-chart-3" stroke-width="1.5"></i></div>
     <div class="toolbar-btn-label">Metrics</div>
   </div>
   <div class="toolbar-divider"></div>
@@ -643,13 +648,13 @@ const FLOOR_W = 12, FLOOR_H = 8;
 const TILE = 1.0;
 const COLORS = {
   floor: 0x6B5E4A, floorLine: 0x5A4E3A,
-  wall: 0xC8C0B0, wallEdge: 0xA8A090,
-  glass: 0x88CCEE,
-  desk: 0xD0CCC0, deskLeg: 0x444444,
+  wall: 0x8A7E70, wallEdge: 0x706458,
+  glass: 0x5599AA,
+  desk: 0x9E8B70, deskLeg: 0x3A3A3A,
   plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
-  whiteboard: 0xFAFAFA,
+  whiteboard: 0xDDDDD8,
   pingPong: 0x2E7D32, pingPongLine: 0xFFFFFF,
-  kombucha: 0xA0887A, cup: 0xFFF5E0,
+  kombucha: 0xA0887A, cup: 0xD4C8A8,
   beanBag1: 0xFF5252, beanBag2: 0x448AFF, beanBag3: 0x69F0AE,
   napPod: 0x8899AA,
   neonSign: 0x00EEFF,
@@ -757,7 +762,7 @@ function init() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.75;
+  renderer.toneMappingExposure = 0.65;
   container.appendChild(renderer.domElement);
 
   // CSS2D Renderer for status bubbles
@@ -806,7 +811,7 @@ function init() {
 // --- LIGHTING ---
 function setupLighting() {
   // Warm ambient — fills shadows softly
-  const ambient = new THREE.AmbientLight(0xFFF0E0, 0.3);
+  const ambient = new THREE.AmbientLight(0xFFF0E0, 0.2);
   scene.add(ambient);
 
   // Hemisphere — warm sky, cool ground bounce
@@ -814,8 +819,8 @@ function setupLighting() {
   scene.add(hemi);
 
   // Main sun — warm, strong, from upper-right
-  const sun = new THREE.DirectionalLight(0xFFEEDD, 2.2);
-  sun.position.set(10, 16, 8);
+  const sun = new THREE.DirectionalLight(0xFFEEDD, 1.6);
+  sun.position.set(8, 18, 4);
   sun.castShadow = true;
   sun.shadow.mapSize.set(4096, 4096);
   sun.shadow.camera.near = 0.1;
@@ -897,7 +902,7 @@ function buildFloor() {
 
   // Floor base (solid underneath)
   const baseGeo = new THREE.BoxGeometry(FLOOR_W * TILE + 0.2, 0.15, FLOOR_H * TILE + 0.2);
-  const baseMesh = new THREE.Mesh(baseGeo, toonMat(0x6B5E4A));
+  const baseMesh = new THREE.Mesh(baseGeo, toonMat(0x4A4038));
   baseMesh.position.y = -0.15;
   baseMesh.receiveShadow = true;
   group.add(baseMesh);
@@ -980,7 +985,7 @@ function buildWalls() {
   group.add(frontWall);
 
   // Ceiling — partial, just back and left edges (don't block isometric view)
-  const ceilMat = toonMat(0xD0C8BE, { roughness: 0.9 });
+  const ceilMat = toonMat(0x9A9088, { roughness: 0.9 });
   const ceilH = 3.2;
   // Back edge ceiling strip
   const ceilBack = new THREE.Mesh(
@@ -1051,7 +1056,7 @@ function buildWalls() {
   const acGroup = new THREE.Group();
   const acBody = new THREE.Mesh(
     new THREE.BoxGeometry(0.8, 0.2, 0.12),
-    toonMat(0xF5F5F5, { roughness: 0.4 })
+    toonMat(0xBBBBBB, { roughness: 0.4 })
   );
   acBody.position.y = 2.8;
   acGroup.add(acBody);
@@ -1059,7 +1064,7 @@ function buildWalls() {
   for (let v = 0; v < 4; v++) {
     const slat = new THREE.Mesh(
       new THREE.BoxGeometry(0.7, 0.005, 0.08),
-      toonMat(0xDDDDDD)
+      toonMat(0xAAAAAA)
     );
     slat.position.set(0, 2.74 + v * 0.04, 0.06);
     slat.rotation.x = 0.2;
@@ -1083,15 +1088,17 @@ function createDesk(x, z, rotation) {
   const group = new THREE.Group();
   const dw = 1.2, dd = 0.65, dh = 0.72;
 
-  // Desktop — wood-colored with edge banding
+  // Desktop — wood-colored with slight per-desk variation
+  const woodTones = [0x7A6850, 0x6E5C45, 0x856E55, 0x6A5840, 0x7E6B52];
+  const deskWood = woodTones[Math.floor(Math.random() * woodTones.length)];
   const topGeo = roundedBox(dw, 0.045, dd, 0.03, 2);
-  const top = new THREE.Mesh(topGeo, toonMat(COLORS.desk, { roughness: 0.4 }));
+  const top = new THREE.Mesh(topGeo, toonMat(deskWood, { roughness: 0.5 }));
   top.position.y = dh - 0.02;
   top.castShadow = true; top.receiveShadow = true;
   group.add(top);
 
   // Edge banding (slightly darker)
-  const edgeMat = toonMat(0xB0AAA0, { roughness: 0.3 });
+  const edgeMat = toonMat(0x8A7A65, { roughness: 0.3 });
   const edgeFront = new THREE.Mesh(new THREE.BoxGeometry(dw, 0.045, 0.008), edgeMat);
   edgeFront.position.set(0, dh - 0.02, dd/2);
   group.add(edgeFront);
@@ -1119,7 +1126,7 @@ function createDesk(x, z, rotation) {
   // Drawer unit (right side)
   const drawer = new THREE.Mesh(
     new THREE.BoxGeometry(0.3, 0.3, dd * 0.7),
-    toonMat(0xBBBBBB, { roughness: 0.5, metalness: 0.1 })
+    toonMat(0x777777, { roughness: 0.5, metalness: 0.15 })
   );
   drawer.position.set(dw/2 - 0.18, 0.38, 0);
   drawer.castShadow = true;
@@ -1378,7 +1385,7 @@ function buildFurniture() {
   // Standing desk
   const standGroup = new THREE.Group();
   const sdw = 0.9, sdd = 0.5, sdh = 1.05;
-  const sdTop = new THREE.Mesh(roundedBox(sdw, 0.04, sdd, 0.03, 2), toonMat(COLORS.desk));
+  const sdTop = new THREE.Mesh(roundedBox(sdw, 0.04, sdd, 0.03, 2), toonMat(0x8A7860, { roughness: 0.5 }));
   sdTop.position.y = sdh;
   sdTop.castShadow = true;
   standGroup.add(sdTop);
@@ -1405,7 +1412,7 @@ function buildFurniture() {
   const printerGroup = new THREE.Group();
   const prBody = new THREE.Mesh(
     roundedBox(0.6, 0.4, 0.5, 0.02, 2),
-    toonMat(0xE8E8E8, { roughness: 0.4 })
+    toonMat(0xAAAAAA, { roughness: 0.4 })
   );
   prBody.position.y = 0.65;
   prBody.castShadow = true;
@@ -1427,7 +1434,7 @@ function buildFurniture() {
   // Stand/cabinet under printer
   const prStand = new THREE.Mesh(
     roundedBox(0.55, 0.44, 0.45, 0.02, 2),
-    toonMat(0xDDDDDD, { roughness: 0.5 })
+    toonMat(0x999999, { roughness: 0.5 })
   );
   prStand.position.y = 0.22;
   prStand.castShadow = true;
@@ -1471,7 +1478,7 @@ function buildFurniture() {
   // Meeting table
   const mtGroup = new THREE.Group();
   const mtw = 2.0, mtd = 1.0, mth = 0.72;
-  const mtTop = new THREE.Mesh(roundedBox(mtw, 0.05, mtd, 0.1, 3), toonMat(0xF0EDE5, { roughness: 0.3 }));
+  const mtTop = new THREE.Mesh(roundedBox(mtw, 0.05, mtd, 0.1, 3), toonMat(0x8A7A65, { roughness: 0.5 }));
   mtTop.position.y = mth;
   mtTop.castShadow = true; mtTop.receiveShadow = true;
   mtGroup.add(mtTop);
@@ -1792,14 +1799,14 @@ function buildDecorations() {
     const lx = -FLOOR_W*TILE/2 + 2 + i * 3.5;
     const lightPanel = new THREE.Mesh(
       new THREE.BoxGeometry(1.2, 0.04, 0.5),
-      toonMat(0xFFFFFF, { emissive: 0xFFF5E8, emissiveIntensity: 0.6, roughness: 0.2 })
+      toonMat(0xDDDDD0, { emissive: 0xFFF5E8, emissiveIntensity: 0.4, roughness: 0.2 })
     );
     lightPanel.position.set(lx, ceilY, -FLOOR_H*TILE/2 + 2.5);
     group.add(lightPanel);
     // Second row
     const lightPanel2 = new THREE.Mesh(
       new THREE.BoxGeometry(1.2, 0.04, 0.5),
-      toonMat(0xFFFFFF, { emissive: 0xFFF5E8, emissiveIntensity: 0.6, roughness: 0.2 })
+      toonMat(0xDDDDD0, { emissive: 0xFFF5E8, emissiveIntensity: 0.4, roughness: 0.2 })
     );
     lightPanel2.position.set(lx, ceilY, FLOOR_H*TILE/2 - 2);
     group.add(lightPanel2);
@@ -1842,7 +1849,7 @@ function buildDecorations() {
   for (let d = 0; d < 3; d++) {
     const drawerFace = new THREE.Mesh(
       new THREE.BoxGeometry(0.3, 0.18, 0.008),
-      toonMat(0x888899, { metalness: 0.3 })
+      toonMat(0x666677, { metalness: 0.3 })
     );
     drawerFace.position.set(0, 0.22 + d * 0.25, 0.176);
     fcGroup.add(drawerFace);
@@ -2124,7 +2131,7 @@ function buildDecorations() {
   const wcGroup = new THREE.Group();
   const wcBody = new THREE.Mesh(
     new THREE.BoxGeometry(0.25, 0.7, 0.25),
-    toonMat(0xEEEEEE, { roughness: 0.3 })
+    toonMat(0xBBBBBB, { roughness: 0.3 })
   );
   wcBody.position.y = 0.55;
   wcBody.castShadow = true;
@@ -2147,7 +2154,7 @@ function buildDecorations() {
   for (let c = 0; c < 3; c++) {
     const cup = new THREE.Mesh(
       new THREE.CylinderGeometry(0.02, 0.018, 0.04, 6),
-      toonMat(0xFFFFFF)
+      toonMat(0xCCCCCC)
     );
     cup.position.set(0.15, 0.95 + c * 0.003, 0);
     wcGroup.add(cup);
@@ -2201,7 +2208,7 @@ function buildDecorations() {
   const clockGroup = new THREE.Group();
   const clockFace = new THREE.Mesh(
     new THREE.CylinderGeometry(0.2, 0.2, 0.03, 24),
-    toonMat(0xFAFAFA, { roughness: 0.3 })
+    toonMat(0xCCCCBB, { roughness: 0.3 })
   );
   clockFace.rotation.x = Math.PI/2;
   clockGroup.add(clockFace);
