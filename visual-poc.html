@@ -199,26 +199,26 @@ let statusBubbles = [];
 const FLOOR_W = 12, FLOOR_H = 8;
 const TILE = 1.0;
 const COLORS = {
-  floor: 0x2A2A3E, floorLine: 0x3A3A50,
+  floor: 0x3D3D55, floorLine: 0x4A4A65,
   wall: 0x353550, wallEdge: 0x4A4A65,
   glass: 0x4488AA,
-  desk: 0x5A5A70, deskLeg: 0x3A3A4A,
+  desk: 0xC0BFB5, deskLeg: 0x606068,
   plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
-  whiteboard: 0x8888AA,
+  whiteboard: 0xEEEEF2,
   pingPong: 0x2E7D32, pingPongLine: 0xFFFFFF,
-  kombucha: 0xBCAAA4, cup: 0xFFF8E1,
+  kombucha: 0x8D7B6E, cup: 0xFFE0A0,
   beanBag1: 0xFF8A80, beanBag2: 0x82B1FF, beanBag3: 0xB9F6CA,
-  napPod: 0x4A5A6A,
+  napPod: 0x6A7A8A,
   neonSign: 0x00D4FF,
-  monitor: 0x1A1A2E, monitorScreen: 0x00D4FF,
-  keyboard: 0x2A2A3E,
+  monitor: 0x222233, monitorScreen: 0x00FFAA,
+  keyboard: 0x444455,
   mug: 0xFFF3E0, mugHandle: 0xFFCC80,
   espresso: 0x5D4037, steam: 0xFFFFFF,
   poster1: 0xFFCDD2, poster2: 0xC5E1A5, poster3: 0xB3E5FC, poster4: 0xFFF9C4,
   engineer: 0x42A5F5, designer: 0xF48FB1, sales: 0x66BB6A,
   pm: 0xFFA726, ceo: 0xAB47BC,
   skin: 0xFFDBAC, skinAlt: 0xE8B88A,
-  chair: 0x3A4A5A,
+  chair: 0x555570,
 };
 
 const STATUS_TEXTS = [
@@ -384,12 +384,12 @@ function setupLighting() {
   scene.add(dir);
 
   // Neon sign accent light
-  const neonLight = new THREE.PointLight(0x7CB9FF, 0.6, 8);
+  const neonLight = new THREE.PointLight(0x00D4FF, 1.5, 12);
   neonLight.position.set(-FLOOR_W*TILE/2 + 0.5, 3.5, 0);
   scene.add(neonLight);
 
   // Espresso warm glow
-  const espressoLight = new THREE.PointLight(0xFF9800, 0.4, 4);
+  const espressoLight = new THREE.PointLight(0xFF9800, 1.0, 8);
   espressoLight.position.set(4, 1.5, -FLOOR_H*TILE/2 + 1.5);
   scene.add(espressoLight);
 }
@@ -575,7 +575,7 @@ function createMonitor() {
 
   // Screen
   const screenGeo = new THREE.BoxGeometry(0.4, 0.25, 0.015);
-  const screenMat = toonMat(COLORS.monitorScreen, { emissive: 0x3F51B5, emissiveIntensity: 0.3 });
+  const screenMat = toonMat(COLORS.monitorScreen, { emissive: COLORS.monitorScreen, emissiveIntensity: 0.8 });
   const screen = new THREE.Mesh(screenGeo, screenMat);
   screen.position.y = 0.32;
   screen.castShadow = true;
@@ -1472,7 +1472,7 @@ function animate() {
     }
     // Ease out
     const t = 1 - Math.pow(1 - introProgress, 3);
-    camera.zoom = 0.15 + t * 0.45; // 0.15 → 0.6
+    camera.zoom = 0.15 + t * 0.85; // 0.15 → 1.0
     camera.updateProjectionMatrix();
   }
 
