@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burn Rate — SaaS Startup Sim</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  #canvas-container { width: 100%; height: 100%; position: relative; }
+  canvas { display: block; }
+
+  /* Top HUD Bar */
+  #hud-top {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center; gap: 0;
+    padding: 0 12px; height: 52px;
+    background: linear-gradient(180deg, rgba(30,30,50,0.88) 0%, rgba(30,30,50,0.78) 100%);
+    border-bottom: 2px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+  }
+  .hud-logo {
+    font-size: 18px; font-weight: 800; color: #fff; margin-right: 18px;
+    text-shadow: 0 0 12px rgba(100,180,255,0.4);
+    letter-spacing: -0.5px;
+  }
+  .hud-logo span { color: #7CB9FF; }
+  .hud-divider {
+    width: 1px; height: 28px; background: rgba(255,255,255,0.12); margin: 0 10px;
+  }
+  .hud-stat {
+    display: flex; flex-direction: column; align-items: center; padding: 4px 14px;
+    border-radius: 8px; transition: background 0.2s;
+  }
+  .hud-stat:hover { background: rgba(255,255,255,0.06); }
+  .hud-stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,0.45); font-weight: 600; }
+  .hud-stat-value { font-size: 16px; font-weight: 700; color: #fff; margin-top: 1px; }
+  .hud-stat-value.green { color: #7AE582; }
+  .hud-stat-value.red { color: #FF7B7B; }
+  .hud-stat-value.blue { color: #7CB9FF; }
+  .hud-stat-value.orange { color: #FFB347; }
+  .hud-stat-value.purple { color: #C9A0FF; }
+
+  .hud-round {
+    margin-left: 14px; padding: 5px 14px; border-radius: 20px;
+    background: linear-gradient(135deg, #7CB9FF 0%, #A78BFA 100%);
+    font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+
+  /* Bottom Toolbar */
+  #hud-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 8px 16px; height: 62px;
+    background: linear-gradient(0deg, rgba(30,30,50,0.88) 0%, rgba(30,30,50,0.78) 100%);
+    border-top: 2px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+  }
+  .toolbar-btn {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 6px 16px; border-radius: 10px; cursor: pointer;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.2s; min-width: 72px;
+  }
+  .toolbar-btn:hover {
+    background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+  .toolbar-btn:active { transform: translateY(0); }
+  .toolbar-btn-icon { font-size: 18px; }
+  .toolbar-btn-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.7); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .toolbar-btn.highlight {
+    background: linear-gradient(135deg, rgba(255,100,100,0.25) 0%, rgba(255,60,60,0.15) 100%);
+    border-color: rgba(255,100,100,0.3);
+  }
+  .toolbar-btn.highlight .toolbar-btn-label { color: #FF7B7B; }
+
+  .toolbar-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.1); margin: 0 6px; }
+
+  .speed-controls {
+    display: flex; gap: 3px; margin-left: 8px;
+  }
+  .speed-btn {
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
+    font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .speed-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .speed-btn.active { background: rgba(124,185,255,0.25); border-color: rgba(124,185,255,0.4); color: #7CB9FF; }
+
+  /* Status bubbles */
+  .status-bubble {
+    background: rgba(255,255,255,0.95); color: #333; padding: 4px 10px;
+    border-radius: 12px; font-size: 11px; font-weight: 600;
+    white-space: nowrap; pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border: 1px solid rgba(0,0,0,0.06);
+    transition: opacity 0.5s;
+    text-align: center;
+  }
+  .status-bubble::after {
+    content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent;
+    border-top: 5px solid rgba(255,255,255,0.95);
+  }
+</style>
+</head>
+<body>
+
+<!-- Top HUD -->
+<div id="hud-top">
+  <div class="hud-logo">🚀 <span>DisruptoCloud</span></div>
+  <div class="hud-round">SERIES A</div>
+  <div class="hud-divider"></div>
+  <div class="hud-stat">
+    <div class="hud-stat-label">MRR</div>
+    <div class="hud-stat-value green">$48.2K</div>
+  </div>
+  <div class="hud-divider"></div>
+  <div class="hud-stat">
+    <div class="hud-stat-label">Users</div>
+    <div class="hud-stat-value blue">2,847</div>
+  </div>
+  <div class="hud-divider"></div>
+  <div class="hud-stat">
+    <div class="hud-stat-label">Burn</div>
+    <div class="hud-stat-value red">-$32K/mo</div>
+  </div>
+  <div class="hud-divider"></div>
+  <div class="hud-stat">
+    <div class="hud-stat-label">Runway</div>
+    <div class="hud-stat-value orange">7 months</div>
+  </div>
+  <div class="hud-divider"></div>
+  <div class="hud-stat">
+    <div class="hud-stat-label">Morale</div>
+    <div class="hud-stat-value purple">82%</div>
+  </div>
+</div>
+
+<!-- Bottom Toolbar -->
+<div id="hud-bottom">
+  <div class="toolbar-btn" title="Build & expand office">
+    <div class="toolbar-btn-icon">🏗️</div>
+    <div class="toolbar-btn-label">Build</div>
+  </div>
+  <div class="toolbar-btn" title="Hire team members">
+    <div class="toolbar-btn-icon">👥</div>
+    <div class="toolbar-btn-label">Hire</div>
+  </div>
+  <div class="toolbar-btn" title="Product roadmap">
+    <div class="toolbar-btn-icon">💡</div>
+    <div class="toolbar-btn-label">Product</div>
+  </div>
+  <div class="toolbar-btn" title="Raise funding">
+    <div class="toolbar-btn-icon">💰</div>
+    <div class="toolbar-btn-label">Fundraise</div>
+  </div>
+  <div class="toolbar-btn highlight" title="Pivot your business">
+    <div class="toolbar-btn-icon">🔄</div>
+    <div class="toolbar-btn-label">Pivot</div>
+  </div>
+  <div class="toolbar-btn" title="View metrics">
+    <div class="toolbar-btn-icon">📊</div>
+    <div class="toolbar-btn-label">Metrics</div>
+  </div>
+  <div class="toolbar-divider"></div>
+  <div class="speed-controls">
+    <div class="speed-btn" data-speed="0" title="Pause">⏸</div>
+    <div class="speed-btn active" data-speed="1" title="Normal">1×</div>
+    <div class="speed-btn" data-speed="2" title="Fast">2×</div>
+    <div class="speed-btn" data-speed="3" title="Turbo">3×</div>
+  </div>
+</div>
+
+<div id="canvas-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<script>
+// =============================================
+// BURN RATE — Visual PoC — Three.js Isometric Office
+// =============================================
+
+// --- GLOBALS ---
+let scene, camera, renderer, cssRenderer, controls;
+let clock = new THREE.Clock();
+let characters = [];
+let walkingCharacters = [];
+let steamParticles = [];
+let pingPongBall;
+let pingPongDir = 1;
+let monitorScreens = [];
+let statusBubbles = [];
+
+const FLOOR_W = 12, FLOOR_H = 8;
+const TILE = 1.0;
+const COLORS = {
+  floor: 0xE8DCC8, floorLine: 0xD4C8B0,
+  wall: 0xF5F0E8, wallEdge: 0xC8BFA8,
+  glass: 0xCCE8FF,
+  desk: 0xE0E0E0, deskLeg: 0x4A4A4A,
+  plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
+  whiteboard: 0xFAFAFA,
+  pingPong: 0x2E7D32, pingPongLine: 0xFFFFFF,
+  kombucha: 0xBCAAA4, cup: 0xFFF8E1,
+  beanBag1: 0xFF8A80, beanBag2: 0x82B1FF, beanBag3: 0xB9F6CA,
+  napPod: 0xCFD8DC,
+  neonSign: 0x7CB9FF,
+  monitor: 0x263238, monitorScreen: 0x1A237E,
+  keyboard: 0x37474F,
+  mug: 0xFFF3E0, mugHandle: 0xFFCC80,
+  espresso: 0x5D4037, steam: 0xFFFFFF,
+  poster1: 0xFFCDD2, poster2: 0xC5E1A5, poster3: 0xB3E5FC, poster4: 0xFFF9C4,
+  engineer: 0x42A5F5, designer: 0xF48FB1, sales: 0x66BB6A,
+  pm: 0xFFA726, ceo: 0xAB47BC,
+  skin: 0xFFDBAC, skinAlt: 0xE8B88A,
+  chair: 0x546E7A,
+};
+
+const STATUS_TEXTS = [
+  "Coding 🚀", "In meeting 📊", "Coffee break ☕",
+  "Debugging 🐛", "On LinkedIn 📱", "Napping 😴",
+  "Deploying 🔥", "Code review 👀", "Standup 🧍", "Slacking 💬"
+];
+
+// --- TOON MATERIAL HELPER ---
+const toonGradient = (() => {
+  const c = document.createElement('canvas');
+  c.width = 4; c.height = 1;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#555'; ctx.fillRect(0,0,1,1);
+  ctx.fillStyle = '#888'; ctx.fillRect(1,0,1,1);
+  ctx.fillStyle = '#bbb'; ctx.fillRect(2,0,1,1);
+  ctx.fillStyle = '#fff'; ctx.fillRect(3,0,1,1);
+  const tex = new THREE.CanvasTexture(c);
+  tex.minFilter = THREE.NearestFilter;
+  tex.magFilter = THREE.NearestFilter;
+  return tex;
+})();
+
+function toonMat(color, opts = {}) {
+  return new THREE.MeshToonMaterial({
+    color, gradientMap: toonGradient,
+    transparent: opts.transparent || false,
+    opacity: opts.opacity !== undefined ? opts.opacity : 1,
+    emissive: opts.emissive || 0x000000,
+    emissiveIntensity: opts.emissiveIntensity || 0,
+    side: opts.side || THREE.FrontSide,
+  });
+}
+
+// --- ROUNDED BOX HELPER ---
+function roundedBox(w, h, d, r, segs) {
+  // Use built-in box with beveled edges approximation
+  const shape = new THREE.Shape();
+  const hw = w/2, hd = d/2;
+  r = Math.min(r, hw, hd);
+  shape.moveTo(-hw + r, -hd);
+  shape.lineTo(hw - r, -hd);
+  shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
+  shape.lineTo(hw, hd - r);
+  shape.quadraticCurveTo(hw, hd, hw - r, hd);
+  shape.lineTo(-hw + r, hd);
+  shape.quadraticCurveTo(-hw, hd, -hw, hd - r);
+  shape.lineTo(-hw, -hd + r);
+  shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
+  const extrudeSettings = { depth: h, bevelEnabled: true, bevelThickness: Math.min(r*0.3, 0.02), bevelSize: Math.min(r*0.3, 0.02), bevelSegments: 2 };
+  const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  geo.rotateX(-Math.PI/2);
+  geo.translate(0, h/2, 0);
+  return geo;
+}
+
+// --- INIT ---
+function init() {
+  const container = document.getElementById('canvas-container');
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xD4E6F1);
+  scene.fog = new THREE.FogExp2(0xD4E6F1, 0.012);
+
+  // Camera — Orthographic Isometric
+  const aspect = window.innerWidth / window.innerHeight;
+  const frustum = 8;
+  camera = new THREE.OrthographicCamera(
+    -frustum * aspect, frustum * aspect,
+    frustum, -frustum, -50, 100
+  );
+  // Isometric angle: azimuth 45°, elevation 35.264° (true iso)
+  const dist = 20;
+  const azimuth = Math.PI / 4; // 45°
+  const elevation = Math.atan(Math.sin(Math.PI/4)); // ~35.264°
+  camera.position.set(
+    dist * Math.cos(elevation) * Math.sin(azimuth),
+    dist * Math.sin(elevation),
+    dist * Math.cos(elevation) * Math.cos(azimuth)
+  );
+  camera.lookAt(0, 0, 0);
+  camera.zoom = 0.15; // Start zoomed out for intro animation
+  camera.updateProjectionMatrix();
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+  container.appendChild(renderer.domElement);
+
+  // CSS2D Renderer for status bubbles
+  cssRenderer = new THREE.CSS2DRenderer();
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.domElement.style.position = 'absolute';
+  cssRenderer.domElement.style.top = '0';
+  cssRenderer.domElement.style.left = '0';
+  cssRenderer.domElement.style.pointerEvents = 'none';
+  container.appendChild(cssRenderer.domElement);
+
+  // Controls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableRotate = false; // Lock isometric angle
+  controls.enablePan = true;
+  controls.enableZoom = true;
+  controls.minZoom = 0.5;
+  controls.maxZoom = 2.5;
+  controls.panSpeed = 1.2;
+  controls.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+  controls.touches = { ONE: null, TWO: THREE.TOUCH.DOLLY_PAN };
+  // Also allow left-click pan
+  controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+
+  // Lighting
+  setupLighting();
+
+  // Build scene
+  buildFloor();
+  buildWalls();
+  buildFurniture();
+  buildAmenities();
+  buildDecorations();
+  buildCharacters();
+  buildSteamParticles();
+  buildPingPongBall();
+
+  // Events
+  window.addEventListener('resize', onResize);
+  setupSpeedButtons();
+
+  // Start animation
+  animate();
+}
+
+// --- LIGHTING ---
+function setupLighting() {
+  // Ambient — warm fill
+  const ambient = new THREE.AmbientLight(0xFFF5E6, 0.7);
+  scene.add(ambient);
+
+  // Hemisphere for sky/ground contrast
+  const hemi = new THREE.HemisphereLight(0xC8E6FF, 0xFFE8CC, 0.4);
+  scene.add(hemi);
+
+  // Main directional — upper right, warm
+  const dir = new THREE.DirectionalLight(0xFFF8F0, 1.2);
+  dir.position.set(8, 14, 6);
+  dir.castShadow = true;
+  dir.shadow.mapSize.set(2048, 2048);
+  dir.shadow.camera.near = 0.1;
+  dir.shadow.camera.far = 40;
+  dir.shadow.camera.left = -12;
+  dir.shadow.camera.right = 12;
+  dir.shadow.camera.top = 12;
+  dir.shadow.camera.bottom = -12;
+  dir.shadow.bias = -0.002;
+  dir.shadow.normalBias = 0.02;
+  dir.shadow.radius = 4;
+  scene.add(dir);
+
+  // Neon sign accent light
+  const neonLight = new THREE.PointLight(0x7CB9FF, 0.6, 8);
+  neonLight.position.set(-FLOOR_W*TILE/2 + 0.5, 3.5, 0);
+  scene.add(neonLight);
+
+  // Espresso warm glow
+  const espressoLight = new THREE.PointLight(0xFF9800, 0.4, 4);
+  espressoLight.position.set(4, 1.5, -FLOOR_H*TILE/2 + 1.5);
+  scene.add(espressoLight);
+}
+
+// --- FLOOR ---
+function buildFloor() {
+  const group = new THREE.Group();
+  const tileGeo = new THREE.BoxGeometry(TILE - 0.02, 0.08, TILE - 0.02);
+  const tileMat = toonMat(COLORS.floor);
+  const lineMat = toonMat(COLORS.floorLine);
+
+  // Use instanced mesh for tiles
+  const tileCount = FLOOR_W * FLOOR_H;
+  const instTile = new THREE.InstancedMesh(tileGeo, tileMat, tileCount);
+  instTile.receiveShadow = true;
+  const dummy = new THREE.Object3D();
+  let idx = 0;
+  for (let x = 0; x < FLOOR_W; x++) {
+    for (let z = 0; z < FLOOR_H; z++) {
+      dummy.position.set(
+        (x - FLOOR_W/2 + 0.5) * TILE,
+        -0.04,
+        (z - FLOOR_H/2 + 0.5) * TILE
+      );
+      dummy.updateMatrix();
+      instTile.setMatrixAt(idx++, dummy.matrix);
+    }
+  }
+  instTile.instanceMatrix.needsUpdate = true;
+  group.add(instTile);
+
+  // Floor base (solid underneath)
+  const baseGeo = new THREE.BoxGeometry(FLOOR_W * TILE + 0.2, 0.15, FLOOR_H * TILE + 0.2);
+  const baseMesh = new THREE.Mesh(baseGeo, toonMat(0xD4C8B0));
+  baseMesh.position.y = -0.15;
+  baseMesh.receiveShadow = true;
+  group.add(baseMesh);
+
+  // Ground plane beneath
+  const groundGeo = new THREE.PlaneGeometry(60, 60);
+  const groundMesh = new THREE.Mesh(groundGeo, toonMat(0xC8D8C0));
+  groundMesh.rotation.x = -Math.PI/2;
+  groundMesh.position.y = -0.25;
+  groundMesh.receiveShadow = true;
+  group.add(groundMesh);
+
+  scene.add(group);
+}
+
+// --- WALLS ---
+function buildWalls() {
+  const group = new THREE.Group();
+  const wallH = 3.2;
+  const wallThick = 0.12;
+  const ox = -FLOOR_W*TILE/2;
+  const oz = -FLOOR_H*TILE/2;
+
+  // Back wall (Z = -FLOOR_H/2)
+  const backGeo = new THREE.BoxGeometry(FLOOR_W * TILE + wallThick*2, wallH, wallThick);
+  const backWall = new THREE.Mesh(backGeo, toonMat(COLORS.wall));
+  backWall.position.set(0, wallH/2, oz - wallThick/2);
+  backWall.castShadow = true; backWall.receiveShadow = true;
+  group.add(backWall);
+
+  // Left wall (X = -FLOOR_W/2)
+  const leftGeo = new THREE.BoxGeometry(wallThick, wallH, FLOOR_H * TILE);
+  const leftWall = new THREE.Mesh(leftGeo, toonMat(COLORS.wall));
+  leftWall.position.set(ox - wallThick/2, wallH/2, 0);
+  leftWall.castShadow = true; leftWall.receiveShadow = true;
+  group.add(leftWall);
+
+  // Right wall — GLASS
+  const glassGeo = new THREE.BoxGeometry(wallThick, wallH, FLOOR_H * TILE);
+  const glassMat = toonMat(COLORS.glass, { transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+  const glassWall = new THREE.Mesh(glassGeo, glassMat);
+  glassWall.position.set(FLOOR_W*TILE/2 + wallThick/2, wallH/2, 0);
+  group.add(glassWall);
+
+  // Glass frame bars
+  const frameMat = toonMat(0xB0BEC5);
+  for (let i = 0; i <= 3; i++) {
+    const bar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, wallH, 0.04),
+      frameMat
+    );
+    bar.position.set(FLOOR_W*TILE/2 + wallThick/2, wallH/2, oz + i * (FLOOR_H*TILE/3));
+    group.add(bar);
+  }
+  // Horizontal bar
+  const hbar = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.04, FLOOR_H * TILE),
+    frameMat
+  );
+  hbar.position.set(FLOOR_W*TILE/2 + wallThick/2, wallH * 0.55, 0);
+  group.add(hbar);
+
+  // Wall trim / baseboard
+  const trimGeo = new THREE.BoxGeometry(FLOOR_W * TILE + wallThick*2, 0.08, 0.06);
+  const trimMat = toonMat(COLORS.wallEdge);
+  const trim1 = new THREE.Mesh(trimGeo, trimMat);
+  trim1.position.set(0, 0.04, oz - wallThick + 0.03);
+  group.add(trim1);
+
+  const trimGeo2 = new THREE.BoxGeometry(0.06, 0.08, FLOOR_H * TILE);
+  const trim2 = new THREE.Mesh(trimGeo2, trimMat);
+  trim2.position.set(ox - wallThick + 0.03, 0.04, 0);
+  group.add(trim2);
+
+  // Front edge (low wall / half wall)
+  const frontGeo = new THREE.BoxGeometry(FLOOR_W * TILE + wallThick*2, 0.4, wallThick);
+  const frontWall = new THREE.Mesh(frontGeo, toonMat(COLORS.wallEdge));
+  frontWall.position.set(0, 0.2, FLOOR_H*TILE/2 + wallThick/2);
+  frontWall.castShadow = true;
+  group.add(frontWall);
+
+  scene.add(group);
+}
+
+// --- DESK BUILDER ---
+function createDesk(x, z, rotation) {
+  const group = new THREE.Group();
+  const dw = 1.1, dd = 0.6, dh = 0.72;
+  const legR = 0.03, legH = dh - 0.04;
+
+  // Desktop
+  const topGeo = roundedBox(dw, 0.04, dd, 0.04, 2);
+  const top = new THREE.Mesh(topGeo, toonMat(COLORS.desk));
+  top.position.y = dh - 0.02;
+  top.castShadow = true; top.receiveShadow = true;
+  group.add(top);
+
+  // Legs
+  const legGeo = new THREE.CylinderGeometry(legR, legR, legH, 6);
+  const legMat = toonMat(COLORS.deskLeg);
+  const legPositions = [
+    [-dw/2 + 0.06, legH/2, -dd/2 + 0.06],
+    [dw/2 - 0.06, legH/2, -dd/2 + 0.06],
+    [-dw/2 + 0.06, legH/2, dd/2 - 0.06],
+    [dw/2 - 0.06, legH/2, dd/2 - 0.06],
+  ];
+  legPositions.forEach(p => {
+    const leg = new THREE.Mesh(legGeo, legMat);
+    leg.position.set(...p);
+    leg.castShadow = true;
+    group.add(leg);
+  });
+
+  // Monitor
+  const monitorGroup = createMonitor();
+  monitorGroup.position.set(0, dh, -dd/2 + 0.15);
+  group.add(monitorGroup);
+
+  // Keyboard
+  const kbGeo = new THREE.BoxGeometry(0.3, 0.015, 0.1);
+  const kb = new THREE.Mesh(kbGeo, toonMat(COLORS.keyboard));
+  kb.position.set(0, dh + 0.008, 0.05);
+  kb.castShadow = true;
+  group.add(kb);
+
+  // Coffee mug
+  const mugGroup = createMug();
+  mugGroup.position.set(dw/2 - 0.15, dh, dd/2 - 0.12);
+  group.add(mugGroup);
+
+  group.position.set(x, 0, z);
+  if (rotation) group.rotation.y = rotation;
+  return group;
+}
+
+function createMonitor() {
+  const group = new THREE.Group();
+  // Stand
+  const standGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.02, 8);
+  const stand = new THREE.Mesh(standGeo, toonMat(COLORS.monitor));
+  stand.position.y = 0.01;
+  group.add(stand);
+
+  // Neck
+  const neckGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.18, 6);
+  const neck = new THREE.Mesh(neckGeo, toonMat(COLORS.monitor));
+  neck.position.y = 0.11;
+  group.add(neck);
+
+  // Screen
+  const screenGeo = new THREE.BoxGeometry(0.4, 0.25, 0.015);
+  const screenMat = toonMat(COLORS.monitorScreen, { emissive: 0x3F51B5, emissiveIntensity: 0.3 });
+  const screen = new THREE.Mesh(screenGeo, screenMat);
+  screen.position.y = 0.32;
+  screen.castShadow = true;
+  group.add(screen);
+  monitorScreens.push(screen);
+
+  // Screen bezel
+  const bezelGeo = new THREE.BoxGeometry(0.42, 0.27, 0.012);
+  const bezel = new THREE.Mesh(bezelGeo, toonMat(COLORS.monitor));
+  bezel.position.y = 0.32;
+  bezel.position.z = -0.002;
+  group.add(bezel);
+
+  return group;
+}
+
+function createMug() {
+  const group = new THREE.Group();
+  const mugGeo = new THREE.CylinderGeometry(0.025, 0.022, 0.05, 8);
+  const mug = new THREE.Mesh(mugGeo, toonMat(COLORS.mug));
+  mug.position.y = 0.025;
+  group.add(mug);
+
+  // Handle
+  const handleGeo = new THREE.TorusGeometry(0.015, 0.004, 6, 8, Math.PI);
+  const handle = new THREE.Mesh(handleGeo, toonMat(COLORS.mugHandle));
+  handle.position.set(0.03, 0.025, 0);
+  handle.rotation.y = Math.PI/2;
+  handle.rotation.z = Math.PI/2;
+  group.add(handle);
+
+  return group;
+}
+
+// --- CHAIR ---
+function createChair(color, rotation) {
+  const group = new THREE.Group();
+  const seatH = 0.42;
+
+  // Seat
+  const seatGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.04, 12);
+  const seat = new THREE.Mesh(seatGeo, toonMat(color));
+  seat.position.y = seatH;
+  seat.castShadow = true;
+  group.add(seat);
+
+  // Backrest
+  const backGeo = new THREE.BoxGeometry(0.3, 0.3, 0.03);
+  const back = new THREE.Mesh(backGeo, toonMat(color));
+  back.position.set(0, seatH + 0.17, -0.14);
+  back.castShadow = true;
+  group.add(back);
+
+  // Pole
+  const poleGeo = new THREE.CylinderGeometry(0.02, 0.02, seatH - 0.06, 6);
+  const pole = new THREE.Mesh(poleGeo, toonMat(0x333333));
+  pole.position.y = (seatH - 0.06)/2 + 0.03;
+  group.add(pole);
+
+  // Base — 5 spokes
+  const baseMat = toonMat(0x333333);
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    const spoke = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.012, 0.012, 0.18, 4),
+      baseMat
+    );
+    spoke.rotation.z = Math.PI/2;
+    spoke.rotation.y = a;
+    spoke.position.set(Math.sin(a)*0.08, 0.03, Math.cos(a)*0.08);
+    group.add(spoke);
+
+    // Wheel
+    const wheel = new THREE.Mesh(
+      new THREE.SphereGeometry(0.018, 6, 6),
+      baseMat
+    );
+    wheel.position.set(Math.sin(a)*0.16, 0.018, Math.cos(a)*0.16);
+    group.add(wheel);
+  }
+
+  group.rotation.y = rotation || 0;
+  return group;
+}
+
+// --- FURNITURE ---
+function buildFurniture() {
+  const group = new THREE.Group();
+  const startX = -FLOOR_W*TILE/2 + 2;
+  const deskZ = -FLOOR_H*TILE/2 + 1.8;
+
+  // 6 developer desks in a row
+  const deskColors = [COLORS.engineer, COLORS.engineer, COLORS.designer, COLORS.sales, COLORS.pm, COLORS.engineer];
+  for (let i = 0; i < 6; i++) {
+    const x = startX + i * 1.5;
+    const desk = createDesk(x, deskZ, 0);
+    group.add(desk);
+
+    // Chair behind desk
+    const chair = createChair(deskColors[i], Math.PI + (Math.random()-0.5)*0.4);
+    chair.position.set(x, 0, deskZ + 0.55);
+    group.add(chair);
+  }
+
+  // Standing desk
+  const standGroup = new THREE.Group();
+  const sdw = 0.9, sdd = 0.5, sdh = 1.05;
+  const sdTop = new THREE.Mesh(roundedBox(sdw, 0.04, sdd, 0.03, 2), toonMat(COLORS.desk));
+  sdTop.position.y = sdh;
+  sdTop.castShadow = true;
+  standGroup.add(sdTop);
+
+  // Standing desk legs
+  const sdLegGeo = new THREE.BoxGeometry(0.04, sdh, 0.04);
+  const sdLegMat = toonMat(COLORS.deskLeg);
+  [[-sdw/2+0.04, sdh/2, -sdd/2+0.04],[sdw/2-0.04, sdh/2, -sdd/2+0.04],
+   [-sdw/2+0.04, sdh/2, sdd/2-0.04],[sdw/2-0.04, sdh/2, sdd/2-0.04]].forEach(p => {
+    const l = new THREE.Mesh(sdLegGeo, sdLegMat);
+    l.position.set(...p); l.castShadow = true;
+    standGroup.add(l);
+  });
+
+  // Standing desk monitor (higher)
+  const sdMon = createMonitor();
+  sdMon.position.set(0, sdh, -sdd/2 + 0.12);
+  standGroup.add(sdMon);
+
+  standGroup.position.set(FLOOR_W*TILE/2 - 1.5, 0, -FLOOR_H*TILE/2 + 1.5);
+  group.add(standGroup);
+
+  // Meeting table
+  const mtGroup = new THREE.Group();
+  const mtw = 2.0, mtd = 1.0, mth = 0.72;
+  const mtTop = new THREE.Mesh(roundedBox(mtw, 0.05, mtd, 0.1, 3), toonMat(0xD7CCC8));
+  mtTop.position.y = mth;
+  mtTop.castShadow = true; mtTop.receiveShadow = true;
+  mtGroup.add(mtTop);
+
+  // Central pedestal
+  const pedGeo = new THREE.CylinderGeometry(0.15, 0.25, mth - 0.05, 8);
+  const ped = new THREE.Mesh(pedGeo, toonMat(COLORS.deskLeg));
+  ped.position.y = (mth - 0.05)/2;
+  ped.castShadow = true;
+  mtGroup.add(ped);
+
+  // 4 chairs around meeting table
+  const mtChairPositions = [
+    [0, mtd/2 + 0.35, 0],
+    [0, -mtd/2 - 0.35, Math.PI],
+    [mtw/2 + 0.35, 0, -Math.PI/2],
+    [-mtw/2 - 0.35, 0, Math.PI/2],
+  ];
+  mtChairPositions.forEach(([cx, cz, cr]) => {
+    const c = createChair(COLORS.chair, cr);
+    c.position.set(cx, 0, cz);
+    mtGroup.add(c);
+  });
+
+  mtGroup.position.set(-FLOOR_W*TILE/2 + 2.5, 0, FLOOR_H*TILE/2 - 2);
+  group.add(mtGroup);
+
+  // Whiteboard
+  const wbGroup = new THREE.Group();
+  const wbGeo = new THREE.BoxGeometry(1.8, 1.2, 0.04);
+  const wb = new THREE.Mesh(wbGeo, toonMat(COLORS.whiteboard));
+  wb.position.y = 2.0;
+  wb.castShadow = true;
+  wbGroup.add(wb);
+
+  // Frame
+  const frameMat = toonMat(0x90A4AE);
+  const frameGeos = [
+    [1.84, 0.04, 0.06, 0, 2.6, 0],
+    [1.84, 0.04, 0.06, 0, 1.4, 0],
+    [0.04, 1.24, 0.06, -0.9, 2.0, 0],
+    [0.04, 1.24, 0.06, 0.9, 2.0, 0],
+  ];
+  frameGeos.forEach(([fw,fh,fd,fx,fy,fz]) => {
+    const f = new THREE.Mesh(new THREE.BoxGeometry(fw,fh,fd), frameMat);
+    f.position.set(fx,fy,fz);
+    wbGroup.add(f);
+  });
+
+  // Sticky notes
+  const stickyColors = [0xFFEB3B, 0xFF7043, 0x66BB6A, 0x42A5F5, 0xAB47BC, 0xEF5350, 0x26C6DA, 0xFFCA28];
+  for (let i = 0; i < 8; i++) {
+    const sx = -0.65 + (i % 4) * 0.38;
+    const sy = 2.25 - Math.floor(i/4) * 0.38;
+    const sticky = new THREE.Mesh(
+      new THREE.BoxGeometry(0.2, 0.2, 0.005),
+      toonMat(stickyColors[i])
+    );
+    sticky.position.set(sx, sy, 0.025);
+    sticky.rotation.z = (Math.random() - 0.5) * 0.15;
+    wbGroup.add(sticky);
+  }
+
+  // Tray
+  const tray = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.03, 0.06),
+    toonMat(0x90A4AE)
+  );
+  tray.position.set(0, 1.38, 0.04);
+  wbGroup.add(tray);
+
+  // Markers
+  [0xFF5722, 0x2196F3, 0x4CAF50].forEach((mc, mi) => {
+    const marker = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.01, 0.01, 0.1, 6),
+      toonMat(mc)
+    );
+    marker.rotation.z = Math.PI/2;
+    marker.position.set(-0.15 + mi * 0.12, 1.4, 0.05);
+    wbGroup.add(marker);
+  });
+
+  wbGroup.position.set(0, 0, -FLOOR_H*TILE/2 + 0.08);
+  group.add(wbGroup);
+
+  scene.add(group);
+}
+
+// --- AMENITIES ---
+function buildAmenities() {
+  const group = new THREE.Group();
+  const oz = FLOOR_H*TILE/2;
+
+  // Ping pong table
+  const ppGroup = new THREE.Group();
+  const ppw = 1.5, ppd = 0.8, pph = 0.72;
+
+  const ppTop = new THREE.Mesh(
+    roundedBox(ppw, 0.04, ppd, 0.02, 2),
+    toonMat(COLORS.pingPong)
+  );
+  ppTop.position.y = pph;
+  ppTop.castShadow = true; ppTop.receiveShadow = true;
+  ppGroup.add(ppTop);
+
+  // White line
+  const line = new THREE.Mesh(
+    new THREE.BoxGeometry(0.02, 0.005, ppd + 0.01),
+    toonMat(COLORS.pingPongLine)
+  );
+  line.position.y = pph + 0.025;
+  ppGroup.add(line);
+
+  // Net
+  const netGeo = new THREE.BoxGeometry(0.01, 0.12, ppd + 0.06);
+  const netMat = toonMat(0xFFFFFF, { transparent: true, opacity: 0.6 });
+  const net = new THREE.Mesh(netGeo, netMat);
+  net.position.y = pph + 0.08;
+  ppGroup.add(net);
+
+  // Net posts
+  [ppd/2 + 0.02, -ppd/2 - 0.02].forEach(nz => {
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.015, 0.015, 0.16, 6),
+      toonMat(0x9E9E9E)
+    );
+    post.position.set(0, pph + 0.1, nz);
+    ppGroup.add(post);
+  });
+
+  // Legs
+  const ppLegGeo = new THREE.CylinderGeometry(0.03, 0.03, pph - 0.04, 6);
+  const ppLegMat = toonMat(COLORS.deskLeg);
+  [[-ppw/2+0.1, -ppd/2+0.1],[ppw/2-0.1, -ppd/2+0.1],
+   [-ppw/2+0.1, ppd/2-0.1],[ppw/2-0.1, ppd/2-0.1]].forEach(([lx,lz]) => {
+    const l = new THREE.Mesh(ppLegGeo, ppLegMat);
+    l.position.set(lx, (pph-0.04)/2, lz);
+    l.castShadow = true;
+    ppGroup.add(l);
+  });
+
+  ppGroup.position.set(FLOOR_W*TILE/2 - 2, 0, FLOOR_H*TILE/2 - 1.5);
+  group.add(ppGroup);
+
+  // Kombucha bar
+  const kbGroup = new THREE.Group();
+  // Counter
+  const counter = new THREE.Mesh(
+    roundedBox(1.4, 0.9, 0.5, 0.04, 2),
+    toonMat(COLORS.kombucha)
+  );
+  counter.position.y = 0;
+  counter.castShadow = true; counter.receiveShadow = true;
+  kbGroup.add(counter);
+
+  // Counter top
+  const cTop = new THREE.Mesh(
+    roundedBox(1.44, 0.04, 0.54, 0.04, 2),
+    toonMat(0xA1887F)
+  );
+  cTop.position.y = 0.9;
+  kbGroup.add(cTop);
+
+  // Taps
+  [0xFF7043, 0x66BB6A, 0xFFC107].forEach((tc, ti) => {
+    const tapBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.05, 0.2, 8),
+      toonMat(tc)
+    );
+    tapBase.position.set(-0.35 + ti * 0.35, 1.05, 0);
+    kbGroup.add(tapBase);
+
+    const tapHandle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.015, 0.015, 0.1, 6),
+      toonMat(0x795548)
+    );
+    tapHandle.position.set(-0.35 + ti * 0.35, 1.18, 0.04);
+    tapHandle.rotation.x = -0.3;
+    kbGroup.add(tapHandle);
+  });
+
+  // Small cups
+  const cupGeo = new THREE.CylinderGeometry(0.02, 0.018, 0.04, 8);
+  const cupMat = toonMat(COLORS.cup);
+  for (let ci = 0; ci < 4; ci++) {
+    const cup = new THREE.Mesh(cupGeo, cupMat);
+    cup.position.set(-0.5 + ci * 0.25, 0.94, 0.18);
+    kbGroup.add(cup);
+  }
+
+  kbGroup.position.set(-FLOOR_W*TILE/2 + 1.5, 0, FLOOR_H*TILE/2 - 1.2);
+  group.add(kbGroup);
+
+  // Bean bags
+  const bbColors = [COLORS.beanBag1, COLORS.beanBag2, COLORS.beanBag3];
+  const bbPositions = [
+    [FLOOR_W*TILE/2 - 1.2, 0, 0.5],
+    [FLOOR_W*TILE/2 - 1.8, 0, 1.2],
+    [FLOOR_W*TILE/2 - 0.8, 0, 1.5],
+  ];
+  bbPositions.forEach(([bx, by, bz], bi) => {
+    const bb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 12, 8),
+      toonMat(bbColors[bi])
+    );
+    bb.scale.set(1.2, 0.6, 1.0);
+    bb.position.set(bx, 0.18, bz);
+    bb.castShadow = true; bb.receiveShadow = true;
+    group.add(bb);
+  });
+
+  // Nap pod
+  const napGroup = new THREE.Group();
+  // Body — capsule
+  const napBody = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.35, 0.8, 8, 12),
+    toonMat(COLORS.napPod)
+  );
+  napBody.rotation.z = Math.PI/2;
+  napBody.position.set(0, 0.4, 0);
+  napBody.castShadow = true;
+  napGroup.add(napBody);
+
+  // Opening
+  const napOpen = new THREE.Mesh(
+    new THREE.CircleGeometry(0.33, 12),
+    toonMat(0x37474F)
+  );
+  napOpen.position.set(0.6, 0.4, 0);
+  napOpen.rotation.y = Math.PI/2;
+  napGroup.add(napOpen);
+
+  // Pillow
+  const pillow = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.06, 0.22),
+    toonMat(0xE1F5FE)
+  );
+  pillow.position.set(0.35, 0.2, 0);
+  napGroup.add(pillow);
+
+  napGroup.position.set(FLOOR_W*TILE/2 - 1.3, 0, -1.5);
+  group.add(napGroup);
+
+  // Espresso machine + counter
+  const espGroup = new THREE.Group();
+
+  // Counter
+  const espCounter = new THREE.Mesh(
+    roundedBox(0.8, 0.85, 0.45, 0.03, 2),
+    toonMat(0xBCAAA4)
+  );
+  espCounter.castShadow = true;
+  espGroup.add(espCounter);
+
+  const espCTop = new THREE.Mesh(
+    roundedBox(0.84, 0.03, 0.49, 0.03, 2),
+    toonMat(0x8D6E63)
+  );
+  espCTop.position.y = 0.85;
+  espGroup.add(espCTop);
+
+  // Machine body
+  const machineBody = new THREE.Mesh(
+    new THREE.BoxGeometry(0.25, 0.3, 0.2),
+    toonMat(COLORS.espresso)
+  );
+  machineBody.position.set(0, 1.03, -0.05);
+  machineBody.castShadow = true;
+  espGroup.add(machineBody);
+
+  // Machine top
+  const machineTop = new THREE.Mesh(
+    roundedBox(0.27, 0.04, 0.22, 0.02, 2),
+    toonMat(0x3E2723)
+  );
+  machineTop.position.set(0, 1.18, -0.05);
+  espGroup.add(machineTop);
+
+  // Drip tray
+  const dripTray = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.01, 0.12),
+    toonMat(0x9E9E9E)
+  );
+  dripTray.position.set(0, 0.88, 0.06);
+  espGroup.add(dripTray);
+
+  // Cup under machine
+  const espCup = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.025, 0.02, 0.05, 8),
+    toonMat(0xFFF8E1)
+  );
+  espCup.position.set(0, 0.91, 0.06);
+  espGroup.add(espCup);
+
+  // Buttons
+  [0xFF5722, 0x4CAF50].forEach((bc, bi) => {
+    const btn = new THREE.Mesh(
+      new THREE.SphereGeometry(0.015, 8, 8),
+      toonMat(bc, { emissive: bc, emissiveIntensity: 0.4 })
+    );
+    btn.position.set(-0.06 + bi * 0.12, 1.06, 0.06);
+    espGroup.add(btn);
+  });
+
+  espGroup.position.set(2, 0, -FLOOR_H*TILE/2 + 0.35);
+  group.add(espGroup);
+
+  scene.add(group);
+}
+
+// --- DECORATIONS ---
+function buildDecorations() {
+  const group = new THREE.Group();
+
+  // Potted plants
+  function createPlant(x, z, scale) {
+    const pGroup = new THREE.Group();
+    // Pot
+    const potGeo = new THREE.CylinderGeometry(0.12*scale, 0.09*scale, 0.15*scale, 8);
+    const pot = new THREE.Mesh(potGeo, toonMat(COLORS.pot));
+    pot.position.y = 0.075*scale;
+    pot.castShadow = true;
+    pGroup.add(pot);
+
+    // Soil
+    const soil = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.11*scale, 0.11*scale, 0.02*scale, 8),
+      toonMat(0x5D4037)
+    );
+    soil.position.y = 0.14*scale;
+    pGroup.add(soil);
+
+    // Foliage — layered spheres
+    const foliageColors = [COLORS.plant, COLORS.plantDark, 0x81C784];
+    for (let fi = 0; fi < 3; fi++) {
+      const leaf = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14*scale * (1 - fi*0.15), 8, 8),
+        toonMat(foliageColors[fi])
+      );
+      leaf.position.set(
+        (Math.random()-0.5)*0.06*scale,
+        0.25*scale + fi*0.1*scale,
+        (Math.random()-0.5)*0.06*scale
+      );
+      leaf.castShadow = true;
+      pGroup.add(leaf);
+    }
+
+    pGroup.position.set(x, 0, z);
+    return pGroup;
+  }
+
+  const plantPositions = [
+    [-FLOOR_W*TILE/2 + 0.5, -FLOOR_H*TILE/2 + 0.5, 1.2],
+    [-FLOOR_W*TILE/2 + 0.5, FLOOR_H*TILE/2 - 0.5, 1.0],
+    [FLOOR_W*TILE/2 - 0.5, -FLOOR_H*TILE/2 + 0.5, 1.3],
+    [0, FLOOR_H*TILE/2 - 0.5, 0.9],
+  ];
+  plantPositions.forEach(([px, pz, ps]) => {
+    group.add(createPlant(px, pz, ps));
+  });
+
+  // Motivational posters on back wall
+  const posterColors = [COLORS.poster1, COLORS.poster2, COLORS.poster3, COLORS.poster4];
+  const posterX = [-FLOOR_W*TILE/2 + 1.5, -FLOOR_W*TILE/2 + 3.2];
+  posterX.forEach((px, pi) => {
+    const posterGroup = new THREE.Group();
+    // Frame
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 0.45, 0.02),
+      toonMat(0x795548)
+    );
+    frame.position.y = 2.2;
+    posterGroup.add(frame);
+
+    // Poster
+    const poster = new THREE.Mesh(
+      new THREE.BoxGeometry(0.52, 0.37, 0.005),
+      toonMat(posterColors[pi])
+    );
+    poster.position.set(0, 2.2, 0.013);
+    posterGroup.add(poster);
+
+    posterGroup.position.set(px, 0, -FLOOR_H*TILE/2 + 0.08);
+    group.add(posterGroup);
+  });
+
+  // Posters on left wall
+  [1, 2].forEach((pi) => {
+    const posterGroup = new THREE.Group();
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.45, 0.6),
+      toonMat(0x795548)
+    );
+    frame.position.y = 2.2;
+    posterGroup.add(frame);
+
+    const poster = new THREE.Mesh(
+      new THREE.BoxGeometry(0.005, 0.37, 0.52),
+      toonMat(posterColors[pi+1])
+    );
+    poster.position.set(0.013, 2.2, 0);
+    posterGroup.add(poster);
+
+    posterGroup.position.set(-FLOOR_W*TILE/2 + 0.08, 0, -FLOOR_H*TILE/2 + pi * 2.5 + 1);
+    group.add(posterGroup);
+  });
+
+  // Startup neon logo on left wall
+  const neonGroup = new THREE.Group();
+
+  // Backing panel
+  const neonBack = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 1.0, 2.2),
+    toonMat(0x263238)
+  );
+  neonBack.position.y = 2.4;
+  neonGroup.add(neonBack);
+
+  // Neon "DISRUPTOCLOUD" — simplified as glowing bars forming an abstract logo
+  // Use a rocket shape
+  const neonMat = toonMat(COLORS.neonSign, { emissive: COLORS.neonSign, emissiveIntensity: 0.8 });
+
+  // Rocket body
+  const rocketBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.06, 0.08, 0.5, 8),
+    neonMat
+  );
+  rocketBody.position.set(0.03, 2.5, -0.3);
+  rocketBody.rotation.x = Math.PI/2;
+  neonGroup.add(rocketBody);
+
+  // Rocket nose
+  const rocketNose = new THREE.Mesh(
+    new THREE.ConeGeometry(0.06, 0.15, 8),
+    neonMat
+  );
+  rocketNose.position.set(0.03, 2.5, -0.6);
+  rocketNose.rotation.x = Math.PI/2;
+  neonGroup.add(rocketNose);
+
+  // Rocket fins
+  [-1, 1].forEach(side => {
+    const fin = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.12, 0.08),
+      neonMat
+    );
+    fin.position.set(0.03, 2.5 + side * 0.08, 0);
+    fin.rotation.z = side * 0.3;
+    neonGroup.add(fin);
+  });
+
+  // Flame
+  const flameMat = toonMat(0xFF6B35, { emissive: 0xFF6B35, emissiveIntensity: 0.6 });
+  const flame = new THREE.Mesh(
+    new THREE.ConeGeometry(0.07, 0.2, 8),
+    flameMat
+  );
+  flame.position.set(0.03, 2.5, 0.1);
+  flame.rotation.x = -Math.PI/2;
+  neonGroup.add(flame);
+
+  // Text bars — "DC" letters simplified
+  const barGeo = new THREE.BoxGeometry(0.02, 0.04, 0.18);
+  // D
+  const d1 = new THREE.Mesh(barGeo, neonMat);
+  d1.position.set(0.03, 2.05, -0.5);
+  neonGroup.add(d1);
+  const d2 = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.25, 0.04), neonMat);
+  d2.position.set(0.03, 2.05, -0.6);
+  neonGroup.add(d2);
+  const d3 = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.02, 6, 8, Math.PI), neonMat);
+  d3.position.set(0.03, 2.05, -0.5);
+  d3.rotation.y = Math.PI/2;
+  d3.rotation.x = Math.PI/2;
+  neonGroup.add(d3);
+
+  // C
+  const c1 = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.02, 6, 8, Math.PI * 1.5), neonMat);
+  c1.position.set(0.03, 2.05, -0.1);
+  c1.rotation.y = Math.PI/2;
+  c1.rotation.x = Math.PI/2;
+  c1.rotation.z = Math.PI/4;
+  neonGroup.add(c1);
+
+  // Glow plane behind neon
+  const glowGeo = new THREE.PlaneGeometry(2.4, 1.2);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: COLORS.neonSign, transparent: true, opacity: 0.08, side: THREE.DoubleSide
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.set(0.08, 2.4, 0);
+  glow.rotation.y = Math.PI/2;
+  neonGroup.add(glow);
+
+  neonGroup.position.set(-FLOOR_W*TILE/2 + 0.08, 0, -0.5);
+  group.add(neonGroup);
+
+  // Rug under meeting area
+  const rug = new THREE.Mesh(
+    new THREE.CircleGeometry(1.5, 24),
+    toonMat(0xE8D5B7, { side: THREE.DoubleSide })
+  );
+  rug.rotation.x = -Math.PI/2;
+  rug.position.set(-FLOOR_W*TILE/2 + 2.5, 0.005, FLOOR_H*TILE/2 - 2);
+  group.add(rug);
+
+  scene.add(group);
+}
+
+// --- CHARACTERS ---
+function createCharacter(color, skinColor) {
+  const group = new THREE.Group();
+  skinColor = skinColor || COLORS.skin;
+  const totalH = 0.9;
+  const headR = totalH * 0.18; // ~40% visual weight with oversized head
+
+  // Body (cylinder)
+  const bodyH = totalH * 0.4;
+  const bodyR = 0.08;
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(bodyR, bodyR * 0.9, bodyH, 8),
+    toonMat(color)
+  );
+  body.position.y = bodyH/2 + 0.42; // Seated height
+  body.castShadow = true;
+  group.add(body);
+
+  // Head
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(headR, 10, 10),
+    toonMat(skinColor)
+  );
+  head.position.y = bodyH + 0.42 + headR * 0.85;
+  head.castShadow = true;
+  group.add(head);
+
+  // Hair (top of head)
+  const hair = new THREE.Mesh(
+    new THREE.SphereGeometry(headR * 1.05, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.55),
+    toonMat(darkenColor(color, 0.4))
+  );
+  hair.position.y = head.position.y + headR * 0.08;
+  group.add(hair);
+
+  // Eyes
+  [-1, 1].forEach(side => {
+    const eye = new THREE.Mesh(
+      new THREE.SphereGeometry(0.02, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0x222222 })
+    );
+    eye.position.set(side * 0.04, head.position.y + 0.01, headR * 0.85);
+    group.add(eye);
+
+    // Eye white
+    const eyeWhite = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    eyeWhite.position.set(side * 0.04, head.position.y + 0.01, headR * 0.82);
+    group.add(eyeWhite);
+  });
+
+  // Arms
+  [-1, 1].forEach(side => {
+    const arm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.025, bodyH * 0.7, 6),
+      toonMat(color)
+    );
+    arm.position.set(side * (bodyR + 0.03), 0.52, 0);
+    arm.rotation.z = side * 0.15;
+    arm.castShadow = true;
+    group.add(arm);
+
+    // Hand
+    const hand = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028, 6, 6),
+      toonMat(skinColor)
+    );
+    hand.position.set(side * (bodyR + 0.04), 0.42, 0.02);
+    group.add(hand);
+  });
+
+  return group;
+}
+
+function darkenColor(hex, amount) {
+  const c = new THREE.Color(hex);
+  c.r = Math.max(0, c.r - amount);
+  c.g = Math.max(0, c.g - amount);
+  c.b = Math.max(0, c.b - amount);
+  return c;
+}
+
+function buildCharacters() {
+  const startX = -FLOOR_W*TILE/2 + 2;
+  const deskZ = -FLOOR_H*TILE/2 + 1.8;
+  const deskColors = [COLORS.engineer, COLORS.engineer, COLORS.designer, COLORS.sales, COLORS.pm, COLORS.engineer];
+  const skinTones = [COLORS.skin, COLORS.skinAlt, COLORS.skin, COLORS.skinAlt, COLORS.skin, COLORS.skinAlt];
+  const statuses = ["Coding 🚀", "Debugging 🐛", "Designing ✨", "Cold calling 📞", "Writing spec 📋", "Code review 👀"];
+
+  // Seated characters at desks
+  for (let i = 0; i < 6; i++) {
+    const char = createCharacter(deskColors[i], skinTones[i]);
+    char.position.set(startX + i * 1.5, 0, deskZ + 0.55);
+    char.rotation.y = Math.PI; // Face desk
+    scene.add(char);
+    characters.push({ mesh: char, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01 });
+
+    // Status bubble
+    createStatusBubble(char, statuses[i], i);
+  }
+
+  // CEO at standing desk
+  const ceo = createCharacter(COLORS.ceo, COLORS.skin);
+  ceo.position.set(FLOOR_W*TILE/2 - 1.5, 0.35, -FLOOR_H*TILE/2 + 1.5);
+  ceo.scale.set(1, 1.05, 1); // Slightly taller
+  scene.add(ceo);
+  characters.push({ mesh: ceo, baseY: 0.35, bobSpeed: 1.2, bobAmount: 0.015 });
+  createStatusBubble(ceo, "Fundraising 💰", 6);
+
+  // Character at ping pong
+  const ppChar = createCharacter(COLORS.sales, COLORS.skinAlt);
+  ppChar.position.set(FLOOR_W*TILE/2 - 2.6, 0, FLOOR_H*TILE/2 - 1.5);
+  ppChar.rotation.y = Math.PI/2;
+  scene.add(ppChar);
+  characters.push({ mesh: ppChar, baseY: 0, bobSpeed: 2.0, bobAmount: 0.02 });
+  createStatusBubble(ppChar, "Ping pong 🏓", 7);
+
+  // Walking characters
+  const walker1 = createCharacter(COLORS.designer, COLORS.skin);
+  walker1.position.set(-2, 0, 0);
+  scene.add(walker1);
+  characters.push({ mesh: walker1, baseY: 0, bobSpeed: 3.0, bobAmount: 0.025 });
+  walkingCharacters.push({
+    mesh: walker1,
+    path: [
+      new THREE.Vector3(-2, 0, 0),
+      new THREE.Vector3(2, 0, 0),
+      new THREE.Vector3(2, 0, 2),
+      new THREE.Vector3(-2, 0, 2),
+    ],
+    speed: 0.8,
+    currentTarget: 1,
+    progress: 0,
+  });
+  createStatusBubble(walker1, "Coffee break ☕", 8);
+
+  const walker2 = createCharacter(COLORS.pm, COLORS.skinAlt);
+  walker2.position.set(3, 0, -1);
+  scene.add(walker2);
+  characters.push({ mesh: walker2, baseY: 0, bobSpeed: 2.8, bobAmount: 0.02 });
+  walkingCharacters.push({
+    mesh: walker2,
+    path: [
+      new THREE.Vector3(3, 0, -1),
+      new THREE.Vector3(-3, 0, 1),
+      new THREE.Vector3(0, 0, 2.5),
+      new THREE.Vector3(3, 0, -1),
+    ],
+    speed: 0.6,
+    currentTarget: 1,
+    progress: 0,
+  });
+  createStatusBubble(walker2, "On LinkedIn 📱", 9);
+}
+
+function createStatusBubble(parent, text, index) {
+  const div = document.createElement('div');
+  div.className = 'status-bubble';
+  div.textContent = text;
+  div.style.opacity = '1';
+
+  const label = new THREE.CSS2DObject(div);
+  label.position.set(0, 1.15, 0);
+  parent.add(label);
+
+  statusBubbles.push({
+    element: div,
+    label: label,
+    currentText: text,
+    timer: Math.random() * 5 + 3, // Random initial delay
+    fadeState: 'visible', // visible, fading-out, hidden, fading-in
+    fadeTimer: 0,
+  });
+}
+
+// --- STEAM PARTICLES ---
+function buildSteamParticles() {
+  const particleCount = 15;
+  const geo = new THREE.SphereGeometry(0.015, 4, 4);
+  const mat = new THREE.MeshBasicMaterial({ color: COLORS.steam, transparent: true, opacity: 0.5 });
+
+  for (let i = 0; i < particleCount; i++) {
+    const p = new THREE.Mesh(geo, mat.clone());
+    p.position.set(
+      2 + (Math.random() - 0.5) * 0.06,
+      1.25 + Math.random() * 0.4,
+      -FLOOR_H*TILE/2 + 0.4
+    );
+    scene.add(p);
+    steamParticles.push({
+      mesh: p,
+      baseX: 2 + (Math.random() - 0.5) * 0.06,
+      baseZ: -FLOOR_H*TILE/2 + 0.4,
+      speed: 0.15 + Math.random() * 0.1,
+      offset: Math.random() * Math.PI * 2,
+      life: Math.random(),
+    });
+  }
+}
+
+// --- PING PONG BALL ---
+function buildPingPongBall() {
+  const geo = new THREE.SphereGeometry(0.018, 8, 8);
+  const mat = toonMat(0xFFFFFF);
+  pingPongBall = new THREE.Mesh(geo, mat);
+  pingPongBall.position.set(FLOOR_W*TILE/2 - 2, 0.85, FLOOR_H*TILE/2 - 1.5);
+  scene.add(pingPongBall);
+}
+
+// --- SPEED BUTTONS ---
+function setupSpeedButtons() {
+  document.querySelectorAll('.speed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
+
+// --- RESIZE ---
+function onResize() {
+  const aspect = window.innerWidth / window.innerHeight;
+  const frustum = 8;
+  camera.left = -frustum * aspect;
+  camera.right = frustum * aspect;
+  camera.top = frustum;
+  camera.bottom = -frustum;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// --- ANIMATION LOOP ---
+let introComplete = false;
+let introProgress = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  // Intro zoom animation
+  if (!introComplete) {
+    introProgress += dt * 0.5;
+    if (introProgress >= 1) {
+      introProgress = 1;
+      introComplete = true;
+    }
+    // Ease out
+    const t = 1 - Math.pow(1 - introProgress, 3);
+    camera.zoom = 0.15 + t * 0.45; // 0.15 → 0.6
+    camera.updateProjectionMatrix();
+  }
+
+  // Character bobbing
+  characters.forEach((c, i) => {
+    const bob = Math.sin(elapsed * c.bobSpeed + i) * c.bobAmount;
+    c.mesh.position.y = c.baseY + bob;
+  });
+
+  // Walking characters
+  walkingCharacters.forEach(w => {
+    const current = w.path[(w.currentTarget - 1 + w.path.length) % w.path.length];
+    const target = w.path[w.currentTarget];
+    w.progress += dt * w.speed / current.distanceTo(target);
+
+    if (w.progress >= 1) {
+      w.progress = 0;
+      w.currentTarget = (w.currentTarget + 1) % w.path.length;
+    }
+
+    const smoothT = w.progress * w.progress * (3 - 2 * w.progress); // Smoothstep
+    w.mesh.position.lerpVectors(current, target, smoothT);
+
+    // Face direction of movement
+    const dir = new THREE.Vector3().subVectors(target, current);
+    if (dir.length() > 0.01) {
+      w.mesh.rotation.y = Math.atan2(dir.x, dir.z);
+    }
+
+    // Walking bounce
+    w.mesh.position.y = Math.abs(Math.sin(elapsed * 8 * w.speed)) * 0.03;
+  });
+
+  // Steam particles
+  steamParticles.forEach(p => {
+    p.life += dt * p.speed;
+    if (p.life > 1) p.life = 0;
+
+    p.mesh.position.y = 1.25 + p.life * 0.5;
+    p.mesh.position.x = p.baseX + Math.sin(elapsed * 2 + p.offset) * 0.03;
+    p.mesh.position.z = p.baseZ + Math.cos(elapsed * 1.5 + p.offset) * 0.02;
+    p.mesh.material.opacity = Math.sin(p.life * Math.PI) * 0.4;
+    p.mesh.scale.setScalar(0.8 + p.life * 0.6);
+  });
+
+  // Ping pong ball
+  if (pingPongBall) {
+    const ppX = FLOOR_W*TILE/2 - 2;
+    const ppZ = FLOOR_H*TILE/2 - 1.5;
+    const swing = Math.sin(elapsed * 3) * 0.55;
+    pingPongBall.position.x = ppX + swing;
+    pingPongBall.position.y = 0.85 + Math.abs(Math.sin(elapsed * 6)) * 0.08;
+    pingPongBall.position.z = ppZ + Math.cos(elapsed * 3) * 0.15;
+  }
+
+  // Monitor glow pulse
+  monitorScreens.forEach((screen, i) => {
+    const pulse = 0.2 + Math.sin(elapsed * 1.5 + i * 0.7) * 0.1;
+    screen.material.emissiveIntensity = pulse;
+  });
+
+  // Status bubble cycling
+  statusBubbles.forEach((sb, i) => {
+    sb.timer -= dt;
+
+    if (sb.fadeState === 'visible' && sb.timer <= 0) {
+      sb.fadeState = 'fading-out';
+      sb.fadeTimer = 0.5;
+    } else if (sb.fadeState === 'fading-out') {
+      sb.fadeTimer -= dt;
+      sb.element.style.opacity = Math.max(0, sb.fadeTimer / 0.5);
+      if (sb.fadeTimer <= 0) {
+        sb.fadeState = 'hidden';
+        sb.fadeTimer = 0.3;
+        // Change text
+        let newText;
+        do {
+          newText = STATUS_TEXTS[Math.floor(Math.random() * STATUS_TEXTS.length)];
+        } while (newText === sb.currentText);
+        sb.currentText = newText;
+        sb.element.textContent = newText;
+      }
+    } else if (sb.fadeState === 'hidden') {
+      sb.fadeTimer -= dt;
+      if (sb.fadeTimer <= 0) {
+        sb.fadeState = 'fading-in';
+        sb.fadeTimer = 0.5;
+      }
+    } else if (sb.fadeState === 'fading-in') {
+      sb.fadeTimer -= dt;
+      sb.element.style.opacity = Math.min(1, 1 - sb.fadeTimer / 0.5);
+      if (sb.fadeTimer <= 0) {
+        sb.fadeState = 'visible';
+        sb.timer = 4 + Math.random() * 4;
+        sb.element.style.opacity = '1';
+      }
+    }
+  });
+
+  controls.update();
+  renderer.render(scene, camera);
+  cssRenderer.render(scene, camera);
+}
+
+// --- GO ---
+init();
+</script>
+</body>
+</html>
