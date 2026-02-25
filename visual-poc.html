@@ -360,7 +360,7 @@ const COLORS = {
   floor: 0x6B5E4A, floorLine: 0x5A4E3A,
   wall: 0xD8D0C0, wallEdge: 0xB8AFA0,
   glass: 0x88CCEE,
-  desk: 0xF0EDE5, deskLeg: 0x555555,
+  desk: 0xD0CCC0, deskLeg: 0x444444,
   plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
   whiteboard: 0xFAFAFA,
   pingPong: 0x2E7D32, pingPongLine: 0xFFFFFF,
@@ -582,15 +582,12 @@ function setupLighting() {
 function buildFloor() {
   const group = new THREE.Group();
   const tileGeo = new THREE.BoxGeometry(TILE - 0.02, 0.08, TILE - 0.02);
-  const tileMat = toonMat(COLORS.floor);
-  const lineMat = toonMat(COLORS.floorLine);
+  const tileMat1 = toonMat(COLORS.floor, { roughness: 0.85 });
+  const tileMat2 = toonMat(COLORS.floorLine, { roughness: 0.85 });
 
-  // Use instanced mesh for tiles
-  const tileCount = FLOOR_W * FLOOR_H;
-  const instTile = new THREE.InstancedMesh(tileGeo, tileMat, tileCount);
-  instTile.receiveShadow = true;
+  // Checkerboard floor tiles — two instanced meshes
+  const tiles1 = [], tiles2 = [];
   const dummy = new THREE.Object3D();
-  let idx = 0;
   for (let x = 0; x < FLOOR_W; x++) {
     for (let z = 0; z < FLOOR_H; z++) {
       dummy.position.set(
@@ -599,11 +596,19 @@ function buildFloor() {
         (z - FLOOR_H/2 + 0.5) * TILE
       );
       dummy.updateMatrix();
-      instTile.setMatrixAt(idx++, dummy.matrix);
+      ((x + z) % 2 === 0 ? tiles1 : tiles2).push(dummy.matrix.clone());
     }
   }
-  instTile.instanceMatrix.needsUpdate = true;
-  group.add(instTile);
+  const instTile1 = new THREE.InstancedMesh(tileGeo, tileMat1, tiles1.length);
+  tiles1.forEach((m, i) => instTile1.setMatrixAt(i, m));
+  instTile1.instanceMatrix.needsUpdate = true;
+  instTile1.receiveShadow = true;
+  group.add(instTile1);
+  const instTile2 = new THREE.InstancedMesh(tileGeo, tileMat2, tiles2.length);
+  tiles2.forEach((m, i) => instTile2.setMatrixAt(i, m));
+  instTile2.instanceMatrix.needsUpdate = true;
+  instTile2.receiveShadow = true;
+  group.add(instTile2);
 
   // Floor base (solid underneath)
   const baseGeo = new THREE.BoxGeometry(FLOOR_W * TILE + 0.2, 0.15, FLOOR_H * TILE + 0.2);
@@ -1208,6 +1213,25 @@ function buildAmenities() {
 function buildDecorations() {
   const group = new THREE.Group();
 
+  // Ceiling light panels
+  const ceilY = 4.2;
+  for (let i = 0; i < 3; i++) {
+    const lx = -FLOOR_W*TILE/2 + 2 + i * 3.5;
+    const lightPanel = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.04, 0.5),
+      toonMat(0xFFFFFF, { emissive: 0xFFF5E8, emissiveIntensity: 0.6, roughness: 0.2 })
+    );
+    lightPanel.position.set(lx, ceilY, -FLOOR_H*TILE/2 + 2.5);
+    group.add(lightPanel);
+    // Second row
+    const lightPanel2 = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.04, 0.5),
+      toonMat(0xFFFFFF, { emissive: 0xFFF5E8, emissiveIntensity: 0.6, roughness: 0.2 })
+    );
+    lightPanel2.position.set(lx, ceilY, FLOOR_H*TILE/2 - 2);
+    group.add(lightPanel2);
+  }
+
   // Potted plants
   function createPlant(x, z, scale) {
     const pGroup = new THREE.Group();
@@ -1454,9 +1478,9 @@ function createCharacter(color, skinColor) {
   const hasLogo = rng() < 0.35;
 
   const baseY = 0.42;
-  const headR = 0.17;
-  const bodyH = 0.36;
-  const bodyR = 0.09;
+  const headR = 0.22;
+  const bodyH = 0.42;
+  const bodyR = 0.12;
   const headY = baseY + bodyH + headR * 0.85;
 
   // === LEGS ===
