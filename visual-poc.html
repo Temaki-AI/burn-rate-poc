@@ -243,8 +243,8 @@ const toonGradient = (() => {
 })();
 
 function toonMat(color, opts = {}) {
-  return new THREE.MeshToonMaterial({
-    color, gradientMap: toonGradient,
+  return new THREE.MeshLambertMaterial({
+    color,
     transparent: opts.transparent || false,
     opacity: opts.opacity !== undefined ? opts.opacity : 1,
     emissive: opts.emissive || 0x000000,
