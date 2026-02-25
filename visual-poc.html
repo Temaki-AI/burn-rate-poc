@@ -5,90 +5,129 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Burn Rate — SaaS Startup Sim</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #87CEEB; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; font-family: 'Inter', system-ui, sans-serif; }
   #canvas-container { width: 100%; height: 100%; position: relative; }
   canvas { display: block; }
 
-  /* Top HUD Bar */
+  /* ─── Top HUD Bar ─── */
   #hud-top {
     position: absolute; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: center; gap: 0;
-    padding: 0 12px; height: 52px;
-    background: linear-gradient(180deg, rgba(30,30,50,0.88) 0%, rgba(30,30,50,0.78) 100%);
-    border-bottom: 2px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
+    padding: 0 16px; height: 54px;
+    background: linear-gradient(180deg, rgba(16,16,32,0.94) 0%, rgba(20,20,38,0.88) 100%);
+    border-bottom: 1px solid rgba(0,212,255,0.15);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.4), 0 0 40px rgba(0,212,255,0.05);
   }
   .hud-logo {
-    font-size: 18px; font-weight: 800; color: #fff; margin-right: 18px;
-    text-shadow: 0 0 12px rgba(100,180,255,0.4);
-    letter-spacing: -0.5px;
+    font-size: 17px; font-weight: 900; color: #fff; margin-right: 16px;
+    letter-spacing: -0.5px; display: flex; align-items: center; gap: 6px;
   }
-  .hud-logo span { color: #7CB9FF; }
+  .hud-logo span {
+    background: linear-gradient(135deg, #00D4FF, #A78BFA);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
   .hud-divider {
-    width: 1px; height: 28px; background: rgba(255,255,255,0.12); margin: 0 10px;
+    width: 1px; height: 30px; background: linear-gradient(180deg, transparent, rgba(255,255,255,0.12), transparent); margin: 0 8px;
   }
   .hud-stat {
-    display: flex; flex-direction: column; align-items: center; padding: 4px 14px;
-    border-radius: 8px; transition: background 0.2s;
+    display: flex; flex-direction: column; align-items: center; padding: 5px 16px;
+    border-radius: 10px; transition: all 0.2s; position: relative;
   }
   .hud-stat:hover { background: rgba(255,255,255,0.06); }
-  .hud-stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,0.45); font-weight: 600; }
-  .hud-stat-value { font-size: 16px; font-weight: 700; color: #fff; margin-top: 1px; }
-  .hud-stat-value.green { color: #7AE582; }
-  .hud-stat-value.red { color: #FF7B7B; }
-  .hud-stat-value.blue { color: #7CB9FF; }
+  .hud-stat-label {
+    font-size: 8.5px; text-transform: uppercase; letter-spacing: 1.4px;
+    color: rgba(255,255,255,0.35); font-weight: 700;
+  }
+  .hud-stat-value {
+    font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 700;
+    color: #fff; margin-top: 1px; letter-spacing: -0.5px;
+    text-shadow: 0 0 12px currentColor;
+  }
+  .hud-stat-value.green { color: #00FF88; }
+  .hud-stat-value.red { color: #FF6B6B; text-shadow: 0 0 16px rgba(255,107,107,0.5); }
+  .hud-stat-value.blue { color: #00D4FF; }
   .hud-stat-value.orange { color: #FFB347; }
   .hud-stat-value.purple { color: #C9A0FF; }
 
-  .hud-round {
-    margin-left: 14px; padding: 5px 14px; border-radius: 20px;
-    background: linear-gradient(135deg, #7CB9FF 0%, #A78BFA 100%);
-    font-size: 11px; font-weight: 700; color: #fff; letter-spacing: 0.5px;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  /* Pulse animation for critical stats */
+  .hud-stat-value.red { animation: criticalPulse 2s ease-in-out infinite; }
+  @keyframes criticalPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
 
-  /* Bottom Toolbar */
+  .hud-round {
+    margin-left: 12px; padding: 5px 14px; border-radius: 20px;
+    background: linear-gradient(135deg, #00D4FF 0%, #A78BFA 100%);
+    font-size: 10px; font-weight: 800; color: #fff; letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 0 16px rgba(0,212,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+
+  /* ─── Bottom Toolbar ─── */
   #hud-bottom {
     position: absolute; bottom: 0; left: 0; right: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: center; gap: 4px;
-    padding: 8px 16px; height: 62px;
-    background: linear-gradient(0deg, rgba(30,30,50,0.88) 0%, rgba(30,30,50,0.78) 100%);
-    border-top: 2px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 16px; height: 64px;
+    background: linear-gradient(0deg, rgba(16,16,32,0.94) 0%, rgba(20,20,38,0.88) 100%);
+    border-top: 1px solid rgba(0,212,255,0.12);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 -2px 20px rgba(0,0,0,0.4);
   }
   .toolbar-btn {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 6px 16px; border-radius: 10px; cursor: pointer;
-    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-    transition: all 0.2s; min-width: 72px;
+    padding: 6px 18px; border-radius: 12px; cursor: pointer;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1); min-width: 76px;
+    position: relative; overflow: hidden;
   }
+  .toolbar-btn::before {
+    content: ''; position: absolute; inset: 0; opacity: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(0,212,255,0.15), transparent 70%);
+    transition: opacity 0.3s;
+  }
+  .toolbar-btn:hover::before { opacity: 1; }
   .toolbar-btn:hover {
-    background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2);
-    transform: translateY(-2px);
+    background: rgba(255,255,255,0.08); border-color: rgba(0,212,255,0.25);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3), 0 0 20px rgba(0,212,255,0.1);
   }
   .toolbar-btn:active { transform: translateY(0); }
-  .toolbar-btn-icon { font-size: 18px; }
-  .toolbar-btn-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.7); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .toolbar-btn-icon { font-size: 20px; position: relative; z-index: 1; filter: drop-shadow(0 0 4px rgba(255,255,255,0.2)); }
+  .toolbar-btn-label {
+    font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.5); margin-top: 3px;
+    text-transform: uppercase; letter-spacing: 1px; position: relative; z-index: 1;
+    transition: color 0.2s;
+  }
+  .toolbar-btn:hover .toolbar-btn-label { color: rgba(255,255,255,0.9); }
   .toolbar-btn.highlight {
-    background: linear-gradient(135deg, rgba(255,100,100,0.25) 0%, rgba(255,60,60,0.15) 100%);
-    border-color: rgba(255,100,100,0.3);
+    background: linear-gradient(135deg, rgba(255,107,107,0.15) 0%, rgba(255,60,60,0.08) 100%);
+    border-color: rgba(255,107,107,0.25);
   }
-  .toolbar-btn.highlight .toolbar-btn-label { color: #FF7B7B; }
-
-  .toolbar-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.1); margin: 0 6px; }
-
-  .speed-controls {
-    display: flex; gap: 3px; margin-left: 8px;
+  .toolbar-btn.highlight::before {
+    background: radial-gradient(circle at 50% 0%, rgba(255,107,107,0.2), transparent 70%);
   }
+  .toolbar-btn.highlight .toolbar-btn-label { color: #FF6B6B; }
+
+  .toolbar-divider { width: 1px; height: 36px; background: linear-gradient(180deg, transparent, rgba(255,255,255,0.1), transparent); margin: 0 4px; }
+
+  .speed-controls { display: flex; gap: 3px; margin-left: 8px; }
   .speed-btn {
-    width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
-    font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: all 0.2s;
   }
-  .speed-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
-  .speed-btn.active { background: rgba(124,185,255,0.25); border-color: rgba(124,185,255,0.4); color: #7CB9FF; }
+  .speed-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .speed-btn.active {
+    background: rgba(0,212,255,0.2); border-color: rgba(0,212,255,0.4); color: #00D4FF;
+    box-shadow: 0 0 12px rgba(0,212,255,0.15);
+  }
 
   /* ─── Slide Panels ─── */
   .slide-panel {
@@ -199,20 +238,22 @@
   }
   .toolbar-btn.active .toolbar-btn-label { color: #00D4FF !important; }
 
-  /* Status bubbles */
+  /* ─── Status Bubbles ─── */
   .status-bubble {
-    background: rgba(255,255,255,0.95); color: #333; padding: 4px 10px;
-    border-radius: 12px; font-size: 11px; font-weight: 600;
+    background: rgba(16,16,32,0.92); color: #e0e8f0; padding: 4px 10px 4px 8px;
+    border-radius: 10px; font-family: 'Inter', system-ui, sans-serif;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.2px;
     white-space: nowrap; pointer-events: none;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,255,0.08);
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
     transition: opacity 0.5s;
     text-align: center;
   }
   .status-bubble::after {
     content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
     width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent;
-    border-top: 5px solid rgba(255,255,255,0.95);
+    border-top: 5px solid rgba(16,16,32,0.92);
   }
 </style>
 </head>
