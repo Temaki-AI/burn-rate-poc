@@ -256,6 +256,153 @@
     border-top: 5px solid rgba(16,16,32,0.92);
   }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  /* === UI POLISH OVERRIDES === */
+  html, body { font-family: 'Inter', system-ui, sans-serif; }
+
+  /* HUD Top — darker, more dramatic */
+  #hud-top {
+    height: 62px !important;
+    background: linear-gradient(180deg, rgba(8,8,18,0.95) 0%, rgba(12,12,28,0.9) 100%) !important;
+    border-bottom: 1px solid rgba(0,212,255,0.1) !important;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.4) !important;
+  }
+  .hud-logo {
+    font-size: 15px !important; font-weight: 900 !important;
+    text-shadow: 0 0 24px rgba(0,212,255,0.5) !important;
+  }
+  .hud-logo span {
+    background: linear-gradient(135deg, #00D4FF, #A78BFA) !important;
+    -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important;
+  }
+  .hud-stat-label {
+    font-size: 8px !important; letter-spacing: 2px !important;
+    color: rgba(255,255,255,0.3) !important; font-weight: 700 !important;
+  }
+  .hud-stat-value {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 18px !important; font-weight: 700 !important;
+    margin-top: 3px !important;
+  }
+  .hud-stat-value.green { color: #00FF88 !important; text-shadow: 0 0 16px rgba(0,255,136,0.4) !important; }
+  .hud-stat-value.red { color: #FF6B6B !important; text-shadow: 0 0 16px rgba(255,107,107,0.4) !important; }
+  .hud-stat-value.blue { color: #00D4FF !important; text-shadow: 0 0 16px rgba(0,212,255,0.4) !important; }
+  .hud-stat-value.orange { color: #FFB347 !important; text-shadow: 0 0 16px rgba(255,179,71,0.3) !important; }
+  .hud-stat-value.purple { color: #C9A0FF !important; text-shadow: 0 0 16px rgba(201,160,255,0.3) !important; }
+  .hud-round {
+    background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 50%, #7C3AED 100%) !important;
+    background-size: 200% 100% !important; animation: roundShimmer 3s ease-in-out infinite !important;
+    font-size: 9px !important; font-weight: 800 !important; letter-spacing: 1.5px !important;
+    text-transform: uppercase !important; padding: 6px 16px !important;
+    box-shadow: 0 2px 16px rgba(124,58,237,0.5) !important;
+  }
+  @keyframes roundShimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+  /* Bottom Toolbar — bigger, glowier */
+  #hud-bottom {
+    height: 72px !important;
+    background: linear-gradient(0deg, rgba(8,8,18,0.95) 0%, rgba(12,12,28,0.9) 100%) !important;
+    border-top: 1px solid rgba(0,212,255,0.08) !important;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.4) !important;
+    gap: 6px !important; padding: 8px 20px !important;
+  }
+  .toolbar-btn {
+    min-width: 80px !important; padding: 8px 16px !important;
+    border-radius: 12px !important; position: relative !important; overflow: hidden !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1) !important;
+  }
+  .toolbar-btn::before {
+    content: '' !important; position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+    background: radial-gradient(circle at 50% 0%, rgba(0,212,255,0.12), transparent 70%) !important;
+    opacity: 0 !important; transition: opacity 0.25s !important;
+  }
+  .toolbar-btn:hover::before { opacity: 1 !important; }
+  .toolbar-btn:hover {
+    background: rgba(0,212,255,0.08) !important;
+    border-color: rgba(0,212,255,0.25) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3) !important;
+  }
+  .toolbar-btn-icon { font-size: 22px !important; filter: drop-shadow(0 0 4px rgba(255,255,255,0.2)) !important; }
+  .toolbar-btn-label {
+    font-size: 9px !important; font-weight: 700 !important;
+    letter-spacing: 1.2px !important; margin-top: 4px !important;
+    color: rgba(255,255,255,0.45) !important;
+  }
+  .toolbar-btn:hover .toolbar-btn-label { color: #00D4FF !important; }
+  .toolbar-btn.highlight {
+    background: linear-gradient(135deg, rgba(255,59,48,0.12) 0%, rgba(255,59,48,0.04) 100%) !important;
+    border-color: rgba(255,59,48,0.2) !important;
+  }
+  .toolbar-btn.highlight::before {
+    background: radial-gradient(circle at 50% 0%, rgba(255,59,48,0.2), transparent 70%) !important;
+  }
+  .toolbar-btn.highlight:hover {
+    border-color: rgba(255,59,48,0.5) !important;
+    box-shadow: 0 6px 20px rgba(255,59,48,0.15) !important;
+  }
+  .toolbar-btn.highlight .toolbar-btn-label { color: #FF6B6B !important; }
+
+  .speed-btn {
+    width: 36px !important; height: 36px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    border-radius: 10px !important;
+  }
+  .speed-btn.active {
+    background: rgba(0,212,255,0.15) !important;
+    border-color: rgba(0,212,255,0.4) !important; color: #00D4FF !important;
+    box-shadow: 0 0 16px rgba(0,212,255,0.2) !important;
+  }
+
+  /* Status Bubbles — glass morphism */
+  .status-bubble {
+    background: rgba(255,255,255,0.92) !important;
+    border: 1px solid rgba(255,255,255,0.5) !important;
+    border-radius: 16px !important; padding: 5px 12px !important;
+    font-size: 11px !important; font-weight: 600 !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08) !important;
+    backdrop-filter: blur(8px) !important;
+    letter-spacing: 0.2px !important;
+  }
+  .status-bubble::after {
+    border-top-color: rgba(255,255,255,0.92) !important;
+  }
+
+  /* Panel overrides */
+  .slide-panel {
+    background: rgba(8,8,20,0.98) !important;
+    border-left: 1px solid rgba(0,212,255,0.2) !important;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.5) !important;
+  }
+  .panel-title { 
+    font-weight: 800 !important; letter-spacing: 0.5px !important;
+    background: linear-gradient(135deg, #00D4FF, #00FF88) !important;
+    -webkit-background-clip: text !important; -webkit-text-fill-color: transparent !important;
+  }
+  .panel-card {
+    background: rgba(255,255,255,0.03) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: 12px !important;
+  }
+  .panel-card:hover {
+    border-color: rgba(0,212,255,0.2) !important;
+    background: rgba(0,212,255,0.03) !important;
+  }
+  .btn-hire {
+    background: linear-gradient(135deg, #00FF88, #00D4FF) !important;
+    color: #000 !important; font-weight: 800 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 12px rgba(0,255,136,0.3) !important;
+  }
+  .btn-hire:hover { 
+    box-shadow: 0 4px 20px rgba(0,255,136,0.4) !important;
+    transform: translateY(-1px) !important;
+  }
+</style>
 </head>
 <body>
 
