@@ -491,7 +491,7 @@
 
 <!-- Top HUD -->
 <div id="hud-top">
-  <div class="hud-logo">🚀 <span>DisruptoCloud</span></div>
+  <div class="hud-logo">🚀 <span id="startupName">DisruptoCloud</span></div>
   <div class="hud-round">SERIES A</div>
   <div class="hud-divider"></div>
   <div class="hud-stat">
@@ -3525,6 +3525,18 @@ function updateCashPulse() {
 }
 // Check on load
 setTimeout(updateCashPulse, 2000);
+
+// ─── STARTUP NAME GENERATOR ───
+const STARTUP_NAMES = [
+  'DisruptoCloud','PivotStack','CloudBro','SynergyOS','BlockchainButForCats',
+  'UberForDogs','SlackKiller','AgileFlex','DeepSyncAI','Moonshot.io',
+  'YOLOmetrics','PivotPanda','ScaleForce','BurnBright','HypeLoop.ai',
+  'NeuralNosh','QuantumToast','ZeroToIPO','VibeCoded','TechDebtOS',
+  'SeriesAAAAH','RunwayRoulette','FounderFuel','PivotParadise','DisruptMeNot',
+  'ChurnZero','BlitzScale','OatMilkDB','StandupHero','ShipItYOLO',
+  'ThinkFluence','MoatBuilder','10xStack','GrowthHackr','CaffeineOps',
+];
+document.getElementById('startupName').textContent = STARTUP_NAMES[Math.floor(Math.random() * STARTUP_NAMES.length)];
 
 // --- GO ---
 init();
