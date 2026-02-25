@@ -653,7 +653,7 @@ const COLORS = {
   desk: 0x9E8B70, deskLeg: 0x3A3A3A,
   plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
   whiteboard: 0xDDDDD8,
-  pingPong: 0x2E7D32, pingPongLine: 0xFFFFFF,
+  pingPong: 0x2E7D32, pingPongLine: 0xE0E0E0,
   kombucha: 0xA0887A, cup: 0xD4C8A8,
   beanBag1: 0xFF5252, beanBag2: 0x448AFF, beanBag3: 0x69F0AE,
   napPod: 0x8899AA,
@@ -661,7 +661,7 @@ const COLORS = {
   monitor: 0x2A2A2A, monitorScreen: 0x4488FF,
   keyboard: 0x333333,
   mug: 0xFFF3E0, mugHandle: 0xFFCC80,
-  espresso: 0x5D4037, steam: 0xFFFFFF,
+  espresso: 0x5D4037, steam: 0xCCCCCC,
   poster1: 0xFFCDD2, poster2: 0xC5E1A5, poster3: 0xB3E5FC, poster4: 0xFFF9C4,
   engineer: 0x42A5F5, designer: 0xF48FB1, sales: 0x66BB6A,
   pm: 0xFFA726, ceo: 0xAB47BC,
@@ -762,7 +762,7 @@ function init() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 0.65;
+  renderer.toneMappingExposure = 0.55;
   container.appendChild(renderer.domElement);
 
   // CSS2D Renderer for status bubbles
@@ -803,6 +803,9 @@ function init() {
   // Events
   window.addEventListener('resize', onResize);
   setupSpeedButtons();
+
+  // Initialize Lucide icons
+  if (window.lucide) lucide.createIcons();
 
   // Start animation
   animate();
