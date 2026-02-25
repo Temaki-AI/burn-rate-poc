@@ -357,26 +357,26 @@ let statusBubbles = [];
 const FLOOR_W = 12, FLOOR_H = 8;
 const TILE = 1.0;
 const COLORS = {
-  floor: 0x3D3D55, floorLine: 0x4A4A65,
-  wall: 0x353550, wallEdge: 0x4A4A65,
-  glass: 0x4488AA,
-  desk: 0xC0BFB5, deskLeg: 0x606068,
+  floor: 0x6B5E4A, floorLine: 0x5A4E3A,
+  wall: 0xD8D0C0, wallEdge: 0xB8AFA0,
+  glass: 0x88CCEE,
+  desk: 0xF0EDE5, deskLeg: 0x555555,
   plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
-  whiteboard: 0xEEEEF2,
+  whiteboard: 0xFAFAFA,
   pingPong: 0x2E7D32, pingPongLine: 0xFFFFFF,
-  kombucha: 0x8D7B6E, cup: 0xFFE0A0,
-  beanBag1: 0xFF8A80, beanBag2: 0x82B1FF, beanBag3: 0xB9F6CA,
-  napPod: 0x6A7A8A,
-  neonSign: 0x00D4FF,
-  monitor: 0x222233, monitorScreen: 0x00FFAA,
-  keyboard: 0x444455,
+  kombucha: 0xA0887A, cup: 0xFFF5E0,
+  beanBag1: 0xFF5252, beanBag2: 0x448AFF, beanBag3: 0x69F0AE,
+  napPod: 0x8899AA,
+  neonSign: 0x00EEFF,
+  monitor: 0x2A2A2A, monitorScreen: 0x4488FF,
+  keyboard: 0x333333,
   mug: 0xFFF3E0, mugHandle: 0xFFCC80,
   espresso: 0x5D4037, steam: 0xFFFFFF,
   poster1: 0xFFCDD2, poster2: 0xC5E1A5, poster3: 0xB3E5FC, poster4: 0xFFF9C4,
   engineer: 0x42A5F5, designer: 0xF48FB1, sales: 0x66BB6A,
   pm: 0xFFA726, ceo: 0xAB47BC,
   skin: 0xFFDBAC, skinAlt: 0xE8B88A,
-  chair: 0x555570,
+  chair: 0x444444,
 };
 
 const STATUS_TEXTS = [
@@ -401,13 +401,15 @@ const toonGradient = (() => {
 })();
 
 function toonMat(color, opts = {}) {
-  return new THREE.MeshLambertMaterial({
+  return new THREE.MeshStandardMaterial({
     color,
     transparent: opts.transparent || false,
     opacity: opts.opacity !== undefined ? opts.opacity : 1,
     emissive: opts.emissive || 0x000000,
     emissiveIntensity: opts.emissiveIntensity || 0,
     side: opts.side || THREE.FrontSide,
+    roughness: opts.roughness !== undefined ? opts.roughness : 0.7,
+    metalness: opts.metalness !== undefined ? opts.metalness : 0.05,
   });
 }
 
@@ -439,8 +441,8 @@ function init() {
 
   // Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x1a1a2e);
-  // No fog — let the office pop
+  scene.background = new THREE.Color(0x2D2D3A);
+  scene.fog = new THREE.Fog(0x2D2D3A, 25, 50);
 
   // Camera — Orthographic Isometric
   const aspect = window.innerWidth / window.innerHeight;
@@ -469,7 +471,8 @@ function init() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputEncoding = THREE.sRGBEncoding;
-  renderer.toneMapping = THREE.NoToneMapping;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 0.9;
   container.appendChild(renderer.domElement);
 
   // CSS2D Renderer for status bubbles
@@ -517,39 +520,62 @@ function init() {
 
 // --- LIGHTING ---
 function setupLighting() {
-  // Ambient — warm fill
-  const ambient = new THREE.AmbientLight(0xFFF5E6, 1.0);
+  // Warm ambient — fills shadows softly
+  const ambient = new THREE.AmbientLight(0xFFF0E0, 0.3);
   scene.add(ambient);
 
-  // Hemisphere for sky/ground contrast
-  const hemi = new THREE.HemisphereLight(0xC8E6FF, 0xFFE8CC, 0.4);
+  // Hemisphere — warm sky, cool ground bounce
+  const hemi = new THREE.HemisphereLight(0xFFE8CC, 0x8888AA, 0.6);
   scene.add(hemi);
 
-  // Main directional — upper right, warm
-  const dir = new THREE.DirectionalLight(0xFFF8F0, 1.6);
-  dir.position.set(8, 14, 6);
-  dir.castShadow = true;
-  dir.shadow.mapSize.set(2048, 2048);
-  dir.shadow.camera.near = 0.1;
-  dir.shadow.camera.far = 40;
-  dir.shadow.camera.left = -12;
-  dir.shadow.camera.right = 12;
-  dir.shadow.camera.top = 12;
-  dir.shadow.camera.bottom = -12;
-  dir.shadow.bias = -0.002;
-  dir.shadow.normalBias = 0.02;
-  dir.shadow.radius = 4;
-  scene.add(dir);
+  // Main sun — warm, strong, from upper-right
+  const sun = new THREE.DirectionalLight(0xFFEEDD, 1.8);
+  sun.position.set(10, 16, 8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(4096, 4096);
+  sun.shadow.camera.near = 0.1;
+  sun.shadow.camera.far = 50;
+  sun.shadow.camera.left = -15;
+  sun.shadow.camera.right = 15;
+  sun.shadow.camera.top = 15;
+  sun.shadow.camera.bottom = -15;
+  sun.shadow.bias = -0.001;
+  sun.shadow.normalBias = 0.02;
+  sun.shadow.radius = 3;
+  scene.add(sun);
 
-  // Neon sign accent light
-  const neonLight = new THREE.PointLight(0x00D4FF, 1.5, 12);
-  neonLight.position.set(-FLOOR_W*TILE/2 + 0.5, 3.5, 0);
+  // Fill light from opposite side — cooler, softer
+  const fill = new THREE.DirectionalLight(0xCCDDFF, 0.4);
+  fill.position.set(-6, 8, -4);
+  scene.add(fill);
+
+  // Overhead fluorescent panels (warm white)
+  const fluoro1 = new THREE.PointLight(0xFFF5E8, 0.8, 10);
+  fluoro1.position.set(-2, 4.5, 0);
+  scene.add(fluoro1);
+  const fluoro2 = new THREE.PointLight(0xFFF5E8, 0.8, 10);
+  fluoro2.position.set(3, 4.5, 0);
+  scene.add(fluoro2);
+
+  // Neon sign — strong cyan accent
+  const neonLight = new THREE.PointLight(0x00D4FF, 2.0, 8);
+  neonLight.position.set(-FLOOR_W*TILE/2 + 0.5, 2.5, 0);
   scene.add(neonLight);
 
-  // Espresso warm glow
-  const espressoLight = new THREE.PointLight(0xFF9800, 1.0, 8);
-  espressoLight.position.set(4, 1.5, -FLOOR_H*TILE/2 + 1.5);
-  scene.add(espressoLight);
+  // Coffee corner warm glow
+  const coffeeLight = new THREE.PointLight(0xFF8844, 1.2, 6);
+  coffeeLight.position.set(4, 1.5, -FLOOR_H*TILE/2 + 1.5);
+  scene.add(coffeeLight);
+
+  // Monitor screen glow (blue tint on desk area)
+  const screenGlow = new THREE.PointLight(0x4488FF, 0.5, 5);
+  screenGlow.position.set(0, 1.0, -FLOOR_H*TILE/2 + 2);
+  scene.add(screenGlow);
+
+  // Warm accent in meeting area
+  const meetingLight = new THREE.PointLight(0xFFAA66, 0.6, 6);
+  meetingLight.position.set(-FLOOR_W*TILE/2 + 2.5, 2, FLOOR_H*TILE/2 - 2);
+  scene.add(meetingLight);
 }
 
 // --- FLOOR ---
@@ -581,7 +607,7 @@ function buildFloor() {
 
   // Floor base (solid underneath)
   const baseGeo = new THREE.BoxGeometry(FLOOR_W * TILE + 0.2, 0.15, FLOOR_H * TILE + 0.2);
-  const baseMesh = new THREE.Mesh(baseGeo, toonMat(0xD4C8B0));
+  const baseMesh = new THREE.Mesh(baseGeo, toonMat(0x6B5E4A));
   baseMesh.position.y = -0.15;
   baseMesh.receiveShadow = true;
   group.add(baseMesh);
@@ -621,7 +647,7 @@ function buildWalls() {
 
   // Right wall — GLASS
   const glassGeo = new THREE.BoxGeometry(wallThick, wallH, FLOOR_H * TILE);
-  const glassMat = toonMat(COLORS.glass, { transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+  const glassMat = toonMat(COLORS.glass, { transparent: true, opacity: 0.12, side: THREE.DoubleSide, roughness: 0.1, metalness: 0.1 });
   const glassWall = new THREE.Mesh(glassGeo, glassMat);
   glassWall.position.set(FLOOR_W*TILE/2 + wallThick/2, wallH/2, 0);
   group.add(glassWall);
@@ -867,7 +893,7 @@ function buildFurniture() {
   // Meeting table
   const mtGroup = new THREE.Group();
   const mtw = 2.0, mtd = 1.0, mth = 0.72;
-  const mtTop = new THREE.Mesh(roundedBox(mtw, 0.05, mtd, 0.1, 3), toonMat(0xD7CCC8));
+  const mtTop = new THREE.Mesh(roundedBox(mtw, 0.05, mtd, 0.1, 3), toonMat(0xF0EDE5, { roughness: 0.3 }));
   mtTop.position.y = mth;
   mtTop.castShadow = true; mtTop.receiveShadow = true;
   mtGroup.add(mtTop);
@@ -1392,7 +1418,7 @@ let charSeed = 1;
 
 const SKIN_TONES = [0xFFDBAC, 0xF1C27D, 0xE8B88A, 0xC68642, 0x8D5524, 0x5C3A1E, 0xFEE3C8, 0xD4A574];
 const HAIR_COLORS = [0x1A1A1A, 0x3B2F2F, 0x8B4513, 0xDAA520, 0xB22222, 0xE8541E, 0xFF69B4, 0x4169E1, 0x32CD32, 0x9B59B6, 0x00CED1, 0xFFFFFF];
-const HOODIE_COLORS = [0x2C3E50, 0x8E44AD, 0x2980B9, 0xC0392B, 0x27AE60, 0xF39C12, 0x1ABC9C, 0xE74C3C, 0x3498DB, 0x00D4FF];
+const HOODIE_COLORS = [0xE74C3C, 0x9B59B6, 0x3498DB, 0x2ECC71, 0xF39C12, 0x1ABC9C, 0xE67E22, 0xFF6B9D, 0x00BCD4, 0x8BC34A, 0xFF5722, 0x673AB7];
 
 function darkenColor(hex, amount) {
   const c = new THREE.Color(hex);
