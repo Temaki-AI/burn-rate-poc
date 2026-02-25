@@ -1221,80 +1221,20 @@ function buildDecorations() {
 }
 
 // --- CHARACTERS ---
-function createCharacter(color, skinColor) {
-  const group = new THREE.Group();
-  skinColor = skinColor || COLORS.skin;
-  const totalH = 0.9;
-  const headR = totalH * 0.18; // ~40% visual weight with oversized head
-
-  // Body (cylinder)
-  const bodyH = totalH * 0.4;
-  const bodyR = 0.08;
-  const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(bodyR, bodyR * 0.9, bodyH, 8),
-    toonMat(color)
-  );
-  body.position.y = bodyH/2 + 0.42; // Seated height
-  body.castShadow = true;
-  group.add(body);
-
-  // Head
-  const head = new THREE.Mesh(
-    new THREE.SphereGeometry(headR, 10, 10),
-    toonMat(skinColor)
-  );
-  head.position.y = bodyH + 0.42 + headR * 0.85;
-  head.castShadow = true;
-  group.add(head);
-
-  // Hair (top of head)
-  const hair = new THREE.Mesh(
-    new THREE.SphereGeometry(headR * 1.05, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.55),
-    toonMat(darkenColor(color, 0.4))
-  );
-  hair.position.y = head.position.y + headR * 0.08;
-  group.add(hair);
-
-  // Eyes
-  [-1, 1].forEach(side => {
-    const eye = new THREE.Mesh(
-      new THREE.SphereGeometry(0.02, 6, 6),
-      new THREE.MeshBasicMaterial({ color: 0x222222 })
-    );
-    eye.position.set(side * 0.04, head.position.y + 0.01, headR * 0.85);
-    group.add(eye);
-
-    // Eye white
-    const eyeWhite = new THREE.Mesh(
-      new THREE.SphereGeometry(0.028, 6, 6),
-      new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
-    );
-    eyeWhite.position.set(side * 0.04, head.position.y + 0.01, headR * 0.82);
-    group.add(eyeWhite);
-  });
-
-  // Arms
-  [-1, 1].forEach(side => {
-    const arm = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.025, 0.025, bodyH * 0.7, 6),
-      toonMat(color)
-    );
-    arm.position.set(side * (bodyR + 0.03), 0.52, 0);
-    arm.rotation.z = side * 0.15;
-    arm.castShadow = true;
-    group.add(arm);
-
-    // Hand
-    const hand = new THREE.Mesh(
-      new THREE.SphereGeometry(0.028, 6, 6),
-      toonMat(skinColor)
-    );
-    hand.position.set(side * (bodyR + 0.04), 0.42, 0.02);
-    group.add(hand);
-  });
-
-  return group;
+// --- SEEDED RANDOM for consistent characters ---
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
 }
+let charSeed = 1;
+
+const SKIN_TONES = [0xFFDBAC, 0xF1C27D, 0xE8B88A, 0xC68642, 0x8D5524, 0x5C3A1E, 0xFEE3C8, 0xD4A574];
+const HAIR_COLORS = [0x1A1A1A, 0x3B2F2F, 0x8B4513, 0xDAA520, 0xB22222, 0xE8541E, 0xFF69B4, 0x4169E1, 0x32CD32, 0x9B59B6, 0x00CED1, 0xFFFFFF];
+const HOODIE_COLORS = [0x2C3E50, 0x8E44AD, 0x2980B9, 0xC0392B, 0x27AE60, 0xF39C12, 0x1ABC9C, 0xE74C3C, 0x3498DB, 0x00D4FF];
 
 function darkenColor(hex, amount) {
   const c = new THREE.Color(hex);
@@ -1302,6 +1242,434 @@ function darkenColor(hex, amount) {
   c.g = Math.max(0, c.g - amount);
   c.b = Math.max(0, c.b - amount);
   return c;
+}
+function lightenColor(hex, amount) {
+  const c = new THREE.Color(hex);
+  c.r = Math.min(1, c.r + amount);
+  c.g = Math.min(1, c.g + amount);
+  c.b = Math.min(1, c.b + amount);
+  return c;
+}
+
+function createCharacter(color, skinColor) {
+  const rng = mulberry32(charSeed++);
+  const pick = arr => arr[Math.floor(rng() * arr.length)];
+  const group = new THREE.Group();
+
+  // Traits
+  const skin = skinColor || pick(SKIN_TONES);
+  const shirtColor = color || pick(HOODIE_COLORS);
+  const hairColor = pick(HAIR_COLORS);
+  const hairStyle = Math.floor(rng() * 9); // 0-8
+  const hasGlasses = rng() < 0.3;
+  const hasHeadphones = !hasGlasses && rng() < 0.25;
+  const hasCoffeeCup = rng() < 0.15;
+  const hasLaptop = !hasCoffeeCup && rng() < 0.12;
+  const hasBeard = rng() < 0.2;
+  const clothingType = Math.floor(rng() * 4); // 0=hoodie, 1=tshirt, 2=button-up, 3=dress
+  const hasLogo = rng() < 0.35;
+
+  const baseY = 0.42;
+  const headR = 0.17;
+  const bodyH = 0.36;
+  const bodyR = 0.09;
+  const headY = baseY + bodyH + headR * 0.85;
+
+  // === LEGS ===
+  [-1, 1].forEach(side => {
+    const leg = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.028, 0.22, 6),
+      toonMat(clothingType === 3 ? shirtColor : 0x2C3E50)
+    );
+    leg.position.set(side * 0.04, baseY - 0.08, 0);
+    leg.castShadow = true;
+    group.add(leg);
+    // Shoe
+    const shoe = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.025, 0.07),
+      toonMat(rng() < 0.5 ? 0x222222 : 0xEEEEEE)
+    );
+    shoe.position.set(side * 0.04, baseY - 0.19, 0.01);
+    group.add(shoe);
+  });
+
+  // === BODY ===
+  if (clothingType === 0) {
+    // Hoodie — wider, with hood bump
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(bodyR * 1.1, bodyR, bodyH, 8),
+      toonMat(shirtColor)
+    );
+    body.position.y = baseY + bodyH / 2;
+    body.castShadow = true;
+    group.add(body);
+    // Hood bump behind head
+    const hood = new THREE.Mesh(
+      new THREE.SphereGeometry(headR * 0.55, 8, 6, 0, Math.PI * 2, Math.PI * 0.3, Math.PI * 0.5),
+      toonMat(shirtColor)
+    );
+    hood.position.set(0, headY - 0.04, -headR * 0.5);
+    hood.rotation.x = 0.3;
+    group.add(hood);
+    // Kangaroo pocket
+    const pocket = new THREE.Mesh(
+      new THREE.BoxGeometry(bodyR * 1.2, 0.06, 0.015),
+      toonMat(darkenColor(shirtColor, 0.08))
+    );
+    pocket.position.set(0, baseY + bodyH * 0.25, bodyR * 0.95);
+    group.add(pocket);
+  } else if (clothingType === 3) {
+    // Dress — flared bottom
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(bodyR * 0.9, bodyR * 1.4, bodyH * 1.1, 8),
+      toonMat(shirtColor)
+    );
+    body.position.y = baseY + bodyH / 2 - 0.02;
+    body.castShadow = true;
+    group.add(body);
+  } else {
+    // T-shirt or button-up
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(bodyR, bodyR * 0.85, bodyH, 8),
+      toonMat(shirtColor)
+    );
+    body.position.y = baseY + bodyH / 2;
+    body.castShadow = true;
+    group.add(body);
+    if (clothingType === 2) {
+      // Button-up: buttons down the front
+      for (let b = 0; b < 3; b++) {
+        const btn = new THREE.Mesh(
+          new THREE.SphereGeometry(0.008, 4, 4),
+          new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+        );
+        btn.position.set(0, baseY + bodyH * 0.65 - b * 0.08, bodyR * 0.92);
+        group.add(btn);
+      }
+    }
+  }
+
+  // Logo on chest
+  if (hasLogo) {
+    const logoColor = pick([0x00D4FF, 0xFF6B6B, 0x00FF88, 0xFFAA00, 0xFF00FF]);
+    const logo = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.04, 0.005),
+      new THREE.MeshBasicMaterial({ color: logoColor })
+    );
+    logo.position.set(0.025, baseY + bodyH * 0.65, bodyR * 0.93);
+    group.add(logo);
+  }
+
+  // === HEAD ===
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(headR, 12, 12),
+    toonMat(skin)
+  );
+  head.position.y = headY;
+  head.castShadow = true;
+  group.add(head);
+
+  // === HAIR STYLES ===
+  const hairMat = toonMat(hairColor);
+  const hairMatDark = toonMat(darkenColor(hairColor, 0.15));
+
+  if (hairStyle === 0) {
+    // Buzz cut — thin shell
+    const buzz = new THREE.Mesh(
+      new THREE.SphereGeometry(headR * 1.02, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      hairMat
+    );
+    buzz.position.y = headY + headR * 0.05;
+    group.add(buzz);
+  } else if (hairStyle === 1) {
+    // Messy/spiky — several small cones
+    for (let s = 0; s < 7; s++) {
+      const angle = (s / 7) * Math.PI * 2 + rng() * 0.4;
+      const spike = new THREE.Mesh(
+        new THREE.ConeGeometry(0.025 + rng() * 0.015, 0.07 + rng() * 0.04, 5),
+        hairMat
+      );
+      spike.position.set(
+        Math.sin(angle) * headR * 0.6,
+        headY + headR * 0.75 + rng() * 0.03,
+        Math.cos(angle) * headR * 0.6
+      );
+      spike.rotation.set(Math.cos(angle) * 0.4, 0, -Math.sin(angle) * 0.4);
+      group.add(spike);
+    }
+  } else if (hairStyle === 2) {
+    // Top bun
+    const base = new THREE.Mesh(
+      new THREE.SphereGeometry(headR * 1.04, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.5),
+      hairMat
+    );
+    base.position.y = headY + headR * 0.08;
+    group.add(base);
+    const bun = new THREE.Mesh(
+      new THREE.SphereGeometry(0.055, 8, 8),
+      hairMat
+    );
+    bun.position.set(0, headY + headR + 0.04, -0.01);
+    group.add(bun);
+  } else if (hairStyle === 3) {
+    // Ponytail
+    const top = new THREE.Mesh(
+      new THREE.SphereGeometry(headR * 1.04, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.55),
+      hairMat
+    );
+    top.position.y = headY + headR * 0.06;
+    group.add(top);
+    const tail = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.015, 0.18, 6),
+      hairMat
+    );
+    tail.position.set(0, headY - 0.02, -headR * 0.85);
+    tail.rotation.x = 0.6;
+    group.add(tail);
+  } else if (hairStyle === 4) {
+    // Afro — big sphere
+    const afro = new THREE.Mesh(
+      new THREE.SphereGeometry(headR * 1.45, 12, 12),
+      hairMat
+    );
+    afro.position.y = headY + headR * 0.15;
+    group.add(afro);
+  } else if (hairStyle === 5) {
+    // Bald — no hair, just a shine spot
+    const shine = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.3 })
+    );
+    shine.position.set(0.03, headY + headR * 0.85, 0.03);
+    group.add(shine);
+  } else if (hairStyle === 6) {
+    // Mohawk
+    for (let m = 0; m < 5; m++) {
+      const spike = new THREE.Mesh(
+        new THREE.BoxGeometry(0.02, 0.06 + m * 0.008, 0.03),
+        hairMat
+      );
+      spike.position.set(0, headY + headR * 0.8 + m * 0.005, -headR * 0.3 + m * headR * 0.15);
+      group.add(spike);
+    }
+  } else if (hairStyle === 7) {
+    // Long straight — curtain style
+    const top = new THREE.Mesh(
+      new THREE.SphereGeometry(headR * 1.06, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.5),
+      hairMat
+    );
+    top.position.y = headY + headR * 0.06;
+    group.add(top);
+    [-1, 0, 1].forEach(side => {
+      const strand = new THREE.Mesh(
+        new THREE.BoxGeometry(side === 0 ? headR * 1.6 : 0.04, 0.2, 0.025),
+        side === 0 ? hairMatDark : hairMat
+      );
+      strand.position.set(
+        side * headR * 0.7,
+        headY - 0.06,
+        side === 0 ? -headR * 0.85 : 0
+      );
+      group.add(strand);
+    });
+  } else {
+    // Curly — cluster of small spheres
+    for (let c = 0; c < 12; c++) {
+      const a = (c / 12) * Math.PI * 2;
+      const elev = rng() * 0.6 + 0.1;
+      const curl = new THREE.Mesh(
+        new THREE.SphereGeometry(0.035 + rng() * 0.015, 6, 6),
+        c % 2 === 0 ? hairMat : hairMatDark
+      );
+      curl.position.set(
+        Math.sin(a) * headR * (0.8 + rng() * 0.3),
+        headY + headR * elev,
+        Math.cos(a) * headR * (0.8 + rng() * 0.3)
+      );
+      group.add(curl);
+    }
+  }
+
+  // === FACE ===
+  // Eyes
+  [-1, 1].forEach(side => {
+    const eyeWhite = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    eyeWhite.position.set(side * 0.05, headY + 0.01, headR * 0.82);
+    group.add(eyeWhite);
+
+    const pupil = new THREE.Mesh(
+      new THREE.SphereGeometry(0.018, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0x111111 })
+    );
+    pupil.position.set(side * 0.05, headY + 0.01, headR * 0.88);
+    group.add(pupil);
+
+    // Pupil highlight
+    const highlight = new THREE.Mesh(
+      new THREE.SphereGeometry(0.006, 4, 4),
+      new THREE.MeshBasicMaterial({ color: 0xFFFFFF })
+    );
+    highlight.position.set(side * 0.05 + 0.008, headY + 0.02, headR * 0.91);
+    group.add(highlight);
+  });
+
+  // Mouth — simple line
+  const mouth = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.006, 0.005),
+    new THREE.MeshBasicMaterial({ color: 0x993333 })
+  );
+  mouth.position.set(0, headY - 0.045, headR * 0.9);
+  group.add(mouth);
+
+  // Nose
+  const nose = new THREE.Mesh(
+    new THREE.SphereGeometry(0.015, 5, 5),
+    toonMat(darkenColor(skin, 0.05))
+  );
+  nose.position.set(0, headY - 0.01, headR * 0.92);
+  group.add(nose);
+
+  // Beard
+  if (hasBeard) {
+    const beard = new THREE.Mesh(
+      new THREE.SphereGeometry(headR * 0.7, 8, 6, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.4),
+      toonMat(darkenColor(hairColor, 0.1))
+    );
+    beard.position.set(0, headY - headR * 0.15, headR * 0.15);
+    group.add(beard);
+  }
+
+  // === GLASSES ===
+  if (hasGlasses) {
+    const glassColor = pick([0x111111, 0x8B4513, 0xFF0000, 0x4169E1]);
+    const glassMat = toonMat(glassColor);
+    [-1, 1].forEach(side => {
+      // Frame ring
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.032, 0.004, 6, 12),
+        glassMat
+      );
+      ring.position.set(side * 0.05, headY + 0.01, headR * 0.88);
+      group.add(ring);
+      // Lens (slightly transparent)
+      const lens = new THREE.Mesh(
+        new THREE.CircleGeometry(0.028, 8),
+        new THREE.MeshBasicMaterial({ color: 0xCCDDFF, transparent: true, opacity: 0.3 })
+      );
+      lens.position.set(side * 0.05, headY + 0.01, headR * 0.885);
+      group.add(lens);
+    });
+    // Bridge
+    const bridge = new THREE.Mesh(
+      new THREE.BoxGeometry(0.03, 0.004, 0.004),
+      glassMat
+    );
+    bridge.position.set(0, headY + 0.01, headR * 0.89);
+    group.add(bridge);
+    // Temple arms
+    [-1, 1].forEach(side => {
+      const arm = new THREE.Mesh(
+        new THREE.BoxGeometry(0.004, 0.004, headR * 0.8),
+        glassMat
+      );
+      arm.position.set(side * 0.08, headY + 0.015, headR * 0.45);
+      group.add(arm);
+    });
+  }
+
+  // === HEADPHONES ===
+  if (hasHeadphones) {
+    const hpColor = pick([0x111111, 0xE74C3C, 0x3498DB]);
+    const hpMat = toonMat(hpColor);
+    // Band
+    const band = new THREE.Mesh(
+      new THREE.TorusGeometry(headR * 1.1, 0.008, 6, 16, Math.PI),
+      hpMat
+    );
+    band.position.set(0, headY + headR * 0.4, 0);
+    band.rotation.z = Math.PI;
+    band.rotation.y = Math.PI / 2;
+    group.add(band);
+    // Ear cups
+    [-1, 1].forEach(side => {
+      const cup = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 0.025, 8),
+        hpMat
+      );
+      cup.position.set(side * (headR * 1.05), headY + 0.02, 0);
+      cup.rotation.z = Math.PI / 2;
+      group.add(cup);
+    });
+  }
+
+  // === ARMS ===
+  [-1, 1].forEach(side => {
+    const armColor = clothingType === 1 ? skin : shirtColor; // T-shirt shows skin arms
+    const arm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.022, bodyH * 0.6, 6),
+      toonMat(armColor)
+    );
+    arm.position.set(side * (bodyR + 0.035), baseY + bodyH * 0.55, 0);
+    arm.rotation.z = side * 0.2;
+    arm.castShadow = true;
+    group.add(arm);
+
+    // Forearm/hand
+    const hand = new THREE.Mesh(
+      new THREE.SphereGeometry(0.025, 6, 6),
+      toonMat(skin)
+    );
+    hand.position.set(side * (bodyR + 0.05), baseY + bodyH * 0.22, 0.02);
+    group.add(hand);
+  });
+
+  // === COFFEE CUP in hand ===
+  if (hasCoffeeCup) {
+    const cupGroup = new THREE.Group();
+    const cup = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.016, 0.05, 8),
+      toonMat(0xFFFFFF)
+    );
+    cupGroup.add(cup);
+    // Lid
+    const lid = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.022, 0.02, 0.008, 8),
+      toonMat(0x8B4513)
+    );
+    lid.position.y = 0.028;
+    cupGroup.add(lid);
+    // Sleeve
+    const sleeve = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.021, 0.018, 0.025, 8),
+      toonMat(0xD2691E)
+    );
+    sleeve.position.y = -0.005;
+    cupGroup.add(sleeve);
+    cupGroup.position.set(bodyR + 0.06, baseY + bodyH * 0.3, 0.04);
+    group.add(cupGroup);
+  }
+
+  // === LAPTOP in hand ===
+  if (hasLaptop) {
+    const laptop = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.005, 0.07),
+      toonMat(0x555555)
+    );
+    laptop.position.set(-bodyR - 0.04, baseY + bodyH * 0.25, 0.06);
+    group.add(laptop);
+    // Screen
+    const screen = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.003, 0.05),
+      new THREE.MeshBasicMaterial({ color: 0x00AAFF })
+    );
+    screen.position.set(-bodyR - 0.04, baseY + bodyH * 0.255, 0.06);
+    group.add(screen);
+  }
+
+  return group;
 }
 
 function buildCharacters() {
