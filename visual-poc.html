@@ -619,7 +619,7 @@ function buildFloor() {
 
   // Ground plane beneath
   const groundGeo = new THREE.PlaneGeometry(60, 60);
-  const groundMesh = new THREE.Mesh(groundGeo, toonMat(0xC8D8C0));
+  const groundMesh = new THREE.Mesh(groundGeo, toonMat(0x3A3A48));
   groundMesh.rotation.x = -Math.PI/2;
   groundMesh.position.y = -0.25;
   groundMesh.receiveShadow = true;
@@ -700,48 +700,119 @@ function buildWalls() {
 // --- DESK BUILDER ---
 function createDesk(x, z, rotation) {
   const group = new THREE.Group();
-  const dw = 1.1, dd = 0.6, dh = 0.72;
-  const legR = 0.03, legH = dh - 0.04;
+  const dw = 1.2, dd = 0.65, dh = 0.72;
 
-  // Desktop
-  const topGeo = roundedBox(dw, 0.04, dd, 0.04, 2);
-  const top = new THREE.Mesh(topGeo, toonMat(COLORS.desk));
+  // Desktop — wood-colored with edge banding
+  const topGeo = roundedBox(dw, 0.045, dd, 0.03, 2);
+  const top = new THREE.Mesh(topGeo, toonMat(COLORS.desk, { roughness: 0.4 }));
   top.position.y = dh - 0.02;
   top.castShadow = true; top.receiveShadow = true;
   group.add(top);
 
-  // Legs
-  const legGeo = new THREE.CylinderGeometry(legR, legR, legH, 6);
-  const legMat = toonMat(COLORS.deskLeg);
-  const legPositions = [
-    [-dw/2 + 0.06, legH/2, -dd/2 + 0.06],
-    [dw/2 - 0.06, legH/2, -dd/2 + 0.06],
-    [-dw/2 + 0.06, legH/2, dd/2 - 0.06],
-    [dw/2 - 0.06, legH/2, dd/2 - 0.06],
-  ];
-  legPositions.forEach(p => {
-    const leg = new THREE.Mesh(legGeo, legMat);
-    leg.position.set(...p);
-    leg.castShadow = true;
-    group.add(leg);
+  // Edge banding (slightly darker)
+  const edgeMat = toonMat(0xB0AAA0, { roughness: 0.3 });
+  const edgeFront = new THREE.Mesh(new THREE.BoxGeometry(dw, 0.045, 0.008), edgeMat);
+  edgeFront.position.set(0, dh - 0.02, dd/2);
+  group.add(edgeFront);
+
+  // Side panels instead of legs (modern desk)
+  const panelMat = toonMat(COLORS.deskLeg, { roughness: 0.6 });
+  [-1, 1].forEach(side => {
+    const panel = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, dh - 0.05, dd * 0.8),
+      panelMat
+    );
+    panel.position.set(side * (dw/2 - 0.02), (dh - 0.05)/2, 0);
+    panel.castShadow = true;
+    group.add(panel);
   });
 
-  // Monitor
+  // Under-desk shelf/crossbar
+  const crossbar = new THREE.Mesh(
+    new THREE.BoxGeometry(dw - 0.15, 0.02, 0.12),
+    panelMat
+  );
+  crossbar.position.set(0, 0.25, -dd/4);
+  group.add(crossbar);
+
+  // Drawer unit (right side)
+  const drawer = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.3, dd * 0.7),
+    toonMat(0xBBBBBB, { roughness: 0.5, metalness: 0.1 })
+  );
+  drawer.position.set(dw/2 - 0.18, 0.38, 0);
+  drawer.castShadow = true;
+  group.add(drawer);
+  // Drawer handles
+  for (let d = 0; d < 2; d++) {
+    const handle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.008, 0.008),
+      toonMat(0x888888, { metalness: 0.4, roughness: 0.3 })
+    );
+    handle.position.set(dw/2 - 0.18, 0.45 - d * 0.12, dd * 0.35 + 0.005);
+    group.add(handle);
+  }
+
+  // Monitor — bigger
   const monitorGroup = createMonitor();
-  monitorGroup.position.set(0, dh, -dd/2 + 0.15);
+  monitorGroup.position.set(-0.1, dh, -dd/2 + 0.18);
   group.add(monitorGroup);
 
   // Keyboard
-  const kbGeo = new THREE.BoxGeometry(0.3, 0.015, 0.1);
-  const kb = new THREE.Mesh(kbGeo, toonMat(COLORS.keyboard));
-  kb.position.set(0, dh + 0.008, 0.05);
+  const kb = new THREE.Mesh(
+    new THREE.BoxGeometry(0.32, 0.012, 0.11),
+    toonMat(COLORS.keyboard, { roughness: 0.8 })
+  );
+  kb.position.set(-0.05, dh + 0.006, 0.06);
   kb.castShadow = true;
   group.add(kb);
 
+  // Mouse
+  const mouse = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.015, 0.065),
+    toonMat(0x333333, { roughness: 0.6 })
+  );
+  mouse.position.set(0.25, dh + 0.007, 0.06);
+  group.add(mouse);
+
+  // Mouse pad
+  const pad = new THREE.Mesh(
+    new THREE.BoxGeometry(0.22, 0.003, 0.18),
+    toonMat(0x2A2A3A, { roughness: 0.9 })
+  );
+  pad.position.set(0.22, dh + 0.001, 0.04);
+  group.add(pad);
+
   // Coffee mug
   const mugGroup = createMug();
-  mugGroup.position.set(dw/2 - 0.15, dh, dd/2 - 0.12);
+  mugGroup.position.set(dw/2 - 0.18, dh, dd/2 - 0.12);
   group.add(mugGroup);
+
+  // Random desk items
+  const rnd = Math.random();
+  if (rnd < 0.4) {
+    // Stack of papers
+    const papers = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.02, 0.15),
+      toonMat(0xFFFFF0)
+    );
+    papers.position.set(-dw/2 + 0.15, dh + 0.01, dd/2 - 0.1);
+    papers.rotation.y = 0.15;
+    group.add(papers);
+  }
+  if (rnd > 0.5) {
+    // Small plant/succulent
+    const potGeo = new THREE.CylinderGeometry(0.025, 0.02, 0.035, 6);
+    const pot = new THREE.Mesh(potGeo, toonMat(0xD4A574));
+    pot.position.set(-dw/2 + 0.12, dh + 0.018, -dd/2 + 0.15);
+    group.add(pot);
+    const succulent = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 6, 6),
+      toonMat(0x66BB6A)
+    );
+    succulent.position.set(-dw/2 + 0.12, dh + 0.045, -dd/2 + 0.15);
+    group.add(succulent);
+  }
 
   group.position.set(x, 0, z);
   if (rotation) group.rotation.y = rotation;
@@ -750,33 +821,59 @@ function createDesk(x, z, rotation) {
 
 function createMonitor() {
   const group = new THREE.Group();
-  // Stand
-  const standGeo = new THREE.CylinderGeometry(0.06, 0.08, 0.02, 8);
-  const stand = new THREE.Mesh(standGeo, toonMat(COLORS.monitor));
-  stand.position.y = 0.01;
-  group.add(stand);
 
-  // Neck
-  const neckGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.18, 6);
-  const neck = new THREE.Mesh(neckGeo, toonMat(COLORS.monitor));
+  // Stand base — sleek rectangular
+  const standBase = new THREE.Mesh(
+    new THREE.BoxGeometry(0.12, 0.008, 0.08),
+    toonMat(COLORS.monitor, { metalness: 0.3, roughness: 0.2 })
+  );
+  standBase.position.y = 0.004;
+  group.add(standBase);
+
+  // Neck — thin arm
+  const neck = new THREE.Mesh(
+    new THREE.BoxGeometry(0.02, 0.2, 0.02),
+    toonMat(COLORS.monitor, { metalness: 0.3, roughness: 0.2 })
+  );
   neck.position.y = 0.11;
   group.add(neck);
 
-  // Screen
-  const screenGeo = new THREE.BoxGeometry(0.4, 0.25, 0.015);
-  const screenMat = toonMat(COLORS.monitorScreen, { emissive: COLORS.monitorScreen, emissiveIntensity: 0.8 });
+  // Screen bezel (behind screen)
+  const bezelGeo = new THREE.BoxGeometry(0.52, 0.33, 0.018);
+  const bezel = new THREE.Mesh(bezelGeo, toonMat(COLORS.monitor, { roughness: 0.4 }));
+  bezel.position.set(0, 0.37, -0.002);
+  bezel.castShadow = true;
+  group.add(bezel);
+
+  // Screen — larger, brighter
+  const screenColors = [0x1E3A5F, 0x2A1A4A, 0x1A3A2A, 0x3A1A1A];
+  const screenColor = screenColors[Math.floor(Math.random() * screenColors.length)];
+  const screenGeo = new THREE.BoxGeometry(0.48, 0.29, 0.01);
+  const screenMat = toonMat(screenColor, { emissive: screenColor, emissiveIntensity: 1.2, roughness: 0.1 });
   const screen = new THREE.Mesh(screenGeo, screenMat);
-  screen.position.y = 0.32;
-  screen.castShadow = true;
+  screen.position.set(0, 0.37, 0.005);
   group.add(screen);
   monitorScreens.push(screen);
 
-  // Screen bezel
-  const bezelGeo = new THREE.BoxGeometry(0.42, 0.27, 0.012);
-  const bezel = new THREE.Mesh(bezelGeo, toonMat(COLORS.monitor));
-  bezel.position.y = 0.32;
-  bezel.position.z = -0.002;
-  group.add(bezel);
+  // "Code" lines on screen (thin colored bars)
+  const lineColors = [0x66FF66, 0x6699FF, 0xFF9966, 0xFFFF66, 0xFF66FF];
+  for (let l = 0; l < 6; l++) {
+    const lineW = 0.08 + Math.random() * 0.2;
+    const line = new THREE.Mesh(
+      new THREE.BoxGeometry(lineW, 0.008, 0.002),
+      new THREE.MeshBasicMaterial({ color: lineColors[l % lineColors.length] })
+    );
+    line.position.set(-0.12 + Math.random() * 0.08, 0.46 - l * 0.035, 0.012);
+    group.add(line);
+  }
+
+  // Webcam dot on top of bezel
+  const webcam = new THREE.Mesh(
+    new THREE.SphereGeometry(0.006, 6, 6),
+    new THREE.MeshBasicMaterial({ color: 0x44FF44 })
+  );
+  webcam.position.set(0, 0.54, 0.01);
+  group.add(webcam);
 
   return group;
 }
@@ -804,19 +901,47 @@ function createChair(color, rotation) {
   const group = new THREE.Group();
   const seatH = 0.42;
 
-  // Seat
-  const seatGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.04, 12);
-  const seat = new THREE.Mesh(seatGeo, toonMat(color));
+  // Seat — slightly wider, cushioned look
+  const seatGeo = new THREE.BoxGeometry(0.32, 0.05, 0.32);
+  const seat = new THREE.Mesh(seatGeo, toonMat(color, { roughness: 0.9 }));
   seat.position.y = seatH;
   seat.castShadow = true;
   group.add(seat);
 
-  // Backrest
-  const backGeo = new THREE.BoxGeometry(0.3, 0.3, 0.03);
-  const back = new THREE.Mesh(backGeo, toonMat(color));
-  back.position.set(0, seatH + 0.17, -0.14);
+  // Backrest — taller, curved look with mesh-back style
+  const back = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.36, 0.025),
+    toonMat(color, { roughness: 0.9 })
+  );
+  back.position.set(0, seatH + 0.2, -0.14);
   back.castShadow = true;
   group.add(back);
+
+  // Lumbar support bump
+  const lumbar = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 8, 4, 0, Math.PI * 2, 0, Math.PI * 0.5),
+    toonMat(color, { roughness: 0.9 })
+  );
+  lumbar.position.set(0, seatH + 0.12, -0.12);
+  lumbar.rotation.x = Math.PI / 2;
+  group.add(lumbar);
+
+  // Armrests
+  [-1, 1].forEach(side => {
+    const armrest = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.02, 0.14),
+      toonMat(0x333333, { roughness: 0.5 })
+    );
+    armrest.position.set(side * 0.17, seatH + 0.1, -0.02);
+    group.add(armrest);
+    // Armrest support
+    const armPole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.01, 0.01, 0.1, 4),
+      toonMat(0x333333)
+    );
+    armPole.position.set(side * 0.17, seatH + 0.05, -0.02);
+    group.add(armPole);
+  });
 
   // Pole
   const poleGeo = new THREE.CylinderGeometry(0.02, 0.02, seatH - 0.06, 6);
@@ -1232,6 +1357,23 @@ function buildDecorations() {
     group.add(lightPanel2);
   }
 
+  // Meeting area rug
+  const rug = new THREE.Mesh(
+    new THREE.BoxGeometry(3.0, 0.02, 2.0),
+    toonMat(0x8B3A5E, { roughness: 0.95 })
+  );
+  rug.position.set(-FLOOR_W*TILE/2 + 2.5, 0.01, FLOOR_H*TILE/2 - 2);
+  rug.receiveShadow = true;
+  group.add(rug);
+  // Rug border
+  const rugBorder = new THREE.Mesh(
+    new THREE.BoxGeometry(3.2, 0.015, 2.2),
+    toonMat(0x6B2A4E, { roughness: 0.95 })
+  );
+  rugBorder.position.set(-FLOOR_W*TILE/2 + 2.5, 0.005, FLOOR_H*TILE/2 - 2);
+  rugBorder.receiveShadow = true;
+  group.add(rugBorder);
+
   // Potted plants
   function createPlant(x, z, scale) {
     const pGroup = new THREE.Group();
@@ -1416,14 +1558,7 @@ function buildDecorations() {
   neonGroup.position.set(-FLOOR_W*TILE/2 + 0.08, 0, -0.5);
   group.add(neonGroup);
 
-  // Rug under meeting area
-  const rug = new THREE.Mesh(
-    new THREE.CircleGeometry(1.5, 24),
-    toonMat(0xE8D5B7, { side: THREE.DoubleSide })
-  );
-  rug.rotation.x = -Math.PI/2;
-  rug.position.set(-FLOOR_W*TILE/2 + 2.5, 0.005, FLOOR_H*TILE/2 - 2);
-  group.add(rug);
+  // (rug moved to buildDecorations)
 
   scene.add(group);
 }
