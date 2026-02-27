@@ -3091,11 +3091,16 @@ function updateSpriteAnimations(dt) {
         s.behavior = 'walking-out';
         s.stateTimer = 0;
         s.state = 1; s.fps = 6; s.frame = 0;
-        s.walkTarget = new THREE.Vector3(
-          s.homePos.x + (Math.random() - 0.5) * 6,
-          s.homePos.y,
-          s.homePos.z + 1.5 + Math.random() * 3
-        );
+        // Walk targets: stay in the open aisle (z > -1) and within office bounds
+        var walkPoints = [
+          new THREE.Vector3(s.homePos.x, s.homePos.y, 0.5),  // aisle in front of desk
+          new THREE.Vector3(s.homePos.x + 2, s.homePos.y, 1), // down the aisle
+          new THREE.Vector3(s.homePos.x - 2, s.homePos.y, 1), // up the aisle
+          new THREE.Vector3(4, s.homePos.y, -2.2),  // coffee machine area
+          new THREE.Vector3(-3, s.homePos.y, 2),  // middle of office
+          new THREE.Vector3(0, s.homePos.y, 1.5),  // center aisle
+        ];
+        s.walkTarget = walkPoints[Math.floor(Math.random() * walkPoints.length)];
         s.nextBreak = null;
       }
     } else if (s.behavior === 'walking-out') {
