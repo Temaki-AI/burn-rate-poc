@@ -3211,6 +3211,559 @@ function onResize() {
 let introComplete = false;
 let introProgress = 0;
 
+
+// ─── ROOM BUILDER SYSTEM ───
+
+function buildRoomAction(index) {
+  const room = ROOMS[index];
+  if (room.built) return;
+  if (G.cash < room.costNum) {
+    showToast('❌ Not enough cash!', 'error');
+    return;
+  }
+  G.cash -= room.costNum;
+  G.runway = Math.max(1, Math.round(G.cash / Math.abs(G.burn)));
+  room.built = true;
+
+  const rw = room.size[0] * TILE;
+  const rh = room.size[1] * TILE;
+  const wx = nextRoomX + rw / 2;
+  const wz = 0;
+  room.position = { x: wx, z: wz };
+  nextRoomX += rw + TILE;
+
+  buildCorridor(wx - rw / 2, wz);
+  const grp = buildRoom(room, wx, wz);
+  builtRooms.push({ room, group: grp });
+
+  // Camera animation
+  const target = controls.target.clone();
+  const dest = new THREE.Vector3(wx, 0, wz);
+  const start = performance.now();
+  function tweenCam(now) {
+    const t = Math.min((now - start) / 1000, 1);
+    const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    controls.target.lerpVectors(target, dest, ease);
+    controls.update();
+    if (t < 1) requestAnimationFrame(tweenCam);
+  }
+  requestAnimationFrame(tweenCam);
+
+  // Expand zoom
+  if (controls.maxDistance) controls.maxDistance = Math.max(controls.maxDistance, nextRoomX + 10);
+  if (controls.maxZoom !== undefined) controls.minZoom = Math.max(0.15, 0.5 - builtRooms.length * 0.04);
+
+  showToast('🏗️ ' + room.name + ' built!');
+  if (typeof confettiBurst === 'function') confettiBurst();
+  renderBuildPanel();
+  // Update HUD
+  const cashEl = document.querySelector('[data-stat="cash"]');
+  if (cashEl) cashEl.textContent = '$' + (G.cash/1000).toFixed(0) + 'K';
+}
+
+function buildCorridor(roomLeftX, roomCenterZ) {
+  const group = new THREE.Group();
+  const corridorW = roomLeftX - FLOOR_W * TILE / 2;
+  if (corridorW <= 0) return;
+  // Floor
+  const floorGeo = new THREE.BoxGeometry(corridorW, 0.08, TILE);
+  const floorMesh = new THREE.Mesh(floorGeo, toonMat(COLORS.floor, { roughness: 0.85 }));
+  floorMesh.position.set(FLOOR_W * TILE / 2 + corridorW / 2, 0, roomCenterZ);
+  group.add(floorMesh);
+  // Base
+  const baseGeo = new THREE.BoxGeometry(corridorW + 0.1, 0.15, TILE + 0.1);
+  const baseMesh = new THREE.Mesh(baseGeo, toonMat(0x4A4038));
+  baseMesh.position.set(FLOOR_W * TILE / 2 + corridorW / 2, -0.06, roomCenterZ);
+  group.add(baseMesh);
+  // Side walls
+  const wallH = 3.2;
+  const wallThick = 0.12;
+  const wallGeo = new THREE.BoxGeometry(corridorW, wallH, wallThick);
+  const wTop = new THREE.Mesh(wallGeo, toonMat(COLORS.wall));
+  wTop.position.set(FLOOR_W * TILE / 2 + corridorW / 2, wallH / 2, roomCenterZ - TILE / 2);
+  group.add(wTop);
+  const wBot = new THREE.Mesh(wallGeo, toonMat(COLORS.wall));
+  wBot.position.set(FLOOR_W * TILE / 2 + corridorW / 2, wallH / 2, roomCenterZ + TILE / 2);
+  group.add(wBot);
+  scene.add(group);
+}
+
+function buildRoom(roomDef, wx, wz) {
+  const group = new THREE.Group();
+  const rw = roomDef.size[0] * TILE;
+  const rh = roomDef.size[1] * TILE;
+  const wallH = 3.2;
+  const wallThick = 0.12;
+  const isGarden = roomDef.buildFn === 'buildRooftopGarden';
+
+  // Floor tiles
+  const tileGeo = new THREE.BoxGeometry(TILE - 0.02, 0.08, TILE - 0.02);
+  const accentColor = {
+    buildServerRoom: 0x2A3A5C, buildGameRoom: 0x3A5C3A, buildCoffeeLab: 0x5C4A3A,
+    buildZenRoom: 0x4A5C4A, buildPhoneBooths: 0x4A4A5C, buildDesignStudio: 0x5C3A5C,
+    buildMiniGym: 0x5C5C3A, buildRooftopGarden: 0x6B5B3A
+  }[roomDef.buildFn] || COLORS.floor;
+  const tileMat1 = toonMat(COLORS.floor, { roughness: 0.85 });
+  const tileMat2 = toonMat(accentColor, { roughness: 0.85 });
+  for (let x = 0; x < roomDef.size[0]; x++) {
+    for (let z = 0; z < roomDef.size[1]; z++) {
+      const mat = (x + z) % 2 === 0 ? tileMat1 : tileMat2;
+      const tile = new THREE.Mesh(tileGeo, mat);
+      tile.position.set(
+        wx + (x - roomDef.size[0] / 2 + 0.5) * TILE,
+        0,
+        wz + (z - roomDef.size[1] / 2 + 0.5) * TILE
+      );
+      group.add(tile);
+    }
+  }
+  // Base
+  const baseGeo = new THREE.BoxGeometry(rw + 0.2, 0.15, rh + 0.2);
+  const baseMesh = new THREE.Mesh(baseGeo, toonMat(0x4A4038));
+  baseMesh.position.set(wx, -0.06, wz);
+  group.add(baseMesh);
+
+  if (isGarden) {
+    // Railing instead of walls
+    const railMat = toonMat(0x8B7355, { roughness: 0.4 });
+    const railH = 1.2;
+    const postGeo = new THREE.CylinderGeometry(0.04, 0.04, railH, 6);
+    const barGeo = new THREE.CylinderGeometry(0.025, 0.025, 1, 6);
+    // Back railing
+    for (let i = 0; i <= roomDef.size[0]; i++) {
+      const post = new THREE.Mesh(postGeo, railMat);
+      post.position.set(wx - rw/2 + i * TILE, railH/2, wz - rh/2);
+      group.add(post);
+    }
+    // Left railing
+    for (let i = 0; i <= roomDef.size[1]; i++) {
+      const post = new THREE.Mesh(postGeo, railMat);
+      post.position.set(wx - rw/2, railH/2, wz - rh/2 + i * TILE);
+      group.add(post);
+    }
+    // Right railing
+    for (let i = 0; i <= roomDef.size[1]; i++) {
+      const post = new THREE.Mesh(postGeo, railMat);
+      post.position.set(wx + rw/2, railH/2, wz - rh/2 + i * TILE);
+      group.add(post);
+    }
+    // Horizontal rails
+    const topRailBack = new THREE.Mesh(new THREE.BoxGeometry(rw, 0.05, 0.05), railMat);
+    topRailBack.position.set(wx, railH, wz - rh/2);
+    group.add(topRailBack);
+    const topRailLeft = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, rh), railMat);
+    topRailLeft.position.set(wx - rw/2, railH, wz);
+    group.add(topRailLeft);
+    const topRailRight = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, rh), railMat);
+    topRailRight.position.set(wx + rw/2, railH, wz);
+    group.add(topRailRight);
+  } else {
+    // Back wall
+    const backGeo = new THREE.BoxGeometry(rw + wallThick * 2, wallH, wallThick);
+    const backWall = new THREE.Mesh(backGeo, toonMat(COLORS.wall));
+    backWall.position.set(wx, wallH / 2, wz - rh / 2 - wallThick / 2);
+    group.add(backWall);
+    // Left wall
+    const leftGeo = new THREE.BoxGeometry(wallThick, wallH, rh);
+    const leftWall = new THREE.Mesh(leftGeo, toonMat(COLORS.wall));
+    leftWall.position.set(wx - rw / 2 - wallThick / 2, wallH / 2, wz);
+    group.add(leftWall);
+    // Right glass wall
+    const glassGeo = new THREE.BoxGeometry(wallThick, wallH, rh);
+    const glassMat = toonMat(COLORS.glass, { transparent: true, opacity: 0.12, side: THREE.DoubleSide, roughness: 0.1 });
+    const glassWall = new THREE.Mesh(glassGeo, glassMat);
+    glassWall.position.set(wx + rw / 2 + wallThick / 2, wallH / 2, wz);
+    group.add(glassWall);
+    // Front low wall
+    const frontGeo = new THREE.BoxGeometry(rw + wallThick * 2, 0.4, wallThick);
+    const frontWall = new THREE.Mesh(frontGeo, toonMat(COLORS.wallEdge));
+    frontWall.position.set(wx, 0.2, wz + rh / 2 + wallThick / 2);
+    group.add(frontWall);
+    // Ceiling strips
+    const ceilMat = toonMat(0x9A9088, { roughness: 0.9 });
+    const ceilH = wallH + 0.1;
+    const cBack = new THREE.Mesh(new THREE.BoxGeometry(rw + wallThick * 2, 0.06, 1.5), ceilMat);
+    cBack.position.set(wx, ceilH, wz - rh / 2 + 0.75);
+    group.add(cBack);
+    const cLeft = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, rh), ceilMat);
+    cLeft.position.set(wx - rw / 2 + 0.75, ceilH, wz);
+    group.add(cLeft);
+    // Trims
+    const trimMat = toonMat(COLORS.wallEdge);
+    const trimBack = new THREE.Mesh(new THREE.BoxGeometry(rw + wallThick * 2, 0.08, 0.06), trimMat);
+    trimBack.position.set(wx, wallH, wz - rh / 2 - wallThick / 2);
+    group.add(trimBack);
+    const trimLeft = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, rh), trimMat);
+    trimLeft.position.set(wx - rw / 2 - wallThick / 2, wallH, wz);
+    group.add(trimLeft);
+  }
+
+  // Call room-specific build function
+  const fn = window[roomDef.buildFn];
+  if (fn) fn(group, wx, wz, rw, rh);
+
+  scene.add(group);
+  return group;
+}
+
+// ─── ROOM-SPECIFIC CONTENT ───
+
+function buildServerRoom(group, wx, wz, rw, rh) {
+  const rackMat = toonMat(0x1A1A2E, { roughness: 0.3, metalness: 0.3 });
+  const rackGeo = new THREE.BoxGeometry(0.8, 2.4, 0.6);
+  for (let i = 0; i < 3; i++) {
+    const rack = new THREE.Mesh(rackGeo, rackMat);
+    rack.position.set(wx - rw/2 + 0.8 + i * 1.2, 1.2, wz - rh/2 + 0.5);
+    group.add(rack);
+    // LED dots
+    for (let j = 0; j < 6; j++) {
+      const ledColor = Math.random() > 0.3 ? 0x00FF88 : 0xFFAA00;
+      const ledMat = toonMat(ledColor, { emissive: ledColor, emissiveIntensity: 2 });
+      const led = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), ledMat);
+      led.position.set(wx - rw/2 + 0.6 + i * 1.2, 0.5 + j * 0.35, wz - rh/2 + 0.2);
+      group.add(led);
+    }
+  }
+  // Cables
+  const cableMat = toonMat(0x333333);
+  for (let i = 0; i < 4; i++) {
+    const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, rw * 0.6, 4), cableMat);
+    cable.rotation.z = Math.PI / 2;
+    cable.position.set(wx, 0.05, wz - rh/2 + 0.4 + i * 0.15);
+    group.add(cable);
+  }
+  // Blue light
+  const blueLight = new THREE.PointLight(0x4488FF, 1.5, 8);
+  blueLight.position.set(wx, 2, wz);
+  group.add(blueLight);
+  // AC unit
+  const ac = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 0.2), toonMat(0xE0E0E0, { roughness: 0.4 }));
+  ac.position.set(wx + rw/2 - 1, 2.5, wz - rh/2 + 0.12);
+  group.add(ac);
+  // RESTRICTED sign
+  const signGeo = new THREE.PlaneGeometry(0.8, 0.3);
+  const signCanvas = document.createElement('canvas');
+  signCanvas.width = 160; signCanvas.height = 60;
+  const sctx = signCanvas.getContext('2d');
+  sctx.fillStyle = '#FF0000'; sctx.fillRect(0,0,160,60);
+  sctx.fillStyle = '#FFFFFF'; sctx.font = 'bold 24px Arial'; sctx.fillText('RESTRICTED', 10, 40);
+  const signTex = new THREE.CanvasTexture(signCanvas);
+  const sign = new THREE.Mesh(signGeo, new THREE.MeshBasicMaterial({ map: signTex }));
+  sign.position.set(wx - rw/2 + 0.1, 2, wz);
+  sign.rotation.y = Math.PI / 2;
+  group.add(sign);
+}
+
+function buildGameRoom(group, wx, wz, rw, rh) {
+  // Ping pong table
+  const tableTop = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 2.5), toonMat(COLORS.pingPong, { roughness: 0.4 }));
+  tableTop.position.set(wx - 0.5, 0.9, wz);
+  group.add(tableTop);
+  const legGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.9, 6);
+  const legMat = toonMat(0x666666);
+  [[-0.6,-1],[0.6,-1],[-0.6,1],[0.6,1]].forEach(([lx,lz]) => {
+    const leg = new THREE.Mesh(legGeo, legMat);
+    leg.position.set(wx - 0.5 + lx * 0.5, 0.45, wz + lz * 0.8);
+    group.add(leg);
+  });
+  // Net
+  const net = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.15), toonMat(0xFFFFFF, { transparent: true, opacity: 0.5 }));
+  net.position.set(wx - 0.5, 0.98, wz);
+  net.rotation.y = Math.PI / 2;
+  group.add(net);
+  // Arcade machine
+  const arcadeBody = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.8, 0.6), toonMat(0x2A1A4A, { roughness: 0.5 }));
+  arcadeBody.position.set(wx + rw/2 - 0.6, 0.9, wz - rh/2 + 0.5);
+  group.add(arcadeBody);
+  const arcadeScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.4), toonMat(0x00FF88, { emissive: 0x00FF88, emissiveIntensity: 1.5 }));
+  arcadeScreen.position.set(wx + rw/2 - 0.6, 1.4, wz - rh/2 + 0.2);
+  group.add(arcadeScreen);
+  // Bean bags
+  const bbColors = [COLORS.beanBag1, COLORS.beanBag2, COLORS.beanBag3];
+  bbColors.forEach((c, i) => {
+    const bb = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), toonMat(c, { roughness: 0.9 }));
+    bb.scale.y = 0.6;
+    bb.position.set(wx + rw/2 - 0.8, 0.2, wz + 0.5 + i * 0.9);
+    group.add(bb);
+  });
+  // Foosball table
+  const foosTop = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 1.4), toonMat(0x2E7D32));
+  foosTop.position.set(wx - rw/2 + 1, 0.85, wz + rh/2 - 1);
+  group.add(foosTop);
+  const foosMat = toonMat(0x5D4037);
+  [[-0.3,0],[0,0],[0.3,0]].forEach(([rx,rz]) => {
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.6, 6), toonMat(0xCCCCCC, { metalness: 0.5 }));
+    rod.rotation.x = Math.PI / 2;
+    rod.position.set(wx - rw/2 + 1 + rx, 0.95, wz + rh/2 - 1);
+    group.add(rod);
+  });
+}
+
+function buildCoffeeLab(group, wx, wz, rw, rh) {
+  // Bar counter
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(rw * 0.8, 1.1, 0.4), toonMat(0x5D4037, { roughness: 0.4 }));
+  counter.position.set(wx, 0.55, wz - rh/2 + 0.5);
+  group.add(counter);
+  const counterTop = new THREE.Mesh(new THREE.BoxGeometry(rw * 0.8 + 0.1, 0.06, 0.5), toonMat(0x8D6E63));
+  counterTop.position.set(wx, 1.12, wz - rh/2 + 0.5);
+  group.add(counterTop);
+  // Stools
+  for (let i = 0; i < 3; i++) {
+    const stool = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.15, 0.8, 8), toonMat(0x37474F));
+    stool.position.set(wx - 0.8 + i * 0.8, 0.4, wz - rh/2 + 1.1);
+    group.add(stool);
+    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.06, 8), toonMat(0x424242));
+    seat.position.set(wx - 0.8 + i * 0.8, 0.82, wz - rh/2 + 1.1);
+    group.add(seat);
+  }
+  // Espresso machine
+  const espresso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.35), toonMat(COLORS.espresso, { metalness: 0.3 }));
+  espresso.position.set(wx - 0.4, 1.37, wz - rh/2 + 0.45);
+  group.add(espresso);
+  // Small fridge
+  const fridge = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.2, 0.5), toonMat(0xE0E0E0, { roughness: 0.3 }));
+  fridge.position.set(wx + rw/2 - 0.4, 0.6, wz - rh/2 + 0.35);
+  group.add(fridge);
+  // Chalkboard
+  const chalk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.04), toonMat(0x2E3A2E));
+  chalk.position.set(wx, 2, wz - rh/2 + 0.08);
+  group.add(chalk);
+  // Shelves with mugs
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.04, 0.2), toonMat(0x8D6E63));
+  shelf.position.set(wx + 0.5, 1.8, wz - rh/2 + 0.15);
+  group.add(shelf);
+  for (let i = 0; i < 4; i++) {
+    const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.08, 6), toonMat(COLORS.mug));
+    mug.position.set(wx + 0.2 + i * 0.2, 1.86, wz - rh/2 + 0.15);
+    group.add(mug);
+  }
+}
+
+function buildZenRoom(group, wx, wz, rw, rh) {
+  // Nap pods
+  for (let i = 0; i < 2; i++) {
+    const podBody = new THREE.Mesh(new THREE.CapsuleGeometry(0.35, 1.2, 8, 12), toonMat(COLORS.napPod, { roughness: 0.3 }));
+    podBody.rotation.z = Math.PI / 2;
+    podBody.position.set(wx - rw/2 + 1.2, 0.45, wz - 0.6 + i * 1.2);
+    group.add(podBody);
+  }
+  // Meditation cushions
+  for (let i = 0; i < 3; i++) {
+    const cushion = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.28, 0.1, 12), toonMat(0xE88F17, { roughness: 0.8 }));
+    cushion.position.set(wx + rw/2 - 0.8, 0.08, wz - 0.8 + i * 0.8);
+    group.add(cushion);
+  }
+  // Plants
+  const plantMat = toonMat(COLORS.plant);
+  const potMat = toonMat(COLORS.pot);
+  for (let i = 0; i < 6; i++) {
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.1, 0.15, 6), potMat);
+    const px = wx - rw/2 + 0.5 + (i % 3) * (rw/3);
+    const pz = wz + rh/2 - 0.4 - Math.floor(i/3) * 0.6;
+    pot.position.set(px, 0.08, pz);
+    group.add(pot);
+    const leaves = new THREE.Mesh(new THREE.SphereGeometry(0.15 + Math.random()*0.1, 6, 6), plantMat);
+    leaves.position.set(px, 0.25 + Math.random()*0.1, pz);
+    group.add(leaves);
+  }
+  // Warm light
+  const warmLight = new THREE.PointLight(0xFFCC88, 1.5, 8);
+  warmLight.position.set(wx, 2.5, wz);
+  group.add(warmLight);
+  // Waterfall
+  const waterGeo = new THREE.PlaneGeometry(0.8, 2.5);
+  const waterMat = toonMat(0x4488CC, { transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+  const water = new THREE.Mesh(waterGeo, waterMat);
+  water.position.set(wx, 1.3, wz - rh/2 + 0.08);
+  group.add(water);
+}
+
+function buildPhoneBooths(group, wx, wz, rw, rh) {
+  const glassMat = toonMat(0x88CCDD, { transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+  const boothW = 0.8, boothD = 0.8, boothH = 2.4;
+  for (let i = 0; i < 3; i++) {
+    const bx = wx - rw/2 + 0.6 + i * (rw/3);
+    const bz = wz;
+    // Glass walls
+    const sides = [
+      [bx, boothH/2, bz - boothD/2, boothW, boothH, 0.03],
+      [bx - boothW/2, boothH/2, bz, 0.03, boothH, boothD],
+      [bx + boothW/2, boothH/2, bz, 0.03, boothH, boothD],
+    ];
+    sides.forEach(([sx,sy,sz,sw,sh,sd]) => {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(sw, sh, sd), glassMat);
+      wall.position.set(sx, sy, sz);
+      group.add(wall);
+    });
+    // Tiny desk
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.04, 0.3), toonMat(COLORS.desk));
+    desk.position.set(bx, 0.9, bz - 0.15);
+    group.add(desk);
+    // Occupied light
+    const lightColor = Math.random() > 0.5 ? 0xFF4444 : 0x00FF88;
+    const occLight = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), toonMat(lightColor, { emissive: lightColor, emissiveIntensity: 1.5 }));
+    occLight.position.set(bx, boothH + 0.1, bz);
+    group.add(occLight);
+  }
+  // Sound foam (bumpy wall)
+  for (let i = 0; i < 12; i++) {
+    for (let j = 0; j < 4; j++) {
+      const foam = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.05), toonMat(0x555566));
+      foam.position.set(wx - rw/2 + 0.2 + i * 0.22, 1 + j * 0.22, wz - rh/2 + 0.08);
+      group.add(foam);
+    }
+  }
+}
+
+function buildDesignStudio(group, wx, wz, rw, rh) {
+  // Large whiteboard
+  const wb = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.5, 0.06), toonMat(COLORS.whiteboard, { roughness: 0.2 }));
+  wb.position.set(wx, 1.8, wz - rh/2 + 0.08);
+  group.add(wb);
+  const wbFrame = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 0.04), toonMat(0x9E9E9E));
+  wbFrame.position.set(wx, 1.8, wz - rh/2 + 0.06);
+  group.add(wbFrame);
+  // Standing desks with drawing tablets
+  for (let i = 0; i < 3; i++) {
+    const deskTop = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.04, 0.6), toonMat(COLORS.desk, { roughness: 0.5 }));
+    deskTop.position.set(wx - 1.5 + i * 1.5, 1.1, wz + 0.3);
+    group.add(deskTop);
+    const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.1, 6), toonMat(0x666666));
+    leg1.position.set(wx - 1.5 + i * 1.5 - 0.3, 0.55, wz + 0.1);
+    group.add(leg1);
+    const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.1, 6), toonMat(0x666666));
+    leg2.position.set(wx - 1.5 + i * 1.5 + 0.3, 0.55, wz + 0.1);
+    group.add(leg2);
+    // Tablet
+    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 0.35), toonMat(0x1A1A2E));
+    tablet.position.set(wx - 1.5 + i * 1.5, 1.14, wz + 0.3);
+    group.add(tablet);
+  }
+  // Color swatches
+  const swatchColors = [0xFF4444, 0x44FF44, 0x4444FF, 0xFFFF44, 0xFF44FF, 0x44FFFF, 0xFF8800, 0x8800FF];
+  swatchColors.forEach((c, i) => {
+    const swatch = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.02), toonMat(c));
+    swatch.position.set(wx - rw/2 + 0.12, 2.2 - Math.floor(i/4) * 0.2, wz - 0.6 + (i%4) * 0.3);
+    swatch.rotation.y = Math.PI / 2;
+    group.add(swatch);
+  });
+  // Mood board
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.0, 1.2), toonMat(0x8D6E63));
+  board.position.set(wx - rw/2 + 0.08, 1.8, wz + rh/2 - 1);
+  group.add(board);
+  for (let i = 0; i < 8; i++) {
+    const patch = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.2, 0.25), toonMat(Math.random() * 0xFFFFFF));
+    patch.position.set(wx - rw/2 + 0.1, 1.5 + Math.floor(i/3)*0.3, wz + rh/2 - 1.4 + (i%3)*0.35);
+    group.add(patch);
+  }
+}
+
+function buildMiniGym(group, wx, wz, rw, rh) {
+  // Treadmill
+  const treadBase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.15, 1.5), toonMat(0x333333));
+  treadBase.position.set(wx - rw/2 + 0.8, 0.08, wz - 0.5);
+  group.add(treadBase);
+  const treadBelt = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.02, 1.3), toonMat(0x1A1A1A));
+  treadBelt.position.set(wx - rw/2 + 0.8, 0.16, wz - 0.5);
+  group.add(treadBelt);
+  const handleGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.2, 6);
+  const handleMat = toonMat(0x999999, { metalness: 0.4 });
+  const h1 = new THREE.Mesh(handleGeo, handleMat);
+  h1.position.set(wx - rw/2 + 0.6, 0.75, wz - 1.1);
+  group.add(h1);
+  const h2 = new THREE.Mesh(handleGeo, handleMat);
+  h2.position.set(wx - rw/2 + 1.0, 0.75, wz - 1.1);
+  group.add(h2);
+  const handleBar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6), handleMat);
+  handleBar.rotation.z = Math.PI / 2;
+  handleBar.position.set(wx - rw/2 + 0.8, 1.35, wz - 1.1);
+  group.add(handleBar);
+  // Dumbbell rack
+  const rack = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.3), toonMat(0x444444));
+  rack.position.set(wx + rw/2 - 0.6, 0.4, wz - rh/2 + 0.3);
+  group.add(rack);
+  for (let i = 0; i < 4; i++) {
+    const db = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 6), toonMat(0x222222, { metalness: 0.5 }));
+    db.rotation.z = Math.PI / 2;
+    db.position.set(wx + rw/2 - 1.0 + i * 0.3, 0.6, wz - rh/2 + 0.3);
+    group.add(db);
+  }
+  // Yoga mats
+  const matColors = [0xFF6B6B, 0x6BCB77, 0x4D96FF];
+  matColors.forEach((c, i) => {
+    const mat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 1.6), toonMat(c, { roughness: 0.9 }));
+    mat.position.set(wx + 0.2 + i * 0.8, 0.05, wz + 0.5);
+    group.add(mat);
+  });
+  // Mirror
+  const mirror = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), toonMat(0xDDEEFF, { roughness: 0.05, metalness: 0.3 }));
+  mirror.position.set(wx, 1.5, wz - rh/2 + 0.06);
+  group.add(mirror);
+  // Water cooler
+  const coolerBody = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.8, 8), toonMat(0xE0E0E0));
+  coolerBody.position.set(wx + rw/2 - 0.4, 0.7, wz + rh/2 - 0.4);
+  group.add(coolerBody);
+  const coolerJug = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.4, 8), toonMat(0x88CCFF, { transparent: true, opacity: 0.4 }));
+  coolerJug.position.set(wx + rw/2 - 0.4, 1.3, wz + rh/2 - 0.4);
+  group.add(coolerJug);
+}
+
+function buildRooftopGarden(group, wx, wz, rw, rh) {
+  // Wooden deck floor overlay
+  const deckMat = toonMat(0x8B6914, { roughness: 0.7 });
+  for (let x = 0; x < Math.floor(rw / 0.3); x++) {
+    const plank = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.03, rh - 0.1), deckMat);
+    plank.position.set(wx - rw/2 + 0.15 + x * 0.3, 0.06, wz);
+    group.add(plank);
+  }
+  // Plants of various sizes
+  const plantMat = toonMat(COLORS.plant);
+  const darkPlantMat = toonMat(COLORS.plantDark);
+  const potMat = toonMat(COLORS.pot);
+  for (let i = 0; i < 10; i++) {
+    const px = wx - rw/2 + 0.5 + Math.random() * (rw - 1);
+    const pz = wz - rh/2 + 0.5 + Math.random() * (rh - 1);
+    const size = 0.15 + Math.random() * 0.25;
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(size * 0.7, size * 0.5, size * 0.8, 6), potMat);
+    pot.position.set(px, size * 0.4, pz);
+    group.add(pot);
+    const pMat = Math.random() > 0.5 ? plantMat : darkPlantMat;
+    const leaves = new THREE.Mesh(new THREE.SphereGeometry(size, 6, 6), pMat);
+    leaves.position.set(px, size * 1.2 + Math.random() * 0.2, pz);
+    group.add(leaves);
+  }
+  // String lights
+  const lightCount = 8;
+  const stringY = 2.5;
+  for (let i = 0; i < lightCount; i++) {
+    const lx = wx - rw/2 + 0.5 + i * (rw - 1) / (lightCount - 1);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), toonMat(0xFFEE88, { emissive: 0xFFEE88, emissiveIntensity: 1.5 }));
+    bulb.position.set(lx, stringY, wz);
+    group.add(bulb);
+  }
+  // String wire
+  const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, rw - 0.5, 4), toonMat(0x333333));
+  wire.rotation.z = Math.PI / 2;
+  wire.position.set(wx, stringY + 0.05, wz);
+  group.add(wire);
+  // Warm light
+  const gardenLight = new THREE.PointLight(0xFFEE88, 1, 10);
+  gardenLight.position.set(wx, 3, wz);
+  group.add(gardenLight);
+  // Bench seating
+  for (let i = 0; i < 2; i++) {
+    const bench = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.4), toonMat(0x8B6914, { roughness: 0.6 }));
+    bench.position.set(wx - 1 + i * 2, 0.45, wz + rh/2 - 0.5);
+    group.add(bench);
+    const benchLeg1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.35), toonMat(0x6B4914));
+    benchLeg1.position.set(wx - 1 + i * 2 - 0.5, 0.2, wz + rh/2 - 0.5);
+    group.add(benchLeg1);
+    const benchLeg2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.4, 0.35), toonMat(0x6B4914));
+    benchLeg2.position.set(wx - 1 + i * 2 + 0.5, 0.2, wz + rh/2 - 0.5);
+    group.add(benchLeg2);
+  }
+}
+
 function animate() {
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
@@ -3578,15 +4131,18 @@ const FEATURE_POOL = [
 ];
 
 const ROOMS = [
-  {icon:'🖥️',name:'Server Room',cost:'$8K',desc:'More compute, fewer outages',effect:'+10% uptime, -5% tech debt'},
-  {icon:'🎮',name:'Game Room',cost:'$5K',desc:'Ping pong, arcade, bean bags',effect:'+15% morale'},
-  {icon:'☕',name:'Coffee Lab',cost:'$3K',desc:'Artisan espresso & kombucha on tap',effect:'+8% productivity'},
-  {icon:'🧘',name:'Zen Room',cost:'$4K',desc:'Meditation pods & nap stations',effect:'+10% morale, -5% burnout'},
-  {icon:'📞',name:'Phone Booths',cost:'$6K',desc:'Soundproof pods for calls & deep work',effect:'+12% focus'},
-  {icon:'🎨',name:'Design Studio',cost:'$7K',desc:'Whiteboards, Wacom tablets, mood boards',effect:'+15% design speed'},
-  {icon:'🏋️',name:'Mini Gym',cost:'$10K',desc:'Pelotons & dumbbells. Culture fit guaranteed.',effect:'+12% morale, +5% retention'},
-  {icon:'🌿',name:'Rooftop Garden',cost:'$8K',desc:'Plants, fresh air, "spontaneous collaboration"',effect:'+10% creativity'},
+  {icon:'🖥️',name:'Server Room',cost:'$8K',costNum:8000,desc:'More compute, fewer outages',effect:'+10% uptime, -5% tech debt',size:[4,3],built:false,buildFn:'buildServerRoom'},
+  {icon:'🎮',name:'Game Room',cost:'$5K',costNum:5000,desc:'Ping pong, arcade, bean bags',effect:'+15% morale',size:[5,4],built:false,buildFn:'buildGameRoom'},
+  {icon:'☕',name:'Coffee Lab',cost:'$3K',costNum:3000,desc:'Artisan espresso & kombucha on tap',effect:'+8% productivity',size:[3,3],built:false,buildFn:'buildCoffeeLab'},
+  {icon:'🧘',name:'Zen Room',cost:'$4K',costNum:4000,desc:'Meditation pods & nap stations',effect:'+10% morale, -5% burnout',size:[4,3],built:false,buildFn:'buildZenRoom'},
+  {icon:'📞',name:'Phone Booths',cost:'$6K',costNum:6000,desc:'Soundproof pods for calls & deep work',effect:'+12% focus',size:[3,2],built:false,buildFn:'buildPhoneBooths'},
+  {icon:'🎨',name:'Design Studio',cost:'$7K',costNum:7000,desc:'Whiteboards, Wacom tablets, mood boards',effect:'+15% design speed',size:[5,3],built:false,buildFn:'buildDesignStudio'},
+  {icon:'🏋️',name:'Mini Gym',cost:'$10K',costNum:10000,desc:'Pelotons & dumbbells. Culture fit guaranteed.',effect:'+12% morale, +5% retention',size:[5,4],built:false,buildFn:'buildMiniGym'},
+  {icon:'🌿',name:'Rooftop Garden',cost:'$8K',costNum:8000,desc:'Plants, fresh air, "spontaneous collaboration"',effect:'+10% creativity',size:[6,4],built:false,buildFn:'buildRooftopGarden'},
 ];
+
+let builtRooms = [];
+let nextRoomX = FLOOR_W * TILE / 2 + 1;
 
 const VC_FIRMS = [
   {name:'Andreessen Borrowed',emoji:'🦈'},{name:'Sequoia Copycat',emoji:'🎩'},
@@ -3635,7 +4191,10 @@ function renderBuildPanel() {
           </div>
         </div>
         <div style="margin-top:8px;">
-          <span class="feat-btn" onclick="this.textContent='✅ Built!';this.style.borderColor='#00FF88';this.style.color='#00FF88';this.style.cursor='default'">🏗️ Build (${r.cost})</span>
+          ${r.built
+            ? '<span class="feat-btn" style="border-color:#00FF88;color:#00FF88;cursor:default">✅ Built</span>'
+            : `<span class="feat-btn" onclick="buildRoomAction(${i})">🏗️ Build (${r.cost})</span>`
+          }
         </div>
       </div>
     `).join('')}
