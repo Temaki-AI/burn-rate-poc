@@ -783,6 +783,7 @@ let seatedCharData = [];
 let pingPongDir = 1;
 let monitorScreens = [];
 let statusBubbles = [];
+let spriteAnimations = [];
 
 const FLOOR_W = 12, FLOOR_H = 8;
 const TILE = 1.0;
@@ -3037,6 +3038,53 @@ function createCharacter(color, skinColor) {
   return group;
 }
 
+
+// --- 2D SPRITE CHARACTER SYSTEM ---
+function createSpriteCharacter(x, y, z) {
+  const spriteLoader = new THREE.TextureLoader();
+  const engineerTex = spriteLoader.load('assets/engineer-male.png');
+  engineerTex.magFilter = THREE.NearestFilter;
+  engineerTex.minFilter = THREE.NearestFilter;
+  engineerTex.repeat.set(1/4, 1/4);
+  engineerTex.offset.set(0, 0.25); // row 2 (sitting), col 0 — Y flipped: (3-2)/4 = 0.25
+
+  const spriteMat = new THREE.MeshBasicMaterial({
+    map: engineerTex,
+    transparent: true,
+    alphaTest: 0.1,
+    side: THREE.DoubleSide
+  });
+  const spriteGeo = new THREE.PlaneGeometry(1.0, 1.0);
+  const spriteMesh = new THREE.Mesh(spriteGeo, spriteMat);
+  spriteMesh.position.set(x, y, z);
+
+  spriteAnimations.push({
+    mesh: spriteMesh,
+    texture: engineerTex,
+    state: 2, // sitting/typing
+    frame: 0,
+    timer: 0,
+    fps: 4
+  });
+
+  return spriteMesh;
+}
+
+function updateSpriteAnimations(dt) {
+  spriteAnimations.forEach(function(s) {
+    // Billboard: face camera
+    s.mesh.quaternion.copy(camera.quaternion);
+    // Animate frames
+    s.timer += dt;
+    if (s.timer > 1 / s.fps) {
+      s.timer = 0;
+      s.frame = (s.frame + 1) % 4;
+      var row = s.state;
+      s.texture.offset.set(s.frame / 4, (3 - row) / 4);
+    }
+  });
+}
+
 function buildCharacters() {
   var startX = -FLOOR_W*TILE/2 + 2;
   var deskZ = -FLOOR_H*TILE/2 + 1.8;
@@ -3047,16 +3095,28 @@ function buildCharacters() {
     var gc = generateCharacter(deskRoles[i], deskLevels[i], 1000 + i * 777);
     gc.hiredDay = 1;
     var roleColor = getRoleColor(gc.role);
-    var char = createCharacter(roleColor, gc.appearance.skinTone);
-    char.position.set(startX + i * 1.5, 0, deskZ + 0.55);
-    char.rotation.y = Math.PI;
-    scene.add(char);
-    gc.mesh = char;
-    gc.activity = 'seated';
-    gameCharacters.push(gc);
-    characters.push({ mesh: char, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
-    seatedCharData.push({ head: char.userData.headMesh, arms: char.userData.armMeshes, charData: gc });
-    createStatusBubble(char, getCharStatusMessage(gc), i);
+    if (i === 0) {
+      // 2D sprite character proof of concept — first desk engineer
+      var spriteMesh = createSpriteCharacter(startX, 0.6, deskZ + 0.55);
+      scene.add(spriteMesh);
+      gc.mesh = spriteMesh;
+      gc.activity = 'seated';
+      gameCharacters.push(gc);
+      characters.push({ mesh: spriteMesh, baseY: 0.6, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
+      seatedCharData.push({ head: null, arms: [], charData: gc });
+      createStatusBubble(spriteMesh, getCharStatusMessage(gc), i);
+    } else {
+      var char = createCharacter(roleColor, gc.appearance.skinTone);
+      char.position.set(startX + i * 1.5, 0, deskZ + 0.55);
+      char.rotation.y = Math.PI;
+      scene.add(char);
+      gc.mesh = char;
+      gc.activity = 'seated';
+      gameCharacters.push(gc);
+      characters.push({ mesh: char, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
+      seatedCharData.push({ head: char.userData.headMesh, arms: char.userData.armMeshes, charData: gc });
+      createStatusBubble(char, getCharStatusMessage(gc), i);
+    }
   }
 
   // CEO at standing desk
@@ -3787,6 +3847,9 @@ function animate() {
     const bob = Math.sin(elapsed * c.bobSpeed + i) * c.bobAmount;
     c.mesh.position.y = c.baseY + bob;
   });
+
+  // Update 2D sprite animations
+  updateSpriteAnimations(dt);
 
   // Walking characters with pause and mood-based speed
   walkingCharacters.forEach(function(w) {
