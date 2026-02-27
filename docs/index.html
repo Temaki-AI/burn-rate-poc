@@ -255,6 +255,52 @@
     width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent;
     border-top: 5px solid rgba(16,16,32,0.92);
   }
+
+  /* --- Character Info Card --- */
+  .char-info-card {
+    position: fixed; top: 50%; right: 20px; transform: translateY(-50%) translateX(20px);
+    width: 280px; z-index: 200; opacity: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(20,20,40,0.97) 0%, rgba(16,16,32,0.97) 100%);
+    border: 1px solid rgba(0,212,255,0.25); border-radius: 16px;
+    padding: 20px; color: #fff; font-family: 'Inter', sans-serif;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 40px rgba(0,212,255,0.08);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .char-info-card.open { opacity: 1; pointer-events: auto; transform: translateY(-50%) translateX(0); }
+  .char-card-close {
+    position: absolute; top: 10px; right: 14px; cursor: pointer;
+    color: rgba(255,255,255,0.4); font-size: 16px; transition: color 0.2s;
+  }
+  .char-card-close:hover { color: #fff; }
+  .char-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .char-card-portrait { width: 50px; height: 60px; position: relative; flex-shrink: 0; }
+  .char-portrait-body {
+    width: 36px; height: 28px; border-radius: 6px 6px 4px 4px;
+    position: absolute; bottom: 0; left: 7px;
+  }
+  .char-portrait-head {
+    width: 30px; height: 30px; border-radius: 50%;
+    position: absolute; top: 0; left: 10px;
+  }
+  .char-portrait-hair {
+    width: 32px; height: 14px; border-radius: 14px 14px 0 0;
+    position: absolute; top: -3px; left: -1px;
+  }
+  .char-card-name { font-size: 16px; font-weight: 700; color: #fff; }
+  .char-card-traits { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .char-trait-tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 8px;
+    background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3);
+    color: #C9A0FF;
+  }
+  .char-card-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0; }
+  .char-card-row { font-size: 12px; color: #ccc; margin: 4px 0; }
+  .char-card-label { color: rgba(255,255,255,0.45); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .char-mood-bar { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #00FF88; letter-spacing: 1px; }
+  .char-card-skill { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin: 2px 0; padding: 0 4px; }
+  .char-skill-stars { color: #FFB347; letter-spacing: 1px; }
+
 </style>
 <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -525,6 +571,52 @@
   /* Toolbar button hover glow */
   .toolbar-btn:hover { box-shadow: 0 0 20px rgba(0,212,255,0.2), 0 6px 20px rgba(0,0,0,0.3) !important; }
   .toolbar-btn.active { background: rgba(0,212,255,0.12) !important; border-color: rgba(0,212,255,0.3) !important; }
+
+
+  /* --- Character Info Card --- */
+  .char-info-card {
+    position: fixed; top: 50%; right: 20px; transform: translateY(-50%) translateX(20px);
+    width: 280px; z-index: 200; opacity: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(20,20,40,0.97) 0%, rgba(16,16,32,0.97) 100%);
+    border: 1px solid rgba(0,212,255,0.25); border-radius: 16px;
+    padding: 20px; color: #fff; font-family: 'Inter', sans-serif;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 40px rgba(0,212,255,0.08);
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .char-info-card.open { opacity: 1; pointer-events: auto; transform: translateY(-50%) translateX(0); }
+  .char-card-close {
+    position: absolute; top: 10px; right: 14px; cursor: pointer;
+    color: rgba(255,255,255,0.4); font-size: 16px; transition: color 0.2s;
+  }
+  .char-card-close:hover { color: #fff; }
+  .char-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .char-card-portrait { width: 50px; height: 60px; position: relative; flex-shrink: 0; }
+  .char-portrait-body {
+    width: 36px; height: 28px; border-radius: 6px 6px 4px 4px;
+    position: absolute; bottom: 0; left: 7px;
+  }
+  .char-portrait-head {
+    width: 30px; height: 30px; border-radius: 50%;
+    position: absolute; top: 0; left: 10px;
+  }
+  .char-portrait-hair {
+    width: 32px; height: 14px; border-radius: 14px 14px 0 0;
+    position: absolute; top: -3px; left: -1px;
+  }
+  .char-card-name { font-size: 16px; font-weight: 700; color: #fff; }
+  .char-card-traits { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .char-trait-tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 8px;
+    background: rgba(167,139,250,0.15); border: 1px solid rgba(167,139,250,0.3);
+    color: #C9A0FF;
+  }
+  .char-card-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 10px 0; }
+  .char-card-row { font-size: 12px; color: #ccc; margin: 4px 0; }
+  .char-card-label { color: rgba(255,255,255,0.45); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .char-mood-bar { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #00FF88; letter-spacing: 1px; }
+  .char-card-skill { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; margin: 2px 0; padding: 0 4px; }
+  .char-skill-stars { color: #FFB347; letter-spacing: 1px; }
 
 </style>
 </head>
@@ -2361,6 +2453,188 @@ function lightenColor(hex, amount) {
   return c;
 }
 
+
+// =============================================
+// CHARACTER DATA MODEL
+// =============================================
+var CHARACTER_TRAITS = {
+  '10x_dev': { name: '10x Developer', icon: '\u26A1', desc: 'Ships features twice as fast', behaviorMod: 'fastTyping',
+    messages: ['Shipped 3 features \uD83D\uDE80', 'Refactoring universe \uD83C\uDF0C', 'In the zone \uD83C\uDFAF', 'Deploying to prod \uD83D\uDCA5'] },
+  'coffee_addict': { name: 'Coffee Addict', icon: '\u2615', desc: 'Visits coffee machine constantly', behaviorMod: 'coffeePilgrim',
+    messages: ['Third espresso \u2615', 'Caffeine crash \uD83D\uDE35', 'Grinding beans \uD83E\uDED8', 'Need. More. Coffee.'] },
+  'night_owl': { name: 'Night Owl', icon: '\uD83E\uDD89', desc: 'Sluggish mornings, productive nights',
+    messages: ['Just woke up \uD83E\uDD71', 'Peak hours at 10pm \uD83C\uDF19'] },
+  'drama_queen': { name: 'Drama Queen', icon: '\uD83D\uDC51', desc: 'Dramatic reactions to everything',
+    messages: ['EVERYTHING IS BROKEN \uD83D\uDD25', 'Best. Code. Ever. \uD83C\uDFC6', "I can't even \uD83D\uDC85"] },
+  'meeting_survivor': { name: 'Meeting Survivor', icon: '\uD83D\uDCC5', desc: 'Perpetually trapped in meetings',
+    messages: ['In meeting \uD83D\uDCCA', 'Another sync \uD83D\uDD04', 'Could have been an email \uD83D\uDCE7'] },
+  'linkedin_influencer': { name: 'LinkedIn Influencer', icon: '\uD83D\uDCBC', desc: 'Posts thought leadership',
+    messages: ['Posting thought piece \uD83D\uDCBC', 'Checking impressions \uD83D\uDCCA', 'Growing network \uD83E\uDD1D'] },
+  'introvert': { name: 'Introvert', icon: '\uD83C\uDFA7', desc: 'Always has headphones on', accessoryMod: 'headphones',
+    messages: ['Deep focus mode \uD83C\uDFA7', 'Noise-cancelling on max \uD83D\uDD07'] },
+  'gym_bro': { name: 'Gym Bro', icon: '\uD83D\uDCAA', desc: 'Takes standing desk breaks',
+    messages: ['Standing desk time', 'Just did 20 pushups \uD83D\uDCAA'] },
+  'snacker': { name: 'Snacker', icon: '\uD83C\uDF55', desc: 'Always eating at desk',
+    messages: ['Snack time \uD83C\uDF55', 'Third snack today \uD83C\uDF7F'] },
+  'overachiever': { name: 'Overachiever', icon: '\uD83C\uDF1F', desc: 'First in, last out',
+    messages: ['Working overtime \uD83C\uDF1F', 'One more feature... \uD83C\uDFAF'] },
+  'slacker': { name: 'Slacker', icon: '\uD83D\uDE34', desc: 'Naps in bean bags',
+    messages: ['Power nap \uD83D\uDE34', 'Long lunch \uD83C\uDF55', 'AFK \uD83C\uDFC3'] },
+  'meme_lord': { name: 'Meme Lord', icon: '\uD83E\uDD23', desc: 'Slack channels full of memes',
+    messages: ['Sent 47 memes today \uD83E\uDD23', 'Shitposting in #random \uD83D\uDCAC'] },
+};
+
+var ROLE_STATUS_MESSAGES = {
+  engineer: ['Coding \uD83D\uDE80', 'Debugging \uD83D\uDC1B', 'Code review \uD83D\uDC40', 'Deploying \uD83D\uDD25', 'Git rebase \uD83D\uDD04'],
+  designer: ['Designing \u2728', 'Pixel perfecting \uD83C\uDFA8', 'User testing \uD83E\uDDEA', 'Figma time'],
+  sales: ['Cold calling \uD83D\uDCDE', 'Demo time \uD83C\uDFAC', 'Pipeline review \uD83D\uDCCA', 'Closing deals \uD83D\uDCB0'],
+  pm: ['Writing spec \uD83D\uDCCB', 'Grooming backlog \uD83D\uDCDD', 'Sprint planning \uD83C\uDFC3', 'Roadmap update'],
+  ceo: ['Fundraising \uD83D\uDCB0', 'Board prep \uD83D\uDCCA', 'Vision casting \uD83D\uDD2E', 'All-hands prep \uD83C\uDFA4'],
+};
+
+var CHAR_FIRST_NAMES = ['Alex','Jordan','Sam','Taylor','Morgan','Casey','Quinn','Riley','Avery','Dakota','Kai','Rowan','Sage','Phoenix','Skyler','Drew','Blake','Charlie','Harper','Emery'];
+var CHAR_LAST_NAMES = ['Chen','Patel','Kim','Nguyen','Okafor','Rossi','Santos','Mueller','Tanaka','Johansson','Cohen','Ali','Lopez','Zhang','Kowalski','Sato','Williams','Garcia','Park'];
+
+var gameCharacters = [];
+var charIdCounter = 0;
+var charRaycaster = new THREE.Raycaster();
+var charMouse = new THREE.Vector2();
+var selectedCharacter = null;
+
+function generateCharacter(role, level, seedOverride) {
+  var seed = seedOverride || (Date.now() + charIdCounter * 1000 + Math.floor(Math.random() * 9999));
+  var rng = mulberry32(seed);
+  var rpick = function(arr) { return arr[Math.floor(rng() * arr.length)]; };
+  var traitKeys = Object.keys(CHARACTER_TRAITS);
+  var numTraits = 1 + Math.floor(rng() * 2);
+  var traits = [];
+  while (traits.length < numTraits) {
+    var t = rpick(traitKeys);
+    if (traits.indexOf(t) === -1) traits.push(t);
+  }
+  var skinTone = rpick(SKIN_TONES);
+  var hairColor = rpick(HAIR_COLORS);
+  var hairStyle = Math.floor(rng() * 12);
+  var clothingColor = rpick(HOODIE_COLORS);
+  var accessories = [];
+  if (rng() < 0.3) accessories.push('glasses');
+  if (traits.indexOf('introvert') >= 0 || rng() < 0.2) accessories.push('headphones');
+  var skillBase = level === 'junior' ? 20 : level === 'mid' ? 40 : level === 'senior' ? 60 : 75;
+  var skillVar = function() { return Math.min(99, Math.max(5, skillBase + Math.floor((rng() - 0.3) * 40))); };
+  return {
+    id: 'char_' + String(++charIdCounter).padStart(3, '0'),
+    name: rpick(CHAR_FIRST_NAMES) + ' ' + rpick(CHAR_LAST_NAMES),
+    role: role, level: level, traits: traits,
+    skills: { coding: skillVar(), design: skillVar(), communication: skillVar() },
+    mood: 50 + Math.floor(rng() * 50), seed: seed, hiredDay: gameDay || 1,
+    appearance: { skinTone: skinTone, hairColor: hairColor, hairStyle: hairStyle, clothingColor: clothingColor, accessories: accessories },
+    mesh: null, activity: 'idle',
+  };
+}
+
+function getCharStatusMessage(charData) {
+  var pool = (ROLE_STATUS_MESSAGES[charData.role] || ROLE_STATUS_MESSAGES.engineer).slice();
+  charData.traits.forEach(function(t) {
+    if (CHARACTER_TRAITS[t] && CHARACTER_TRAITS[t].messages) pool = pool.concat(CHARACTER_TRAITS[t].messages);
+  });
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function getRoleColor(role) {
+  var map = { engineer: COLORS.engineer, designer: COLORS.designer, sales: COLORS.sales, pm: COLORS.pm, ceo: COLORS.ceo };
+  return map[role] || COLORS.engineer;
+}
+
+function getMoodBar(mood) {
+  var filled = Math.round(mood / 10); var s = '';
+  for (var i = 0; i < 10; i++) s += i < filled ? '\u2588' : '\u2591';
+  return s;
+}
+function getStars(val) {
+  var stars = Math.round(val / 20); var s = '';
+  for (var i = 0; i < 5; i++) s += i < stars ? '\u2605' : '\u2606';
+  return s;
+}
+function getMoodEmoji(mood) {
+  if (mood >= 70) return '\uD83D\uDE0A';
+  if (mood >= 40) return '\uD83D\uDE10';
+  if (mood >= 20) return '\uD83D\uDE1F';
+  return '\uD83E\uDD2F';
+}
+
+function showCharacterCard(charData) {
+  closeCharacterCard();
+  selectedCharacter = charData;
+  var card = document.createElement('div');
+  card.id = 'charInfoCard';
+  card.className = 'char-info-card';
+  var skinHex = '#' + new THREE.Color(charData.appearance.skinTone).getHexString();
+  var hairHex = '#' + new THREE.Color(charData.appearance.hairColor).getHexString();
+  var clothHex = '#' + new THREE.Color(charData.appearance.clothingColor).getHexString();
+  var traitHtml = charData.traits.map(function(t) {
+    var tr = CHARACTER_TRAITS[t];
+    return tr ? '<span class="char-trait-tag">' + tr.icon + ' ' + tr.name + '</span>' : '';
+  }).join('');
+  var levelStr = charData.level.charAt(0).toUpperCase() + charData.level.slice(1);
+  var roleStr = charData.role.charAt(0).toUpperCase() + charData.role.slice(1);
+  card.innerHTML = '<div class="char-card-close" onclick="closeCharacterCard()">\u2715</div>' +
+    '<div class="char-card-header">' +
+      '<div class="char-card-portrait">' +
+        '<div class="char-portrait-body" style="background:' + clothHex + '"></div>' +
+        '<div class="char-portrait-head" style="background:' + skinHex + '">' +
+          '<div class="char-portrait-hair" style="background:' + hairHex + '"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="char-card-title">' +
+        '<div class="char-card-name">' + charData.name + '</div>' +
+        '<div class="char-card-traits">' + traitHtml + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="char-card-divider"></div>' +
+    '<div class="char-card-row"><span class="char-card-label">Role:</span> ' + levelStr + ' ' + roleStr + '</div>' +
+    '<div class="char-card-row"><span class="char-card-label">Mood:</span> ' + getMoodEmoji(charData.mood) + ' ' + charData.mood + '%  <span class="char-mood-bar">' + getMoodBar(charData.mood) + '</span></div>' +
+    '<div class="char-card-row"><span class="char-card-label">Skills:</span></div>' +
+    '<div class="char-card-skill"><span>Coding</span><span class="char-skill-stars">' + getStars(charData.skills.coding) + '</span><span>' + charData.skills.coding + '</span></div>' +
+    '<div class="char-card-skill"><span>Design</span><span class="char-skill-stars">' + getStars(charData.skills.design) + '</span><span>' + charData.skills.design + '</span></div>' +
+    '<div class="char-card-skill"><span>Comms</span><span class="char-skill-stars">' + getStars(charData.skills.communication) + '</span><span>' + charData.skills.communication + '</span></div>' +
+    '<div class="char-card-divider"></div>' +
+    '<div class="char-card-row"><span class="char-card-label">Hired:</span> Day ' + charData.hiredDay + '</div>' +
+    '<div class="char-card-row"><span class="char-card-label">Status:</span> ' + getCharStatusMessage(charData) + '</div>';
+  document.body.appendChild(card);
+  requestAnimationFrame(function() { card.classList.add('open'); });
+}
+
+function closeCharacterCard() {
+  var card = document.getElementById('charInfoCard');
+  if (card) {
+    card.classList.remove('open');
+    setTimeout(function() { if (card.parentNode) card.parentNode.removeChild(card); }, 300);
+  }
+  selectedCharacter = null;
+}
+
+function onCharacterClick(event) {
+  if (event.target.closest && event.target.closest('.slide-panel, .toolbar-btn, #hud-top, #hud-bottom, .char-info-card, .toast-notification')) return;
+  var rect = renderer.domElement.getBoundingClientRect();
+  charMouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  charMouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  charRaycaster.setFromCamera(charMouse, camera);
+  var meshes = [];
+  gameCharacters.forEach(function(gc) { if (gc.mesh) gc.mesh.traverse(function(child) { if (child.isMesh) meshes.push(child); }); });
+  var intersects = charRaycaster.intersectObjects(meshes, false);
+  if (intersects.length > 0) {
+    var hitObj = intersects[0].object;
+    var found = null;
+    gameCharacters.forEach(function(gc) {
+      if (!gc.mesh) return;
+      gc.mesh.traverse(function(child) { if (child === hitObj) found = gc; });
+    });
+    if (found) { showCharacterCard(found); return; }
+  }
+  closeCharacterCard();
+}
+document.addEventListener('click', onCharacterClick);
+
 function createCharacter(color, skinColor) {
   const rng = mulberry32(charSeed++);
   const pick = arr => arr[Math.floor(rng() * arr.length)];
@@ -2896,77 +3170,92 @@ function createCharacter(color, skinColor) {
 }
 
 function buildCharacters() {
-  const startX = -FLOOR_W*TILE/2 + 2;
-  const deskZ = -FLOOR_H*TILE/2 + 1.8;
-  const deskColors = [COLORS.engineer, COLORS.engineer, COLORS.designer, COLORS.sales, COLORS.pm, COLORS.engineer];
-  const skinTones = [COLORS.skin, COLORS.skinAlt, COLORS.skin, COLORS.skinAlt, COLORS.skin, COLORS.skinAlt];
-  const statuses = ["Coding 🚀", "Debugging 🐛", "Designing ✨", "Cold calling 📞", "Writing spec 📋", "Code review 👀"];
+  var startX = -FLOOR_W*TILE/2 + 2;
+  var deskZ = -FLOOR_H*TILE/2 + 1.8;
+  var deskRoles = ['engineer', 'engineer', 'designer', 'sales', 'pm', 'engineer'];
+  var deskLevels = ['senior', 'mid', 'senior', 'mid', 'senior', 'junior'];
 
-  // Seated characters at desks
-  for (let i = 0; i < 6; i++) {
-    const char = createCharacter(deskColors[i], skinTones[i]);
+  for (var i = 0; i < 6; i++) {
+    var gc = generateCharacter(deskRoles[i], deskLevels[i], 1000 + i * 777);
+    gc.hiredDay = 1;
+    var roleColor = getRoleColor(gc.role);
+    var char = createCharacter(roleColor, gc.appearance.skinTone);
     char.position.set(startX + i * 1.5, 0, deskZ + 0.55);
-    char.rotation.y = Math.PI; // Face desk
+    char.rotation.y = Math.PI;
     scene.add(char);
-    characters.push({ mesh: char, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01 });
-    seatedCharData.push({ head: char.userData.headMesh, arms: char.userData.armMeshes });
-
-    // Status bubble
-    createStatusBubble(char, statuses[i], i);
+    gc.mesh = char;
+    gc.activity = 'seated';
+    gameCharacters.push(gc);
+    characters.push({ mesh: char, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
+    seatedCharData.push({ head: char.userData.headMesh, arms: char.userData.armMeshes, charData: gc });
+    createStatusBubble(char, getCharStatusMessage(gc), i);
   }
 
   // CEO at standing desk
-  const ceo = createCharacter(COLORS.ceo, COLORS.skin);
+  var ceoData = generateCharacter('ceo', 'lead', 7777);
+  ceoData.name = 'The Founder';
+  ceoData.hiredDay = 1;
+  ceoData.mood = 90;
+  var ceo = createCharacter(COLORS.ceo, ceoData.appearance.skinTone);
   ceo.position.set(FLOOR_W*TILE/2 - 1.5, 0.35, -FLOOR_H*TILE/2 + 1.5);
-  ceo.scale.set(1, 1.05, 1); // Slightly taller
+  ceo.scale.set(1.1, 1.1, 1.1);
   scene.add(ceo);
-  characters.push({ mesh: ceo, baseY: 0.35, bobSpeed: 1.2, bobAmount: 0.015 });
-  createStatusBubble(ceo, "Fundraising 💰", 6);
+  ceoData.mesh = ceo;
+  ceoData.activity = 'standing';
+  gameCharacters.push(ceoData);
+  characters.push({ mesh: ceo, baseY: 0.35, bobSpeed: 1.2, bobAmount: 0.015, charData: ceoData });
+  createStatusBubble(ceo, getCharStatusMessage(ceoData), 6);
 
   // Character at ping pong
-  const ppChar = createCharacter(COLORS.sales, COLORS.skinAlt);
+  var ppData = generateCharacter('sales', 'mid', 8888);
+  ppData.hiredDay = 1;
+  var ppChar = createCharacter(COLORS.sales, ppData.appearance.skinTone);
   ppChar.position.set(FLOOR_W*TILE/2 - 2.6, 0, FLOOR_H*TILE/2 - 1.5);
   ppChar.rotation.y = Math.PI/2;
   scene.add(ppChar);
-  characters.push({ mesh: ppChar, baseY: 0, bobSpeed: 2.0, bobAmount: 0.02 });
-  createStatusBubble(ppChar, "Ping pong 🏓", 7);
+  ppData.mesh = ppChar;
+  ppData.activity = 'playing';
+  gameCharacters.push(ppData);
+  characters.push({ mesh: ppChar, baseY: 0, bobSpeed: 2.0, bobAmount: 0.02, charData: ppData });
+  createStatusBubble(ppChar, "Ping pong \uD83C\uDFD3", 7);
 
-  // Walking characters
-  const walker1 = createCharacter(COLORS.designer, COLORS.skin);
+  // Walking characters with meaningful paths
+  var walker1Data = generateCharacter('designer', 'mid', 5555);
+  walker1Data.hiredDay = 1;
+  if (walker1Data.traits.indexOf('coffee_addict') < 0) walker1Data.traits.push('coffee_addict');
+  var walker1 = createCharacter(COLORS.designer, walker1Data.appearance.skinTone);
   walker1.position.set(-2, 0, 0);
   scene.add(walker1);
-  characters.push({ mesh: walker1, baseY: 0, bobSpeed: 3.0, bobAmount: 0.025 });
+  walker1Data.mesh = walker1;
+  walker1Data.activity = 'walking';
+  gameCharacters.push(walker1Data);
+  characters.push({ mesh: walker1, baseY: 0, bobSpeed: 3.0, bobAmount: 0.025, charData: walker1Data });
+  var coffeePos = new THREE.Vector3(2, 0, -FLOOR_H*TILE/2 + 0.8);
   walkingCharacters.push({
-    mesh: walker1,
-    path: [
-      new THREE.Vector3(-2, 0, 0),
-      new THREE.Vector3(2, 0, 0),
-      new THREE.Vector3(2, 0, 2),
-      new THREE.Vector3(-2, 0, 2),
-    ],
-    speed: 0.8,
-    currentTarget: 1,
-    progress: 0,
+    mesh: walker1, charData: walker1Data,
+    path: [new THREE.Vector3(-2, 0, 0), coffeePos, new THREE.Vector3(2, 0, 1), new THREE.Vector3(-2, 0, 1)],
+    speed: 0.7, currentTarget: 1, progress: 0,
+    pauseTimer: 0, paused: false, pauseDuration: 3,
   });
-  createStatusBubble(walker1, "Coffee break ☕", 8);
+  createStatusBubble(walker1, getCharStatusMessage(walker1Data), 8);
 
-  const walker2 = createCharacter(COLORS.pm, COLORS.skinAlt);
+  var walker2Data = generateCharacter('pm', 'senior', 6666);
+  walker2Data.hiredDay = 1;
+  if (walker2Data.traits.indexOf('linkedin_influencer') < 0) walker2Data.traits.push('linkedin_influencer');
+  var walker2 = createCharacter(COLORS.pm, walker2Data.appearance.skinTone);
   walker2.position.set(3, 0, -1);
   scene.add(walker2);
-  characters.push({ mesh: walker2, baseY: 0, bobSpeed: 2.8, bobAmount: 0.02 });
+  walker2Data.mesh = walker2;
+  walker2Data.activity = 'walking';
+  gameCharacters.push(walker2Data);
+  characters.push({ mesh: walker2, baseY: 0, bobSpeed: 2.8, bobAmount: 0.02, charData: walker2Data });
   walkingCharacters.push({
-    mesh: walker2,
-    path: [
-      new THREE.Vector3(3, 0, -1),
-      new THREE.Vector3(-3, 0, 1),
-      new THREE.Vector3(0, 0, 2.5),
-      new THREE.Vector3(3, 0, -1),
-    ],
-    speed: 0.6,
-    currentTarget: 1,
-    progress: 0,
+    mesh: walker2, charData: walker2Data,
+    path: [new THREE.Vector3(3, 0, -1), new THREE.Vector3(-3, 0, 1), new THREE.Vector3(0, 0, 2.5), new THREE.Vector3(3, 0, -1)],
+    speed: 0.5, currentTarget: 1, progress: 0,
+    pauseTimer: 0, paused: false, pauseDuration: 4,
   });
-  createStatusBubble(walker2, "On LinkedIn 📱", 9);
+  createStatusBubble(walker2, getCharStatusMessage(walker2Data), 9);
 }
 
 const MAX_VISIBLE_BUBBLES = 3;
@@ -3078,30 +3367,39 @@ function animate() {
     c.mesh.position.y = c.baseY + bob;
   });
 
-  // Walking characters
-  walkingCharacters.forEach(w => {
-    const current = w.path[(w.currentTarget - 1 + w.path.length) % w.path.length];
-    const target = w.path[w.currentTarget];
-    w.progress += dt * w.speed / current.distanceTo(target);
+  // Walking characters with pause and mood-based speed
+  walkingCharacters.forEach(function(w) {
+    if (w.paused) {
+      w.pauseTimer -= dt;
+      if (w.pauseTimer <= 0) w.paused = false;
+      return;
+    }
+    var current = w.path[(w.currentTarget - 1 + w.path.length) % w.path.length];
+    var target = w.path[w.currentTarget];
+    var dist = current.distanceTo(target);
+    if (dist < 0.01) dist = 1;
+    var moodMod = w.charData ? (0.6 + w.charData.mood / 150) : 1;
+    var slackerMod = (w.charData && w.charData.traits.indexOf('slacker') >= 0) ? 0.6 : 1;
+    w.progress += dt * w.speed * moodMod * slackerMod / dist;
 
     if (w.progress >= 1) {
       w.progress = 0;
       w.currentTarget = (w.currentTarget + 1) % w.path.length;
+      if (w.pauseDuration && Math.random() < 0.6) {
+        w.paused = true;
+        w.pauseTimer = w.pauseDuration * (0.5 + Math.random());
+      }
     }
 
-    // Enhanced easing (smootherstep)
-    const x = w.progress;
-    const smoothT = x * x * x * (x * (x * 6 - 15) + 10);
+    var x = w.progress;
+    var smoothT = x * x * x * (x * (x * 6 - 15) + 10);
     w.mesh.position.lerpVectors(current, target, smoothT);
 
-    // Face direction of movement
-    const dir = new THREE.Vector3().subVectors(target, current);
-    if (dir.length() > 0.01) {
-      w.mesh.rotation.y = Math.atan2(dir.x, dir.z);
-    }
+    var dir = new THREE.Vector3().subVectors(target, current);
+    if (dir.length() > 0.01) w.mesh.rotation.y = Math.atan2(dir.x, dir.z);
 
-    // Walking bounce
-    w.mesh.position.y = Math.abs(Math.sin(elapsed * 8 * w.speed)) * 0.03;
+    var bobAmp = w.charData ? (w.charData.mood >= 70 ? 0.04 : w.charData.mood >= 40 ? 0.025 : 0.015) : 0.03;
+    w.mesh.position.y = Math.abs(Math.sin(elapsed * 8 * w.speed)) * bobAmp;
   });
 
   // Steam particles
@@ -3152,11 +3450,15 @@ function animate() {
       if (sb.fadeTimer <= 0) {
         sb.fadeState = 'hidden';
         sb.fadeTimer = 2 + Math.random() * 4; // Stay hidden longer
-        // Change text
-        let newText;
-        do {
+        // Change text - use character-specific messages
+        var newText;
+        var charForBubble = gameCharacters[i];
+        if (charForBubble) {
+          newText = getCharStatusMessage(charForBubble);
+        } else {
           newText = STATUS_TEXTS[Math.floor(Math.random() * STATUS_TEXTS.length)];
-        } while (newText === sb.currentText);
+        }
+        if (newText === sb.currentText) newText = STATUS_TEXTS[Math.floor(Math.random() * STATUS_TEXTS.length)];
         sb.currentText = newText;
         sb.element.textContent = newText;
       }
@@ -3191,16 +3493,23 @@ function animate() {
     });
   }
 
-  // Seated character idle animations (typing, head bob)
-  seatedCharData.forEach((sd, i) => {
+  // Seated character idle animations with mood-based behavior
+  seatedCharData.forEach(function(sd, i) {
     if (!sd.arms) return;
-    const typingPhase = Math.sin(elapsed * 8 + i * 1.3);
-    sd.arms.forEach((arm, ai) => {
+    var cd = sd.charData;
+    var mood = cd ? cd.mood : 70;
+    var typeSpeed = 8;
+    if (cd && cd.traits.indexOf('10x_dev') >= 0) typeSpeed = 12;
+    if (mood < 20) typeSpeed = 4;
+    else if (mood < 40) typeSpeed = 10;
+    var typingPhase = Math.sin(elapsed * typeSpeed + i * 1.3);
+    sd.arms.forEach(function(arm, ai) {
       if (arm) arm.rotation.x = -0.3 + typingPhase * 0.08 * (ai === 0 ? 1 : -1);
     });
     if (sd.head) {
+      var headDroop = mood >= 70 ? 0 : mood >= 40 ? 0.05 : mood >= 20 ? 0.12 : 0.2;
       sd.head.rotation.z = Math.sin(elapsed * 0.5 + i * 2.1) * 0.03;
-      sd.head.rotation.x = Math.sin(elapsed * 0.3 + i * 1.7) * 0.02;
+      sd.head.rotation.x = headDroop + Math.sin(elapsed * 0.3 + i * 1.7) * 0.02;
     }
   });
 
@@ -3655,9 +3964,9 @@ function renderMetricsPanel() {
 
 // ─── HIRE CONFIRMATION ───
 function hireCandidate(btn, name, role) {
-  const card = btn.closest('.panel-card');
+  var card = btn.closest('.panel-card');
   card.style.position = 'relative';
-  const overlay = document.createElement('div');
+  var overlay = document.createElement('div');
   overlay.className = 'hire-confirmed';
   overlay.innerHTML = `<span>✅ ${name} hired as ${role}!</span>`;
   card.appendChild(overlay);
