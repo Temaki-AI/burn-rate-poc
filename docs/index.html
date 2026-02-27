@@ -3062,11 +3062,17 @@ function createSpriteCharacter(x, y, z) {
     mesh: spriteMesh,
     texture: engineerTex,
     state: 2, // sitting/typing
+    behavior: "desk",
+    homePos: null,
+    stateTimer: 0,
+    nextBreak: 5 + Math.random() * 10,
+    breakDuration: 3,
     frame: 0,
     timer: 0,
     fps: 4
   });
 
+  spriteAnimations[spriteAnimations.length-1].homePos = new THREE.Vector3(x, y, z);
   return spriteMesh;
 }
 
@@ -3074,7 +3080,60 @@ function updateSpriteAnimations(dt) {
   spriteAnimations.forEach(function(s) {
     // Billboard: face camera
     s.mesh.quaternion.copy(camera.quaternion);
-    // Animate frames
+
+    // --- State machine ---
+    s.stateTimer = (s.stateTimer || 0) + dt;
+
+    if (s.behavior === 'desk') {
+      if (s.state !== 2) { s.state = 2; s.frame = 0; s.fps = 4; }
+      if (!s.nextBreak) s.nextBreak = 8 + Math.random() * 7;
+      if (s.stateTimer > s.nextBreak) {
+        s.behavior = 'walking-out';
+        s.stateTimer = 0;
+        s.state = 1; s.fps = 6; s.frame = 0;
+        s.walkTarget = new THREE.Vector3(
+          s.homePos.x + (Math.random() - 0.5) * 6,
+          s.homePos.y,
+          s.homePos.z + 1.5 + Math.random() * 3
+        );
+        s.nextBreak = null;
+      }
+    } else if (s.behavior === 'walking-out') {
+      if (s.state !== 1) { s.state = 1; s.fps = 6; }
+      var dir = new THREE.Vector3().subVectors(s.walkTarget, s.mesh.position);
+      var dist = dir.length();
+      if (dist > 0.05) {
+        dir.normalize().multiplyScalar(Math.min(dt * 1.5, dist));
+        s.mesh.position.add(dir);
+      } else {
+        s.behavior = 'break';
+        s.stateTimer = 0;
+        s.state = Math.random() < 0.3 ? 3 : 0;
+        s.fps = 3; s.frame = 0;
+        s.breakDuration = 3 + Math.random() * 4;
+      }
+    } else if (s.behavior === 'break') {
+      if (s.stateTimer > s.breakDuration) {
+        s.behavior = 'walking-back';
+        s.stateTimer = 0;
+        s.state = 1; s.fps = 6; s.frame = 0;
+      }
+    } else if (s.behavior === 'walking-back') {
+      if (s.state !== 1) { s.state = 1; s.fps = 6; }
+      var dir2 = new THREE.Vector3().subVectors(s.homePos, s.mesh.position);
+      var dist2 = dir2.length();
+      if (dist2 > 0.05) {
+        dir2.normalize().multiplyScalar(Math.min(dt * 1.5, dist2));
+        s.mesh.position.add(dir2);
+      } else {
+        s.mesh.position.copy(s.homePos);
+        s.behavior = 'desk';
+        s.stateTimer = 0;
+        s.state = 2; s.fps = 4; s.frame = 0;
+      }
+    }
+
+    // --- Frame animation ---
     s.timer += dt;
     if (s.timer > 1 / s.fps) {
       s.timer = 0;
