@@ -490,6 +490,42 @@
     color: rgba(255,255,255,0.4); text-align: right;
   }
   #game-clock .day { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.6); }
+
+  /* Toast notifications from right */
+  .toast-notification {
+    position: fixed; right: 16px; z-index: 200;
+    padding: 10px 16px; border-radius: 10px;
+    background: rgba(8,8,20,0.92); border: 1px solid rgba(0,212,255,0.2);
+    backdrop-filter: blur(12px); font-size: 12px; color: #fff;
+    animation: toastSlideIn 0.4s cubic-bezier(0.16,1,0.3,1);
+    transition: opacity 0.4s, transform 0.4s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .toast-notification.fade-out { opacity: 0; transform: translateX(20px); }
+  @keyframes toastSlideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* Panel backdrop blur overlay */
+  .panel-backdrop {
+    position: fixed; inset: 0; z-index: 140;
+    background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .panel-backdrop.active { opacity: 1; pointer-events: auto; }
+
+  /* Speed button active pulse */
+  @keyframes speedPulse { 0%,100% { box-shadow: 0 0 12px rgba(0,212,255,0.15); } 50% { box-shadow: 0 0 20px rgba(0,212,255,0.35); } }
+  .speed-btn.active { animation: speedPulse 2s ease-in-out infinite !important; }
+  /* Animated number counters */
+  .hud-stat-value {
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1) !important;
+  }
+  .hud-stat-value.bump { transform: scale(1.15); }
+
+
+  /* Toolbar button hover glow */
+  .toolbar-btn:hover { box-shadow: 0 0 20px rgba(0,212,255,0.2), 0 6px 20px rgba(0,0,0,0.3) !important; }
+  .toolbar-btn.active { background: rgba(0,212,255,0.12) !important; border-color: rgba(0,212,255,0.3) !important; }
+
 </style>
 </head>
 <body>
@@ -562,6 +598,7 @@
     <div class="speed-btn active" data-speed="1" title="Normal">1×</div>
     <div class="speed-btn" data-speed="2" title="Fast">2×</div>
     <div class="speed-btn" data-speed="3" title="Turbo">3×</div>
+    <div class="speed-btn" id="muteBtn" onclick="toggleMute()" title="Toggle Sound" style="font-size:14px;">🔊</div>
   </div>
 </div>
 
@@ -574,6 +611,7 @@
   Q2 2024
 </div>
 
+<div class="panel-backdrop" id="panelBackdrop" onclick="closePanel()"></div>
 <!-- Slide Panels -->
 <div class="slide-panel" id="buildPanel">
   <div class="panel-header">
@@ -628,6 +666,12 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/renderers/CSS2DRenderer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/postprocessing/ShaderPass.js"></script>
 <script>
 // =============================================
 // BURN RATE — Visual PoC — Three.js Isometric Office
@@ -640,6 +684,10 @@ let characters = [];
 let walkingCharacters = [];
 let steamParticles = [];
 let pingPongBall;
+let composer;
+let neonSignMesh;
+let audioCtx, isMuted = false;
+let seatedCharData = [];
 let pingPongDir = 1;
 let monitorScreens = [];
 let statusBubbles = [];
@@ -649,7 +697,7 @@ const TILE = 1.0;
 const COLORS = {
   floor: 0x8B7355, floorLine: 0x7A6245,
   wall: 0xB5A998, wallEdge: 0x8A7E6A,
-  glass: 0x6BB5CC,
+  glass: 0x88CCDD,
   desk: 0xC49A6C, deskLeg: 0x5C3318,
   plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0xD2691E,
   whiteboard: 0xE8E8E8,
@@ -765,6 +813,15 @@ function init() {
   renderer.toneMappingExposure = 0.55;
   container.appendChild(renderer.domElement);
 
+  // Post-processing: bloom
+  composer = new THREE.EffectComposer(renderer);
+  const renderPass = new THREE.RenderPass(scene, camera);
+  composer.addPass(renderPass);
+  const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight), 0.35, 0.6, 0.85
+  );
+  composer.addPass(bloomPass);
+
   // CSS2D Renderer for status bubbles
   cssRenderer = new THREE.CSS2DRenderer();
   cssRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -875,8 +932,30 @@ function setupLighting() {
 function buildFloor() {
   const group = new THREE.Group();
   const tileGeo = new THREE.BoxGeometry(TILE - 0.02, 0.08, TILE - 0.02);
+  // Procedural carpet texture
+  const carpetCanvas = document.createElement('canvas');
+  carpetCanvas.width = 64; carpetCanvas.height = 64;
+  const cctx = carpetCanvas.getContext('2d');
+  cctx.fillStyle = '#8B7355';
+  cctx.fillRect(0, 0, 64, 64);
+  for (let cx = 0; cx < 64; cx += 4) {
+    for (let cz = 0; cz < 64; cz += 4) {
+      const v = 120 + Math.random() * 20;
+      cctx.fillStyle = 'rgb(' + v + ',' + (v-15) + ',' + (v-35) + ')';
+      cctx.fillRect(cx, cz, 3, 3);
+    }
+  }
+  // Grid lines
+  cctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  cctx.lineWidth = 1;
+  for (let g = 0; g < 64; g += 16) { cctx.beginPath(); cctx.moveTo(g,0); cctx.lineTo(g,64); cctx.stroke(); cctx.beginPath(); cctx.moveTo(0,g); cctx.lineTo(64,g); cctx.stroke(); }
+  const carpetTex = new THREE.CanvasTexture(carpetCanvas);
+  carpetTex.wrapS = carpetTex.wrapT = THREE.RepeatWrapping;
+  carpetTex.repeat.set(2, 2);
   const tileMat1 = toonMat(COLORS.floor, { roughness: 0.85 });
+  tileMat1.map = carpetTex;
   const tileMat2 = toonMat(COLORS.floorLine, { roughness: 0.85 });
+  tileMat2.map = carpetTex;
 
   // Checkerboard floor tiles — two instanced meshes
   const tiles1 = [], tiles2 = [];
@@ -2128,6 +2207,7 @@ function buildDecorations() {
   neonGroup.add(glow);
 
   neonGroup.position.set(-FLOOR_W*TILE/2 + 0.08, 0, -0.5);
+  neonSignMesh = neonGroup; // Tag for pulsing
   group.add(neonGroup);
 
   // Water cooler
@@ -2754,6 +2834,8 @@ function createCharacter(color, skinColor) {
     arm.rotation.z = side * 0.2;
     arm.castShadow = true;
     group.add(arm);
+    if (!group.userData.armMeshes) group.userData.armMeshes = [];
+    group.userData.armMeshes.push(arm);
 
     // Forearm/hand
     const hand = new THREE.Mesh(
@@ -2807,6 +2889,9 @@ function createCharacter(color, skinColor) {
     group.add(screen);
   }
 
+  // Tag head and arms for animation
+  group.userData.headMesh = head;
+  group.userData.armMeshes = group.userData.armMeshes || [];
   return group;
 }
 
@@ -2824,6 +2909,7 @@ function buildCharacters() {
     char.rotation.y = Math.PI; // Face desk
     scene.add(char);
     characters.push({ mesh: char, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01 });
+    seatedCharData.push({ head: char.userData.headMesh, arms: char.userData.armMeshes });
 
     // Status bubble
     createStatusBubble(char, statuses[i], i);
@@ -2961,6 +3047,7 @@ function onResize() {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   cssRenderer.setSize(window.innerWidth, window.innerHeight);
+  if (composer) composer.setSize(window.innerWidth, window.innerHeight);
 }
 
 // --- ANIMATION LOOP ---
@@ -3002,7 +3089,9 @@ function animate() {
       w.currentTarget = (w.currentTarget + 1) % w.path.length;
     }
 
-    const smoothT = w.progress * w.progress * (3 - 2 * w.progress); // Smoothstep
+    // Enhanced easing (smootherstep)
+    const x = w.progress;
+    const smoothT = x * x * x * (x * (x * 6 - 15) + 10);
     w.mesh.position.lerpVectors(current, target, smoothT);
 
     // Face direction of movement
@@ -3020,11 +3109,14 @@ function animate() {
     p.life += dt * p.speed;
     if (p.life > 1) p.life = 0;
 
-    p.mesh.position.y = 1.25 + p.life * 0.5;
-    p.mesh.position.x = p.baseX + Math.sin(elapsed * 2 + p.offset) * 0.03;
-    p.mesh.position.z = p.baseZ + Math.cos(elapsed * 1.5 + p.offset) * 0.02;
-    p.mesh.material.opacity = Math.sin(p.life * Math.PI) * 0.4;
-    p.mesh.scale.setScalar(0.8 + p.life * 0.6);
+    p.mesh.position.y = 1.25 + p.life * 0.7;
+    p.mesh.position.x = p.baseX + Math.sin(elapsed * 2 + p.offset) * 0.05;
+    p.mesh.position.z = p.baseZ + Math.cos(elapsed * 1.5 + p.offset) * 0.04;
+    const fade = Math.sin(p.life * Math.PI);
+    p.mesh.material.opacity = fade * 0.5;
+    p.mesh.scale.setScalar(0.6 + p.life * 1.2);
+    // Spiral drift
+    p.mesh.position.x += Math.sin(p.life * 4 + p.offset) * 0.02;
   });
 
   // Ping pong ball
@@ -3037,10 +3129,13 @@ function animate() {
     pingPongBall.position.z = ppZ + Math.cos(elapsed * 3) * 0.15;
   }
 
-  // Monitor glow pulse
+  // Monitor glow pulse + color shifting
   monitorScreens.forEach((screen, i) => {
-    const pulse = 0.2 + Math.sin(elapsed * 1.5 + i * 0.7) * 0.1;
+    const pulse = 0.3 + Math.sin(elapsed * 1.5 + i * 0.7) * 0.15;
     screen.material.emissiveIntensity = pulse;
+    // Subtle color shift
+    const hue = (elapsed * 0.02 + i * 0.2) % 1;
+    screen.material.emissive.setHSL(hue * 0.15 + 0.55, 0.6, 0.15 + pulse * 0.1);
   });
 
   // Status bubble cycling — max 4 visible at once
@@ -3086,8 +3181,31 @@ function animate() {
   // Event feed
   tickEvents(dt);
 
+  // Neon sign pulsing glow
+  if (neonSignMesh) {
+    const neonPulse = 0.8 + Math.sin(elapsed * 2.0) * 0.5;
+    neonSignMesh.traverse(child => {
+      if (child.material && child.material.emissive) {
+        child.material.emissiveIntensity = neonPulse;
+      }
+    });
+  }
+
+  // Seated character idle animations (typing, head bob)
+  seatedCharData.forEach((sd, i) => {
+    if (!sd.arms) return;
+    const typingPhase = Math.sin(elapsed * 8 + i * 1.3);
+    sd.arms.forEach((arm, ai) => {
+      if (arm) arm.rotation.x = -0.3 + typingPhase * 0.08 * (ai === 0 ? 1 : -1);
+    });
+    if (sd.head) {
+      sd.head.rotation.z = Math.sin(elapsed * 0.5 + i * 2.1) * 0.03;
+      sd.head.rotation.x = Math.sin(elapsed * 0.3 + i * 1.7) * 0.02;
+    }
+  });
+
   controls.update();
-  renderer.render(scene, camera);
+  if (composer) composer.render(); else renderer.render(scene, camera);
   cssRenderer.render(scene, camera);
 }
 
@@ -3119,7 +3237,31 @@ const EVENT_TEMPLATES = [
 let gameDay = 47;
 let eventTimer = 3;
 
+
+// --- TOAST NOTIFICATIONS ---
+let toastStack = [];
+function showToast(text, type) {
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification' + (type ? ' ' + type : '');
+  toast.textContent = text;
+  const topOffset = 70 + toastStack.length * 50;
+  toast.style.top = topOffset + 'px';
+  document.body.appendChild(toast);
+  toastStack.push(toast);
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => {
+      toast.remove();
+      toastStack = toastStack.filter(t => t !== toast);
+      // Re-stack remaining
+      toastStack.forEach((t, i) => { t.style.top = (70 + i * 50) + 'px'; });
+    }, 400);
+  }, 4000);
+}
+
 function addEvent(text, type) {
+  playNotificationPing();
+  showToast(text, type);
   const feed = document.getElementById('event-feed');
   if (!feed) return;
   const item = document.createElement('div');
@@ -3180,6 +3322,7 @@ function togglePanel(name) {
   else if (name === 'metrics') renderMetricsPanel();
   
   document.getElementById(name + 'Panel').classList.add('open');
+  document.getElementById('panelBackdrop').classList.add('active');
   
   // Highlight active toolbar button
   document.querySelectorAll('.toolbar-btn').forEach((btn, i) => {
@@ -3191,6 +3334,7 @@ function togglePanel(name) {
 function closePanel() {
   document.querySelectorAll('.slide-panel').forEach(p => p.classList.remove('open'));
   document.querySelectorAll('.toolbar-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panelBackdrop').classList.remove('active');
   activePanel = null;
 }
 
@@ -3547,6 +3691,102 @@ const STARTUP_NAMES = [
   'ThinkFluence','MoatBuilder','10xStack','GrowthHackr','CaffeineOps',
 ];
 document.getElementById('startupName').textContent = STARTUP_NAMES[Math.floor(Math.random() * STARTUP_NAMES.length)];
+
+// --- SOUND SYSTEM (Web Audio API, procedural) ---
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  
+  // Ambient keyboard typing - filtered noise bursts
+  function playTypingLoop() {
+    if (!audioCtx || isMuted) { setTimeout(playTypingLoop, 300 + Math.random() * 800); return; }
+    const dur = 0.03 + Math.random() * 0.04;
+    const bufSize = Math.floor(audioCtx.sampleRate * dur);
+    const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * 0.015;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    const filt = audioCtx.createBiquadFilter();
+    filt.type = 'bandpass'; filt.frequency.value = 2000 + Math.random() * 3000; filt.Q.value = 2;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.06;
+    src.connect(filt).connect(gain).connect(audioCtx.destination);
+    src.start();
+    setTimeout(playTypingLoop, 80 + Math.random() * 300);
+  }
+  setTimeout(playTypingLoop, 1000);
+
+  // Ambient murmur - very low filtered noise
+  const murmurBuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+  const murmurData = murmurBuf.getChannelData(0);
+  for (let i = 0; i < murmurData.length; i++) murmurData[i] = (Math.random() * 2 - 1);
+  const murmurSrc = audioCtx.createBufferSource();
+  murmurSrc.buffer = murmurBuf; murmurSrc.loop = true;
+  const murmurFilt = audioCtx.createBiquadFilter();
+  murmurFilt.type = 'lowpass'; murmurFilt.frequency.value = 400;
+  const murmurGain = audioCtx.createGain();
+  murmurGain.gain.value = 0.02;
+  murmurSrc.connect(murmurFilt).connect(murmurGain).connect(audioCtx.destination);
+  murmurSrc.start();
+  window._murmurGain = murmurGain;
+}
+
+function playNotificationPing() {
+  if (!audioCtx || isMuted) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine'; osc.frequency.value = 880;
+  gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+}
+
+// Confetti burst for milestones
+function confettiBurst() {
+  const colors = [0xFF6B6B, 0x00FF88, 0x00D4FF, 0xFFB347, 0xA78BFA, 0xFFFF00];
+  const confetti = [];
+  for (let i = 0; i < 60; i++) {
+    const geo = new THREE.BoxGeometry(0.04, 0.04, 0.005);
+    const mat = new THREE.MeshBasicMaterial({ color: colors[i % colors.length] });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set((Math.random() - 0.5) * 2, 3 + Math.random() * 2, (Math.random() - 0.5) * 2);
+    m.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    scene.add(m);
+    confetti.push({ mesh: m, vx: (Math.random() - 0.5) * 0.05, vy: -0.02 - Math.random() * 0.03, vz: (Math.random() - 0.5) * 0.05, spin: Math.random() * 0.2 });
+  }
+  let frame = 0;
+  function animConfetti() {
+    frame++;
+    confetti.forEach(c => {
+      c.mesh.position.x += c.vx;
+      c.mesh.position.y += c.vy;
+      c.mesh.position.z += c.vz;
+      c.mesh.rotation.x += c.spin;
+      c.mesh.rotation.z += c.spin * 0.7;
+      c.vy -= 0.0005; // gravity
+    });
+    if (frame < 180) requestAnimationFrame(animConfetti);
+    else confetti.forEach(c => scene.remove(c.mesh));
+  }
+  animConfetti();
+  playNotificationPing();
+}
+
+// Toggle mute
+function toggleMute() {
+  isMuted = !isMuted;
+  const btn = document.getElementById('muteBtn');
+  if (btn) btn.textContent = isMuted ? '🔇' : '🔊';
+  if (window._murmurGain) window._murmurGain.gain.value = isMuted ? 0 : 0.02;
+}
+
+// Init audio on first interaction
+document.addEventListener('click', function initOnClick() {
+  initAudio();
+  document.removeEventListener('click', initOnClick);
+}, { once: true });
 
 // --- GO ---
 init();
