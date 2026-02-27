@@ -647,26 +647,26 @@ let statusBubbles = [];
 const FLOOR_W = 12, FLOOR_H = 8;
 const TILE = 1.0;
 const COLORS = {
-  floor: 0x6B5E4A, floorLine: 0x5A4E3A,
-  wall: 0x8A7E70, wallEdge: 0x706458,
-  glass: 0x5599AA,
-  desk: 0x9E8B70, deskLeg: 0x3A3A3A,
-  plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0x8D6E63,
-  whiteboard: 0xDDDDD8,
-  pingPong: 0x2E7D32, pingPongLine: 0xE0E0E0,
-  kombucha: 0xA0887A, cup: 0xD4C8A8,
-  beanBag1: 0xFF5252, beanBag2: 0x448AFF, beanBag3: 0x69F0AE,
-  napPod: 0x8899AA,
+  floor: 0x8B7355, floorLine: 0x7A6245,
+  wall: 0xB5A998, wallEdge: 0x8A7E6A,
+  glass: 0x6BB5CC,
+  desk: 0xC49A6C, deskLeg: 0x5C3318,
+  plant: 0x4CAF50, plantDark: 0x388E3C, pot: 0xD2691E,
+  whiteboard: 0xE8E8E8,
+  pingPong: 0x2E8B57, pingPongLine: 0xE0E0E0,
+  kombucha: 0xB8860B, cup: 0xF5DEB3,
+  beanBag1: 0xFF4444, beanBag2: 0x2979FF, beanBag3: 0x00E676,
+  napPod: 0x7986CB,
   neonSign: 0x00EEFF,
-  monitor: 0x2A2A2A, monitorScreen: 0x4488FF,
-  keyboard: 0x333333,
-  mug: 0xFFF3E0, mugHandle: 0xFFCC80,
-  espresso: 0x5D4037, steam: 0xCCCCCC,
-  poster1: 0xFFCDD2, poster2: 0xC5E1A5, poster3: 0xB3E5FC, poster4: 0xFFF9C4,
-  engineer: 0x42A5F5, designer: 0xF48FB1, sales: 0x66BB6A,
+  monitor: 0x1A1A2E, monitorScreen: 0x5C6BC0,
+  keyboard: 0x424242,
+  mug: 0xFFB74D, mugHandle: 0xE88F17,
+  espresso: 0x6D4C41, steam: 0xCCCCCC,
+  poster1: 0xFF8A80, poster2: 0xAED581, poster3: 0x81D4FA, poster4: 0xFFE082,
+  engineer: 0x2196F3, designer: 0xEC407A, sales: 0x66BB6A,
   pm: 0xFFA726, ceo: 0xAB47BC,
   skin: 0xFFDBAC, skinAlt: 0xE8B88A,
-  chair: 0x444444,
+  chair: 0x37474F,
 };
 
 const STATUS_TEXTS = [
@@ -1008,7 +1008,7 @@ function buildWalls() {
   group.add(ceilLeft);
 
   // Window blinds on glass wall (horizontal slats)
-  const blindMat = toonMat(0xCCCCCC, { roughness: 0.6 });
+  const blindMat = toonMat(0xD5C4A1, { roughness: 0.6 });
   for (let b = 0; b < 8; b++) {
     const blind = new THREE.Mesh(
       new THREE.BoxGeometry(0.008, 0.02, FLOOR_H * TILE * 0.9),
@@ -1059,7 +1059,7 @@ function buildWalls() {
   const acGroup = new THREE.Group();
   const acBody = new THREE.Mesh(
     new THREE.BoxGeometry(0.8, 0.2, 0.12),
-    toonMat(0xBBBBBB, { roughness: 0.4 })
+    toonMat(0xE0E0E0, { roughness: 0.4 })
   );
   acBody.position.y = 2.8;
   acGroup.add(acBody);
@@ -1067,7 +1067,7 @@ function buildWalls() {
   for (let v = 0; v < 4; v++) {
     const slat = new THREE.Mesh(
       new THREE.BoxGeometry(0.7, 0.005, 0.08),
-      toonMat(0xAAAAAA)
+      toonMat(0xCCCCCC))
     );
     slat.position.set(0, 2.74 + v * 0.04, 0.06);
     slat.rotation.x = 0.2;
@@ -1138,7 +1138,7 @@ function createDesk(x, z, rotation) {
   for (let d = 0; d < 2; d++) {
     const handle = new THREE.Mesh(
       new THREE.BoxGeometry(0.08, 0.008, 0.008),
-      toonMat(0x888888, { metalness: 0.4, roughness: 0.3 })
+      toonMat(0xB8860B, { metalness: 0.4, roughness: 0.3 })
     );
     handle.position.set(dw/2 - 0.18, 0.45 - d * 0.12, dd * 0.35 + 0.005);
     group.add(handle);
@@ -1415,7 +1415,7 @@ function buildFurniture() {
   const printerGroup = new THREE.Group();
   const prBody = new THREE.Mesh(
     roundedBox(0.6, 0.4, 0.5, 0.02, 2),
-    toonMat(0xAAAAAA, { roughness: 0.4 })
+    toonMat(0xD0C8C0, { roughness: 0.4 })
   );
   prBody.position.y = 0.65;
   prBody.castShadow = true;
@@ -1423,7 +1423,7 @@ function buildFurniture() {
   // Paper tray
   const pTray = new THREE.Mesh(
     new THREE.BoxGeometry(0.35, 0.015, 0.25),
-    toonMat(0xCCCCCC)
+    toonMat(0xE0D8D0))
   );
   pTray.position.set(0, 0.44, 0.2);
   printerGroup.add(pTray);
@@ -1437,7 +1437,7 @@ function buildFurniture() {
   // Stand/cabinet under printer
   const prStand = new THREE.Mesh(
     roundedBox(0.55, 0.44, 0.45, 0.02, 2),
-    toonMat(0x999999, { roughness: 0.5 })
+    toonMat(0x607D8B, { roughness: 0.5 })
   );
   prStand.position.y = 0.22;
   prStand.castShadow = true;
@@ -2134,7 +2134,7 @@ function buildDecorations() {
   const wcGroup = new THREE.Group();
   const wcBody = new THREE.Mesh(
     new THREE.BoxGeometry(0.25, 0.7, 0.25),
-    toonMat(0xBBBBBB, { roughness: 0.3 })
+    toonMat(0xD6E4EC, { roughness: 0.3 })
   );
   wcBody.position.y = 0.55;
   wcBody.castShadow = true;
@@ -2157,7 +2157,7 @@ function buildDecorations() {
   for (let c = 0; c < 3; c++) {
     const cup = new THREE.Mesh(
       new THREE.CylinderGeometry(0.02, 0.018, 0.04, 6),
-      toonMat(0xCCCCCC)
+      toonMat(0xE0D8D0))
     );
     cup.position.set(0.15, 0.95 + c * 0.003, 0);
     wcGroup.add(cup);
