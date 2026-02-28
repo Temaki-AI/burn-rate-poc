@@ -210,6 +210,7 @@ function loadModel(){
     character.scale.set(0.35,0.35,0.35);
     // clone materials so each mesh is independent
     character.traverse(function(c){ if(c.isMesh && c.material) c.material = c.material.clone(); });
+    saveOrigScales();
     scene.add(character);
     var box = new THREE.Box3().setFromObject(character);
     character.position.y = -box.min.y;
@@ -240,15 +241,22 @@ function applyColors(){
 }
 
 /* ── proportions ── */
+var origScales = {};  // saved on first load
+function saveOrigScales(){
+  character.traverse(function(c){
+    if(c.name && !c.isMesh) origScales[c.name] = c.scale.clone();
+  });
+}
 function applyProportions(){
-  if(!character) return;
+  if(!character || !Object.keys(origScales).length) return;
   var hs=parseFloat($('headScale').value), bw=parseFloat($('bodyWidth').value), es=parseFloat($('eyeScale').value);
   character.traverse(function(c){
-    var n=c.name;
-    if(n==='Head_M'||n==='Head M') c.scale.set(hs,hs,hs);
-    if(n==='Eyes_M'||n==='Eyes M') c.scale.set(es,es,es);
-    if(n==='UpperBody_M'||n==='UpperBody M'){c.scale.x=bw;c.scale.z=bw;}
-    if(n==='LowerBody_F'||n==='LowerBody F'){c.scale.x=bw;c.scale.z=bw;}
+    var n=c.name; var os=origScales[n];
+    if(!os) return;
+    if(n==='Head_M'||n==='Head M') c.scale.set(os.x*hs, os.y*hs, os.z*hs);
+    if(n==='Eyes_M'||n==='Eyes M') c.scale.set(os.x*es, os.y*es, os.z*es);
+    if(n==='UpperBody_M'||n==='UpperBody M') c.scale.set(os.x*bw, os.y, os.z*bw);
+    if(n==='LowerBody_F'||n==='LowerBody F') c.scale.set(os.x*bw, os.y, os.z*bw);
   });
 }
 
