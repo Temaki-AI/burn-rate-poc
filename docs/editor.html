@@ -293,88 +293,96 @@ function rebuildHair(){
   var olMat=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide});
   hairGroup=new THREE.Group(); hairGroup.name='hair';
   var R=HAIR.r, cy=HAIR.cy, cz=HAIR.cz, top=HAIR.top;
-  // hairline sits in upper third of head
-  var hl = top - R*0.3;  // hairline Y (~5.2)
+  // Dome-based hair: sphere centered at head center, slightly larger than head.
+  // The dome's lower edge naturally sits at the hairline.
+  // top=5.75, cy=4.3, R=1.81
   switch(style){
     case 'buzz':{
-      // thin cap on top of head, only covers crown
-      var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.95,16,12,0,Math.PI*2,0,Math.PI*0.38),mat);
-      m.position.set(0,hl+R*0.15,cz); hairGroup.add(m); break;
+      // tight cap hugging scalp — center at head center, slightly larger
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.03,16,14,0,Math.PI*2,0,Math.PI*0.45),mat);
+      m.position.set(0,cy,cz); hairGroup.add(m); break;
     }
     case 'spiky':{
-      // spikes emanating from crown
+      // thin base cap + spikes shooting up from crown
+      var base=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,16,12,0,Math.PI*2,0,Math.PI*0.4),mat);
+      base.position.set(0,cy,cz); hairGroup.add(base);
       for(var i=0;i<12;i++){var a=(i/12)*Math.PI*2;
-        var spike=new THREE.Mesh(new THREE.ConeGeometry(R*0.12, R*0.4+Math.random()*R*0.35, 5),mat);
-        spike.position.set(Math.cos(a)*R*0.5, top+R*0.05+Math.random()*R*0.2, cz+Math.sin(a)*R*0.5);
-        spike.rotation.x=-Math.cos(a)*0.25; spike.rotation.z=Math.sin(a)*0.25; hairGroup.add(spike);
+        var spike=new THREE.Mesh(new THREE.ConeGeometry(R*0.1, R*0.35+Math.random()*R*0.3, 5),mat);
+        spike.position.set(Math.cos(a)*R*0.45, top+R*0.1+Math.random()*R*0.15, cz+Math.sin(a)*R*0.45);
+        spike.rotation.x=-Math.cos(a)*0.2; spike.rotation.z=Math.sin(a)*0.2; hairGroup.add(spike);
       }
-      for(var j=0;j<5;j++){
-        var s2=new THREE.Mesh(new THREE.ConeGeometry(R*0.1, R*0.5+Math.random()*R*0.25, 5),mat);
-        s2.position.set((Math.random()-0.5)*R*0.3, top+R*0.1+Math.random()*R*0.15, cz+(Math.random()-0.5)*R*0.3);
+      for(var j=0;j<4;j++){
+        var s2=new THREE.Mesh(new THREE.ConeGeometry(R*0.08, R*0.45+Math.random()*R*0.2, 5),mat);
+        s2.position.set((Math.random()-0.5)*R*0.25, top+R*0.2+Math.random()*R*0.1, cz+(Math.random()-0.5)*R*0.25);
         hairGroup.add(s2);
       } break;
     }
     case 'slickback':{
-      // flat swept-back cap
-      var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.98,16,12,0,Math.PI*2,0,Math.PI*0.38),mat);
-      m.position.set(0,hl+R*0.12,cz-R*0.1); m.scale.set(1,0.6,1.15); hairGroup.add(m); break;
+      // smooth swept-back look
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.04,16,14,0,Math.PI*2,0,Math.PI*0.42),mat);
+      m.position.set(0,cy,cz-R*0.08); m.scale.set(1,0.95,1.1); hairGroup.add(m); break;
     }
     case 'topbun':{
-      // cap + bun on top
-      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*0.95,16,10,0,Math.PI*2,0,Math.PI*0.35),mat);
-      m1.position.set(0,hl+R*0.15,cz); hairGroup.add(m1);
-      var m2=new THREE.Mesh(new THREE.SphereGeometry(R*0.28,12,12),mat);
-      m2.position.set(0,top+R*0.25,cz); hairGroup.add(m2); break;
+      // base cap + bun sitting on top
+      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,16,12,0,Math.PI*2,0,Math.PI*0.4),mat);
+      m1.position.set(0,cy,cz); hairGroup.add(m1);
+      var m2=new THREE.Mesh(new THREE.SphereGeometry(R*0.25,12,12),mat);
+      m2.position.set(0,top+R*0.15,cz); hairGroup.add(m2); break;
     }
     case 'ponytail':{
-      // cap + tail hanging back
-      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*0.95,16,10,0,Math.PI*2,0,Math.PI*0.38),mat);
-      m1.position.set(0,hl+R*0.12,cz); hairGroup.add(m1);
-      var m2=new THREE.Mesh(new THREE.CylinderGeometry(R*0.12,R*0.08,R*0.7,8),mat);
-      m2.position.set(0,cy+R*0.1,cz-R*0.85); m2.rotation.x=Math.PI*0.4; hairGroup.add(m2); break;
+      // base cap + tail hanging from back
+      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,16,12,0,Math.PI*2,0,Math.PI*0.42),mat);
+      m1.position.set(0,cy,cz); hairGroup.add(m1);
+      var m2=new THREE.Mesh(new THREE.CylinderGeometry(R*0.1,R*0.07,R*0.6,8),mat);
+      m2.position.set(0,cy-R*0.2,cz-R*0.7); m2.rotation.x=Math.PI*0.35; hairGroup.add(m2); break;
     }
     case 'afro':{
-      // large sphere around upper head
-      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.15,20,16),mat);
-      m.position.set(0,hl+R*0.35,cz); m.scale.set(1,0.8,1); hairGroup.add(m); break;
+      // big sphere engulfing upper head
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.25,20,16),mat);
+      m.position.set(0,cy+R*0.15,cz); m.scale.set(1,0.85,1); hairGroup.add(m); break;
     }
     case 'mohawk':{
-      // strip of blocks along top center
+      // thin base + ridge of blocks along center
+      var base=new THREE.Mesh(new THREE.SphereGeometry(R*1.01,16,10,0,Math.PI*2,0,Math.PI*0.35),mat);
+      base.position.set(0,cy,cz); hairGroup.add(base);
       for(var i=0;i<7;i++){var t=i/6;
-        var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.1, R*(0.25+t*0.15), R*0.12),mat);
-        m.position.set(0, top+R*0.05+R*0.08*t, cz-R*0.45+i*R*0.15); hairGroup.add(m);
+        var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.08, R*(0.2+t*0.15), R*0.1),mat);
+        m.position.set(0, top+R*0.08*t, cz-R*0.4+i*R*0.13); hairGroup.add(m);
       } break;
     }
     case 'sidepart':{
-      // swept cap slightly to one side
-      var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.98,16,12,0,Math.PI*2,0,Math.PI*0.38),mat);
-      m.position.set(R*0.08,hl+R*0.12,cz); m.scale.set(1.05,0.65,1.08); hairGroup.add(m); break;
+      // side-swept cap
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.04,16,14,0,Math.PI*2,0,Math.PI*0.42),mat);
+      m.position.set(R*0.06,cy,cz); m.scale.set(1.03,0.95,1.05); hairGroup.add(m); break;
     }
     case 'messy':{
-      // clusters of balls on crown
-      for(var i=0;i<16;i++){var a=(i/16)*Math.PI*2+Math.random()*0.4;
-        var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.12+Math.random()*R*0.1,6,6),mat);
-        var rOff=R*0.45+Math.random()*R*0.2;
-        m.position.set(Math.cos(a)*rOff, top-R*0.1+Math.random()*R*0.35, cz+Math.sin(a)*rOff);
+      // base + scattered tufts
+      var base=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,16,10,0,Math.PI*2,0,Math.PI*0.38),mat);
+      base.position.set(0,cy,cz); hairGroup.add(base);
+      for(var i=0;i<14;i++){var a=(i/14)*Math.PI*2+Math.random()*0.4;
+        var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.1+Math.random()*R*0.08,6,6),mat);
+        m.position.set(Math.cos(a)*R*0.5, top+Math.random()*R*0.25, cz+Math.sin(a)*R*0.5);
         hairGroup.add(m);
       } break;
     }
     case 'curly':{
-      // curls clustered around crown
-      for(var i=0;i<22;i++){var a=(i/22)*Math.PI*2+Math.random()*0.3;
-        var rr=R*0.5+Math.random()*R*0.18; var el=Math.random()*Math.PI*0.3;
-        var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.1+Math.random()*R*0.07,6,6),mat);
-        m.position.set(Math.cos(a)*rr*Math.cos(el), hl+R*0.2+Math.sin(el)*rr, cz+Math.sin(a)*rr*Math.cos(el));
+      // cluster of curly balls covering crown
+      for(var i=0;i<25;i++){var a=(i/25)*Math.PI*2+Math.random()*0.3;
+        var rr=R*0.55+Math.random()*R*0.15; var el=Math.random()*Math.PI*0.35;
+        var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.1+Math.random()*R*0.06,8,8),mat);
+        var py=cy+R*0.3+Math.sin(el)*rr;
+        if(py<cy+R*0.2) py=cy+R*0.2; // keep above hairline
+        m.position.set(Math.cos(a)*rr*Math.cos(el), py, cz+Math.sin(a)*rr*Math.cos(el));
         hairGroup.add(m);
       } break;
     }
     case 'bob':{
-      // dome cap + side flaps that frame the face (behind ears, not over face)
-      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.0,16,12,0,Math.PI*2,0,Math.PI*0.4),mat);
-      m1.position.set(0,hl+R*0.1,cz); m1.scale.set(1,0.7,1); hairGroup.add(m1);
+      // dome cap hugging head + side panels framing face
+      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.05,16,14,0,Math.PI*2,0,Math.PI*0.45),mat);
+      m1.position.set(0,cy,cz); m1.scale.set(1,0.95,1); hairGroup.add(m1);
       [-1,1].forEach(function(s){
-        var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.22,R*0.5,R*0.45),mat);
-        m.position.set(s*R*0.75,cy-R*0.05,cz-R*0.15); hairGroup.add(m);
+        var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.2,R*0.45,R*0.35),mat);
+        m.position.set(s*R*0.7,cy-R*0.35,cz-R*0.08); hairGroup.add(m);
       }); break;
     }
   }
