@@ -3,65 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Burn Rate — Funko Character Editor</title>
+<title>Burn Rate — Character Editor</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden;background:#0f0f1a;font-family:'Inter',sans-serif;color:#fff}
 #app{display:flex;width:100%;height:100%}
-#viewport{flex:0 0 55%;height:100%;position:relative}
+#viewport{flex:1;height:100%;position:relative;min-width:0}
 #viewport canvas{display:block}
-#panel{flex:0 0 45%;height:100%;overflow-y:auto;background:#161625;border-left:1px solid #2a2a40;padding:20px}
+#panel{width:340px;flex-shrink:0;height:100%;overflow-y:auto;background:#161625;border-left:1px solid #2a2a40;padding:16px}
 #panel::-webkit-scrollbar{width:6px}
 #panel::-webkit-scrollbar-track{background:#161625}
 #panel::-webkit-scrollbar-thumb{background:#00d4ff33;border-radius:3px}
-.section{margin-bottom:18px}
-.section-title{font-size:11px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #2a2a40}
-.ctrl{display:flex;align-items:center;margin-bottom:6px;font-size:12px}
+.section{margin-bottom:14px}
+.section-title{font-size:10px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #2a2a40}
+.ctrl{display:flex;align-items:center;margin-bottom:5px;font-size:12px}
 .ctrl label{flex:0 0 35%;color:#999}
 .ctrl input[type=color]{width:32px;height:22px;border:1px solid #444;border-radius:4px;background:transparent;cursor:pointer;padding:0}
 .ctrl input[type=range]{flex:1;accent-color:#00d4ff;height:4px}
 .ctrl select{flex:1;background:#1a1a2e;color:#fff;border:1px solid #333;border-radius:6px;padding:4px 8px;font-size:11px}
-.ctrl input[type=checkbox]{accent-color:#00d4ff;width:15px;height:15px}
+.ctrl input[type=text]{flex:1;background:#1a1a2e;color:#fff;border:1px solid #333;border-radius:6px;padding:4px 8px;font-size:11px}
 .val{color:#00d4ff;font-size:10px;width:32px;text-align:right;margin-left:4px;font-weight:600}
-.btn-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
-.btn{padding:6px 12px;border:1px solid #333;border-radius:8px;background:#1a1a2e;color:#fff;font-size:11px;cursor:pointer;transition:all .15s;font-weight:500}
+.btn-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.btn{padding:5px 10px;border:1px solid #333;border-radius:8px;background:#1a1a2e;color:#fff;font-size:11px;cursor:pointer;transition:all .15s;font-weight:500}
 .btn:hover{border-color:#00d4ff;background:#1a2a4e}
 .btn.active{border-color:#00d4ff;background:#00d4ff18;color:#00d4ff}
+.btn.save{border-color:#4CAF50;color:#4CAF50}
+.btn.save:hover{background:#4CAF5022}
+.btn.danger{border-color:#f44336;color:#f44336}
+.btn.danger:hover{background:#f4433622}
 #info{position:absolute;bottom:12px;left:12px;font-size:10px;color:#666;pointer-events:none}
-.color-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
-.color-swatch{width:28px;height:28px;border-radius:6px;border:2px solid #333;cursor:pointer;transition:all .15s}
+.color-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+.color-swatch{width:26px;height:26px;border-radius:6px;border:2px solid #333;cursor:pointer;transition:all .15s}
 .color-swatch:hover,.color-swatch.active{border-color:#00d4ff;transform:scale(1.15)}
+/* Gallery */
+#gallery{position:absolute;top:0;left:0;width:100%;height:100%;background:#0f0f1aee;z-index:100;display:none;overflow-y:auto;padding:20px}
+#gallery.open{display:block}
+#gallery h2{text-align:center;font-size:18px;margin-bottom:16px;background:linear-gradient(90deg,#00d4ff,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;max-width:1000px;margin:0 auto}
+.char-card{background:#1a1a2e;border:1px solid #2a2a40;border-radius:12px;padding:12px;cursor:pointer;transition:all .2s}
+.char-card:hover{border-color:#00d4ff;transform:translateY(-2px);box-shadow:0 4px 20px #00d4ff22}
+.char-card .avatar{width:100%;aspect-ratio:1;background:#161625;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.char-card .avatar canvas{width:100%;height:100%}
+.char-card .cname{font-weight:700;font-size:13px;margin-bottom:2px}
+.char-card .crole{font-size:10px;color:#00d4ff;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.char-card .ctraits{font-size:10px;color:#666}
+.char-card .card-actions{display:flex;gap:4px;margin-top:6px}
+.char-card .card-actions .btn{font-size:10px;padding:3px 8px}
+.close-gallery{position:fixed;top:16px;right:16px;font-size:24px;cursor:pointer;color:#fff;z-index:101;background:#1a1a2e;border:1px solid #333;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.close-gallery:hover{border-color:#00d4ff}
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4CAF50;color:#fff;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="viewport">
-    <div id="info">Burn Rate — Funko Character Editor v3 • drag to orbit</div>
+    <div id="info">Burn Rate — Character Editor v4 • drag to orbit</div>
   </div>
   <div id="panel">
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:20px;font-weight:800;background:linear-gradient(90deg,#00d4ff,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">🔥 CHARACTER EDITOR</div>
-      <div style="font-size:10px;color:#666;margin-top:2px">Funko Pop Base • Burn Rate</div>
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:18px;font-weight:800;background:linear-gradient(90deg,#00d4ff,#ff6b6b);-webkit-background-clip:text;-webkit-text-fill-color:transparent">🔥 CHARACTER EDITOR</div>
     </div>
-    <div class="section"><div class="section-title">⚡ Role Presets</div><div class="btn-row" id="presetRow"></div></div>
-    <div class="section"><div class="section-title">🎨 Skin Tone</div><div class="color-row" id="skinRow"></div><div class="ctrl"><label>Custom</label><input type="color" id="skinColor" value="#F5D0A9"></div></div>
+
+    <div class="section"><div class="section-title">👤 Identity</div>
+      <div class="ctrl"><label>Name</label><input type="text" id="charName" placeholder="Character name..."></div>
+      <div class="ctrl"><label>Role</label><select id="charRole"><option value="engineer">Engineer</option><option value="designer">Designer</option><option value="pm">PM</option><option value="sales">Sales</option><option value="ceo">CEO</option><option value="intern">Intern</option></select></div>
+    </div>
+
+    <div class="section"><div class="section-title">🎨 Skin</div>
+      <div class="color-row" id="skinRow"></div>
+      <div class="ctrl"><label>Custom</label><input type="color" id="skinColor" value="#F5D0A9"></div>
+    </div>
+
     <div class="section"><div class="section-title">💇 Hair</div>
       <div class="ctrl"><label>Style</label><select id="hairStyle"><option value="none">Bald</option><option value="buzz">Buzz Cut</option><option value="spiky">Spiky</option><option value="slickback">Slick Back</option><option value="topbun">Top Bun</option><option value="ponytail">Ponytail</option><option value="afro">Afro</option><option value="mohawk">Mohawk</option><option value="sidepart">Side Part</option><option value="messy">Messy</option><option value="curly">Curly</option><option value="bob">Bob</option></select></div>
       <div class="ctrl"><label>Color</label><input type="color" id="hairColor" value="#3D2B1F"></div>
     </div>
+
     <div class="section"><div class="section-title">👕 Clothing</div>
       <div class="ctrl"><label>Shirt</label><input type="color" id="shirtColor" value="#2196F3"></div>
       <div class="ctrl"><label>Pants</label><input type="color" id="pantsColor" value="#37474F"></div>
     </div>
+
     <div class="section"><div class="section-title">👀 Eyes</div>
       <div class="ctrl"><label>Color</label><input type="color" id="eyeColor" value="#000000"></div>
       <div class="ctrl"><label>Size</label><input type="range" id="eyeScale" min="0.5" max="1.8" step="0.05" value="1.0"><span class="val" id="eyeScaleVal">1.00</span></div>
     </div>
+
     <div class="section"><div class="section-title">📐 Proportions</div>
       <div class="ctrl"><label>Head Size</label><input type="range" id="headScale" min="0.85" max="1.25" step="0.01" value="1.0"><span class="val" id="headScaleVal">1.00</span></div>
       <div class="ctrl"><label>Body Width</label><input type="range" id="bodyWidth" min="0.8" max="1.3" step="0.01" value="1.0"><span class="val" id="bodyWidthVal">1.00</span></div>
     </div>
+
     <div class="section"><div class="section-title">🎬 Animation</div>
       <div class="btn-row" id="animRow">
         <button class="btn active" data-anim="idle">Idle</button>
@@ -71,240 +106,361 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0f0f1a;font-family:
       </div>
       <div class="ctrl"><label>Turntable</label><input type="checkbox" id="turntable" checked></div>
     </div>
+
     <div class="section"><div class="section-title">🛠 Actions</div>
       <div class="btn-row">
-        <button class="btn" id="btnRandom">🎲 Randomize</button>
-        <button class="btn" id="btnCopy">📋 Copy JSON</button>
+        <button class="btn" id="btnRandom">🎲 Random</button>
+        <button class="btn save" id="btnSave">💾 Save</button>
+        <button class="btn" id="btnGallery">📋 Gallery</button>
+        <button class="btn" id="btnExport">📦 Export All</button>
       </div>
+    </div>
+
+    <div class="section"><div class="section-title">⚡ Quick Load</div>
+      <div class="btn-row" id="quickLoad"></div>
     </div>
   </div>
 </div>
+
+<div id="gallery">
+  <div class="close-gallery" onclick="toggleGallery()">✕</div>
+  <h2>📋 Character Roster</h2>
+  <div class="gallery-grid" id="galleryGrid"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 /* ── globals ── */
 var scene, camera, renderer, controls, clock;
-var character = null;       // the GLB scene graph, added once
-var meshMap = {};           // name → Mesh (for quick access)
-var nodeMap = {};           // name → Object3D (parents)
+var character = null;
 var currentAnim = 'idle', animTime = 0, baseY = 0;
+var savedCharacters = [];  // loaded from characters.json + localStorage
+var editingId = null;      // id of character being edited (null = new)
 
 /* ── toon gradient ── */
 var toonGradient = (function(){
   var c = document.createElement('canvas'); c.width=4; c.height=1;
   var x = c.getContext('2d');
-  x.fillStyle='#666'; x.fillRect(0,0,1,1);
-  x.fillStyle='#999'; x.fillRect(1,0,1,1);
-  x.fillStyle='#ccc'; x.fillRect(2,0,1,1);
-  x.fillStyle='#fff'; x.fillRect(3,0,1,1);
+  ['#666','#999','#ccc','#fff'].forEach(function(col,i){ x.fillStyle=col; x.fillRect(i,0,1,1); });
   var t = new THREE.CanvasTexture(c);
   t.minFilter = THREE.NearestFilter; t.magFilter = THREE.NearestFilter;
   return t;
 })();
+function makeToon(hex){ return new THREE.MeshToonMaterial({color:new THREE.Color(hex), gradientMap:toonGradient}); }
 
-function makeToon(hex){ return new THREE.MeshToonMaterial({color: new THREE.Color(hex), gradientMap: toonGradient}); }
-
-/* ── presets ── */
 var SKIN_PRESETS = [
   {n:'Light',h:'#FDDCB5'},{n:'Peach',h:'#F5D0A9'},{n:'Tan',h:'#D4A574'},
   {n:'Brown',h:'#A0734A'},{n:'Dark',h:'#6B4226'},{n:'Ebony',h:'#3B2219'},
   {n:'Olive',h:'#C4A882'},{n:'Rosy',h:'#F0C0A0'}
 ];
-var ROLES = {
-  engineer: {skin:'#F5D0A9',hair:'spiky',hc:'#3D2B1F',shirt:'#1565C0',pants:'#37474F',eyes:'#000000'},
-  designer: {skin:'#FDDCB5',hair:'bob',hc:'#E91E63',shirt:'#9C27B0',pants:'#212121',eyes:'#000000'},
-  pm:       {skin:'#D4A574',hair:'sidepart',hc:'#1B1B1B',shirt:'#FFFFFF',pants:'#1565C0',eyes:'#000000'},
-  sales:    {skin:'#F5D0A9',hair:'slickback',hc:'#3E2723',shirt:'#F44336',pants:'#263238',eyes:'#000000'},
-  ceo:      {skin:'#D4A574',hair:'slickback',hc:'#424242',shirt:'#212121',pants:'#212121',eyes:'#000000'},
-  intern:   {skin:'#FDDCB5',hair:'messy',hc:'#FFB74D',shirt:'#4CAF50',pants:'#795548',eyes:'#000000'}
-};
+
+/* ── $ helper ── */
+function $(id){ return document.getElementById(id); }
+function toast(msg){ var t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){t.classList.remove('show');},2000); }
 
 /* ── init ── */
 function init(){
   clock = new THREE.Clock();
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1a2e);
-  var vp = document.getElementById('viewport');
-  var w = vp.clientWidth, h = vp.clientHeight;
-
-  camera = new THREE.PerspectiveCamera(35, w/h, 0.1, 100);
+  var vp = $('viewport');
+  camera = new THREE.PerspectiveCamera(35, vp.clientWidth/vp.clientHeight, 0.1, 100);
   camera.position.set(0, 1.0, 4);
-
-  renderer = new THREE.WebGLRenderer({antialias:true});
-  renderer.setSize(w, h);
+  renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+  renderer.setSize(vp.clientWidth, vp.clientHeight);
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
   vp.appendChild(renderer.domElement);
-
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.target.set(0, 0.8, 0);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.08;
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
   controls.minDistance = 2; controls.maxDistance = 8;
   controls.update();
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-  var k = new THREE.DirectionalLight(0xffffff, 0.8); k.position.set(3,5,4); scene.add(k);
-  var f = new THREE.DirectionalLight(0x88aaff, 0.3); f.position.set(-3,3,-2); scene.add(f);
-  var r = new THREE.DirectionalLight(0xff8844, 0.2); r.position.set(0,2,-4); scene.add(r);
-
-  var gnd = new THREE.Mesh(new THREE.CircleGeometry(1.5, 48), new THREE.MeshStandardMaterial({color:0x252540, roughness:0.8}));
-  gnd.rotation.x = -Math.PI/2; gnd.position.y = -0.01; scene.add(gnd);
-  scene.add(new THREE.GridHelper(6, 30, 0x333355, 0x222244));
+  var k=new THREE.DirectionalLight(0xffffff,0.8); k.position.set(3,5,4); scene.add(k);
+  var f=new THREE.DirectionalLight(0x88aaff,0.3); f.position.set(-3,3,-2); scene.add(f);
+  scene.add(new THREE.DirectionalLight(0xff8844,0.2)).position.set(0,2,-4);
+  var gnd=new THREE.Mesh(new THREE.CircleGeometry(1.5,48), new THREE.MeshStandardMaterial({color:0x252540,roughness:0.8}));
+  gnd.rotation.x=-Math.PI/2; gnd.position.y=-0.01; scene.add(gnd);
+  scene.add(new THREE.GridHelper(6,30,0x333355,0x222244));
 
   addEventListener('resize', function(){
-    var vp2 = document.getElementById('viewport');
-    camera.aspect = vp2.clientWidth / vp2.clientHeight;
+    camera.aspect = vp.clientWidth/vp.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(vp2.clientWidth, vp2.clientHeight);
+    renderer.setSize(vp.clientWidth, vp.clientHeight);
   });
 
   loadModel();
+  loadCharacters();
   buildUI();
   animate();
 }
 
-/* ── load GLB once ── */
+/* ── load GLB ── */
 function loadModel(){
   new THREE.GLTFLoader().load('assets/funko-base-male.glb', function(gltf){
     character = gltf.scene;
-
-    // index meshes and nodes
-    character.traverse(function(c){
-      if(c.isMesh) meshMap[c.name] = c;
-      nodeMap[c.name] = c;
-    });
-
-    console.log('Meshes:', Object.keys(meshMap));
-    console.log('All nodes:', Object.keys(nodeMap));
-
-    // scale & center
-    character.scale.set(0.35, 0.35, 0.35);
+    character.scale.set(0.35,0.35,0.35);
+    // clone materials so each mesh is independent
+    character.traverse(function(c){ if(c.isMesh && c.material) c.material = c.material.clone(); });
     scene.add(character);
-
-    // auto-center feet on ground
     var box = new THREE.Box3().setFromObject(character);
     character.position.y = -box.min.y;
     baseY = character.position.y;
-
-    // apply initial look
     applyColors();
     applyProportions();
-
-    console.log('Character loaded, height:', (box.max.y - box.min.y).toFixed(2));
+    rebuildHair();
+    console.log('Model loaded');
   });
 }
 
-/* ── apply colors (no rebuild!) ── */
+/* ── colors ── */
 function applyColors(){
   if(!character) return;
-  var skin  = new THREE.Color($('skinColor').value);
-  var shirt = new THREE.Color($('shirtColor').value);
-  var pants = new THREE.Color($('pantsColor').value);
-  var eyes  = new THREE.Color($('eyeColor').value);
-
-  // Clone shared materials on first run so each mesh gets its own
-  if(!character.userData._matsCloned){
-    character.traverse(function(c){
-      if(c.isMesh && c.material) c.material = c.material.clone();
-    });
-    character.userData._matsCloned = true;
-  }
-
-  // Now safe to tint individually
+  var skin=new THREE.Color($('skinColor').value);
+  var shirt=new THREE.Color($('shirtColor').value);
+  var pants=new THREE.Color($('pantsColor').value);
+  var eyes=new THREE.Color($('eyeColor').value);
   character.traverse(function(c){
-    if(!c.isMesh || !c.material || !c.material.color) return;
-    var n = c.name;
-    if(n.indexOf('Head') === 0 || n.indexOf('Ears') === 0 || n.indexOf('Hands') === 0 || (n.charAt(0) === '_' && n.indexOf('__0') >= 0)){
+    if(!c.isMesh||!c.material||!c.material.color) return;
+    var n=c.name;
+    if(n.indexOf('Head')===0||n.indexOf('Ears')===0||n.indexOf('Hands')===0||(n.charAt(0)==='_'&&n.indexOf('__0')>=0))
       c.material.color.copy(skin);
-    } else if(n.indexOf('Eyes') === 0){
-      c.material.color.copy(eyes);
-    } else if(n.indexOf('UpperBody') === 0){
-      c.material.color.copy(shirt);
-    } else if(n.indexOf('LowerBody') === 0){
-      c.material.color.copy(pants);
-    }
+    else if(n.indexOf('Eyes')===0) c.material.color.copy(eyes);
+    else if(n.indexOf('UpperBody')===0) c.material.color.copy(shirt);
+    else if(n.indexOf('LowerBody')===0) c.material.color.copy(pants);
   });
 }
 
-/* ── apply proportions ── */
+/* ── proportions ── */
 function applyProportions(){
   if(!character) return;
-  var hs = parseFloat($('headScale').value);
-  var bw = parseFloat($('bodyWidth').value);
-  var es = parseFloat($('eyeScale').value);
-
+  var hs=parseFloat($('headScale').value), bw=parseFloat($('bodyWidth').value), es=parseFloat($('eyeScale').value);
   character.traverse(function(c){
-    var n = c.name;
-    // parent nodes (no underscore before letter for these)
-    if(n === 'Head_M' || n === 'Head M') c.scale.set(hs, hs, hs);
-    if(n === 'Eyes_M' || n === 'Eyes M') c.scale.set(es, es, es);
-    if(n === 'UpperBody_M' || n === 'UpperBody M'){ c.scale.x = bw; c.scale.z = bw; }
-    if(n === 'LowerBody_F' || n === 'LowerBody F'){ c.scale.x = bw; c.scale.z = bw; }
+    var n=c.name;
+    if(n==='Head_M'||n==='Head M') c.scale.set(hs,hs,hs);
+    if(n==='Eyes_M'||n==='Eyes M') c.scale.set(es,es,es);
+    if(n==='UpperBody_M'||n==='UpperBody M'){c.scale.x=bw;c.scale.z=bw;}
+    if(n==='LowerBody_F'||n==='LowerBody F'){c.scale.x=bw;c.scale.z=bw;}
   });
 }
 
-/* ── UI helper ── */
-function $(id){ return document.getElementById(id); }
+/* ── hair ── */
+var hairGroup = null;
+function rebuildHair(){
+  if(!character) return;
+  var headNode=null;
+  character.traverse(function(c){if(c.name.indexOf('Head')===0&&!c.isMesh)headNode=c;});
+  if(!headNode) return;
+  if(hairGroup){headNode.remove(hairGroup);hairGroup=null;}
+  var style=$('hairStyle').value;
+  if(style==='none') return;
+  var mat=makeToon($('hairColor').value);
+  hairGroup=new THREE.Group(); hairGroup.name='hair';
+  switch(style){
+    case 'buzz':{var m=new THREE.Mesh(new THREE.SphereGeometry(110,16,12,0,Math.PI*2,0,Math.PI*0.55),mat);m.position.set(0,60,-5);hairGroup.add(m);break;}
+    case 'spiky':{for(var i=0;i<12;i++){var a=(i/12)*Math.PI*2;var m=new THREE.Mesh(new THREE.ConeGeometry(15,40+Math.random()*50,5),mat);m.position.set(Math.cos(a)*(70+Math.random()*30),80+Math.random()*20,Math.sin(a)*(70+Math.random()*30)-5);m.rotation.x=-Math.cos(a)*0.3;m.rotation.z=Math.sin(a)*0.3;hairGroup.add(m);}for(var j=0;j<5;j++){var m2=new THREE.Mesh(new THREE.ConeGeometry(12,60+Math.random()*30,5),mat);m2.position.set((Math.random()-0.5)*40,100+Math.random()*20,(Math.random()-0.5)*40);hairGroup.add(m2);}break;}
+    case 'slickback':{var m=new THREE.Mesh(new THREE.SphereGeometry(115,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);m.position.set(0,55,-15);m.scale.set(1,0.7,1.2);hairGroup.add(m);break;}
+    case 'topbun':{var m1=new THREE.Mesh(new THREE.SphereGeometry(110,16,10,0,Math.PI*2,0,Math.PI*0.45),mat);m1.position.set(0,60,-5);hairGroup.add(m1);var m2=new THREE.Mesh(new THREE.SphereGeometry(35,12,12),mat);m2.position.set(0,135,-5);hairGroup.add(m2);break;}
+    case 'ponytail':{var m1=new THREE.Mesh(new THREE.SphereGeometry(110,16,10,0,Math.PI*2,0,Math.PI*0.5),mat);m1.position.set(0,55,-5);hairGroup.add(m1);var m2=new THREE.Mesh(new THREE.CylinderGeometry(18,12,100,8),mat);m2.position.set(0,30,-100);m2.rotation.x=Math.PI*0.35;hairGroup.add(m2);break;}
+    case 'afro':{var m=new THREE.Mesh(new THREE.SphereGeometry(145,20,16),mat);m.position.set(0,80,-5);m.scale.set(1,0.85,1);hairGroup.add(m);break;}
+    case 'mohawk':{for(var i=0;i<8;i++){var t=i/7;var m=new THREE.Mesh(new THREE.BoxGeometry(12,40+t*25,20),mat);m.position.set(0,90+t*10,-80+i*22);hairGroup.add(m);}break;}
+    case 'sidepart':{var m=new THREE.Mesh(new THREE.SphereGeometry(115,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);m.position.set(10,55,-5);m.scale.set(1.05,0.75,1.1);hairGroup.add(m);break;}
+    case 'messy':{for(var i=0;i<18;i++){var a=(i/18)*Math.PI*2+Math.random()*0.5;var m=new THREE.Mesh(new THREE.SphereGeometry(20+Math.random()*15,6,6),mat);m.position.set(Math.cos(a)*(80+Math.random()*30),70+Math.random()*40,Math.sin(a)*(80+Math.random()*30)-5);hairGroup.add(m);}break;}
+    case 'curly':{for(var i=0;i<25;i++){var a=(i/25)*Math.PI*2+Math.random()*0.3;var r2=85+Math.random()*20;var el=Math.random()*Math.PI*0.4;var m=new THREE.Mesh(new THREE.SphereGeometry(18+Math.random()*10,6,6),mat);m.position.set(Math.cos(a)*r2*Math.cos(el),60+Math.sin(el)*r2,Math.sin(a)*r2*Math.cos(el)-5);hairGroup.add(m);}break;}
+    case 'bob':{var m1=new THREE.Mesh(new THREE.SphereGeometry(120,16,12,0,Math.PI*2,0,Math.PI*0.55),mat);m1.position.set(0,50,-5);m1.scale.set(1,0.8,1);hairGroup.add(m1);[-1,1].forEach(function(s){var m=new THREE.Mesh(new THREE.BoxGeometry(40,80,30),mat);m.position.set(s*90,-10,5);hairGroup.add(m);});break;}
+  }
+  var olMat=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide});
+  hairGroup.traverse(function(c){if(c.isMesh){var ol=new THREE.Mesh(c.geometry,olMat);ol.scale.multiplyScalar(1.04);c.add(ol);}});
+  headNode.add(hairGroup);
+}
 
+/* ═══════════════════════════════════════
+   CHARACTER DATA — save / load / export
+   ═══════════════════════════════════════ */
+
+function getCharacterData(){
+  return {
+    id: editingId || slugify($('charName').value) || 'char-'+Date.now(),
+    name: $('charName').value || 'Unnamed',
+    role: $('charRole').value,
+    skin: $('skinColor').value,
+    hair: $('hairStyle').value,
+    hairColor: $('hairColor').value,
+    shirt: $('shirtColor').value,
+    pants: $('pantsColor').value,
+    eyes: $('eyeColor').value,
+    headScale: +parseFloat($('headScale').value).toFixed(2),
+    bodyWidth: +parseFloat($('bodyWidth').value).toFixed(2),
+    eyeScale: +parseFloat($('eyeScale').value).toFixed(2)
+  };
+}
+
+function loadCharacterToEditor(ch){
+  editingId = ch.id || null;
+  $('charName').value = ch.name || '';
+  $('charRole').value = ch.role || 'engineer';
+  $('skinColor').value = ch.skin || '#F5D0A9';
+  $('hairStyle').value = ch.hair || 'none';
+  $('hairColor').value = ch.hairColor || '#3D2B1F';
+  $('shirtColor').value = ch.shirt || '#2196F3';
+  $('pantsColor').value = ch.pants || '#37474F';
+  $('eyeColor').value = ch.eyes || '#000000';
+  $('headScale').value = ch.headScale || 1.0;
+  $('bodyWidth').value = ch.bodyWidth || 1.0;
+  $('eyeScale').value = ch.eyeScale || 1.0;
+  updateVals();
+  applyColors();
+  applyProportions();
+  rebuildHair();
+}
+
+function slugify(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+
+/* ── persistence (localStorage + JSON file) ── */
+var LS_KEY = 'burnrate_characters';
+
+function loadCharacters(){
+  // Load from localStorage
+  try { savedCharacters = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e){ savedCharacters = []; }
+  // If empty, fetch the bundled characters.json
+  if(savedCharacters.length === 0){
+    fetch('assets/characters.json').then(function(r){return r.json();}).then(function(data){
+      savedCharacters = data;
+      localStorage.setItem(LS_KEY, JSON.stringify(savedCharacters));
+      buildQuickLoad();
+      console.log('Loaded '+data.length+' characters from characters.json');
+    }).catch(function(e){ console.warn('No characters.json found'); });
+  } else {
+    buildQuickLoad();
+  }
+}
+
+function saveCharacter(){
+  var data = getCharacterData();
+  if(!data.name || data.name === 'Unnamed'){ toast('⚠️ Give your character a name first!'); return; }
+  data.id = slugify(data.name);
+  // Update or insert
+  var idx = savedCharacters.findIndex(function(c){return c.id === data.id;});
+  if(idx >= 0) savedCharacters[idx] = data;
+  else savedCharacters.push(data);
+  localStorage.setItem(LS_KEY, JSON.stringify(savedCharacters));
+  editingId = data.id;
+  buildQuickLoad();
+  toast('💾 Saved "'+data.name+'"!');
+}
+
+function deleteCharacter(id){
+  savedCharacters = savedCharacters.filter(function(c){return c.id !== id;});
+  localStorage.setItem(LS_KEY, JSON.stringify(savedCharacters));
+  if(editingId === id) editingId = null;
+  buildQuickLoad();
+  renderGallery();
+  toast('🗑 Character deleted');
+}
+
+function exportAll(){
+  var json = JSON.stringify(savedCharacters, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'characters.json';
+  a.click();
+  toast('📦 Exported '+savedCharacters.length+' characters');
+}
+
+/* ── gallery ── */
+function toggleGallery(){
+  var g = $('gallery');
+  g.classList.toggle('open');
+  if(g.classList.contains('open')) renderGallery();
+}
+
+function renderGallery(){
+  var grid = $('galleryGrid');
+  grid.innerHTML = '';
+  savedCharacters.forEach(function(ch){
+    var card = document.createElement('div');
+    card.className = 'char-card';
+    var colors = 'background:linear-gradient(135deg,'+ch.shirt+' 0%,'+ch.pants+' 100%)';
+    card.innerHTML =
+      '<div class="avatar" style="'+colors+'">'+
+        '<div style="width:60px;height:60px;border-radius:50%;background:'+ch.skin+';margin-top:10px;position:relative">'+
+          '<div style="position:absolute;top:35%;left:25%;width:8px;height:8px;border-radius:50%;background:'+ch.eyes+'"></div>'+
+          '<div style="position:absolute;top:35%;right:25%;width:8px;height:8px;border-radius:50%;background:'+ch.eyes+'"></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="cname">'+ch.name+'</div>'+
+      '<div class="crole">'+ch.role+'</div>'+
+      (ch.traits ? '<div class="ctraits">'+ch.traits.join(' • ')+'</div>' : '')+
+      '<div class="card-actions">'+
+        '<button class="btn" data-load="'+ch.id+'">✏️ Edit</button>'+
+        '<button class="btn danger" data-del="'+ch.id+'">🗑</button>'+
+      '</div>';
+    grid.appendChild(card);
+  });
+  // bind buttons
+  grid.querySelectorAll('[data-load]').forEach(function(b){
+    b.onclick = function(e){
+      e.stopPropagation();
+      var ch = savedCharacters.find(function(c){return c.id===b.dataset.load;});
+      if(ch){ loadCharacterToEditor(ch); toggleGallery(); toast('Loaded "'+ch.name+'"'); }
+    };
+  });
+  grid.querySelectorAll('[data-del]').forEach(function(b){
+    b.onclick = function(e){
+      e.stopPropagation();
+      if(confirm('Delete this character?')) deleteCharacter(b.dataset.del);
+    };
+  });
+}
+
+/* ── quick load bar ── */
+function buildQuickLoad(){
+  var row = $('quickLoad');
+  row.innerHTML = '';
+  savedCharacters.slice(0,8).forEach(function(ch){
+    var b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = ch.name.split(' ')[0];
+    b.title = ch.name + ' (' + ch.role + ')';
+    b.style.borderLeft = '3px solid '+ch.shirt;
+    b.onclick = function(){ loadCharacterToEditor(ch); toast('Loaded "'+ch.name+'"'); };
+    row.appendChild(b);
+  });
+}
+
+/* ── UI ── */
 function buildUI(){
   // skin swatches
   var sr = $('skinRow');
   SKIN_PRESETS.forEach(function(s){
-    var d = document.createElement('div');
-    d.className = 'color-swatch'; d.style.background = s.h; d.title = s.n;
-    d.onclick = function(){
-      $('skinColor').value = s.h;
-      sr.querySelectorAll('.color-swatch').forEach(function(x){x.classList.remove('active');});
-      d.classList.add('active');
-      applyColors();
-    };
+    var d=document.createElement('div'); d.className='color-swatch'; d.style.background=s.h; d.title=s.n;
+    d.onclick=function(){ $('skinColor').value=s.h; sr.querySelectorAll('.color-swatch').forEach(function(x){x.classList.remove('active');}); d.classList.add('active'); applyColors(); };
     sr.appendChild(d);
   });
-
-  // role presets
-  var pr = $('presetRow');
-  Object.keys(ROLES).forEach(function(role){
-    var b = document.createElement('button'); b.className = 'btn';
-    b.textContent = role.charAt(0).toUpperCase() + role.slice(1);
-    b.onclick = function(){ applyPreset(role); };
-    pr.appendChild(b);
-  });
-
-  // live updates — colors
-  ['skinColor','shirtColor','pantsColor','eyeColor'].forEach(function(id){
-    $(id).addEventListener('input', applyColors);
-  });
-
-  // live updates — proportions
-  ['headScale','bodyWidth','eyeScale'].forEach(function(id){
-    $(id).addEventListener('input', function(){
-      updateVals();
-      applyProportions();
-    });
-  });
-
-  // hair (needs rebuild of hair group)
-  ['hairStyle','hairColor'].forEach(function(id){
-    $(id).addEventListener('change', rebuildHair);
-    $(id).addEventListener('input', rebuildHair);
-  });
-
+  // live color updates
+  ['skinColor','shirtColor','pantsColor','eyeColor'].forEach(function(id){ $(id).addEventListener('input',applyColors); });
+  // live proportions
+  ['headScale','bodyWidth','eyeScale'].forEach(function(id){ $(id).addEventListener('input',function(){updateVals();applyProportions();}); });
+  // hair
+  ['hairStyle','hairColor'].forEach(function(id){ $(id).addEventListener('change',rebuildHair); $(id).addEventListener('input',rebuildHair); });
   // animations
   $('animRow').querySelectorAll('.btn').forEach(function(b){
-    b.onclick = function(){
-      currentAnim = b.dataset.anim;
-      $('animRow').querySelectorAll('.btn').forEach(function(x){x.classList.remove('active');});
-      b.classList.add('active');
-    };
+    b.onclick=function(){ currentAnim=b.dataset.anim; $('animRow').querySelectorAll('.btn').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); };
   });
-
-  // actions
+  // action buttons
   $('btnRandom').onclick = randomize;
-  $('btnCopy').onclick = copyJSON;
+  $('btnSave').onclick = saveCharacter;
+  $('btnGallery').onclick = toggleGallery;
+  $('btnExport').onclick = exportAll;
 }
 
 function updateVals(){
@@ -313,118 +469,15 @@ function updateVals(){
   $('bodyWidthVal').textContent = parseFloat($('bodyWidth').value).toFixed(2);
 }
 
-/* ── hair ── */
-var hairGroup = null;
-function rebuildHair(){
-  if(!character) return;
-  // find head node
-  var headNode = null;
-  character.traverse(function(c){ if(c.name.indexOf('Head') === 0 && !c.isMesh) headNode = c; });
-  if(!headNode) return;
-
-  // remove old hair
-  if(hairGroup){ headNode.remove(hairGroup); hairGroup = null; }
-
-  var style = $('hairStyle').value;
-  if(style === 'none') return;
-
-  var color = $('hairColor').value;
-  var mat = makeToon(color);
-  hairGroup = new THREE.Group(); hairGroup.name = 'hair';
-
-  // All positions in head-local space (model is ~170 units tall in local)
-  switch(style){
-    case 'buzz':{
-      var m = new THREE.Mesh(new THREE.SphereGeometry(110,16,12,0,Math.PI*2,0,Math.PI*0.55), mat);
-      m.position.set(0,60,-5); hairGroup.add(m); break;
-    }
-    case 'spiky':{
-      for(var i=0;i<12;i++){var a=(i/12)*Math.PI*2;
-        var m=new THREE.Mesh(new THREE.ConeGeometry(15,40+Math.random()*50,5),mat);
-        m.position.set(Math.cos(a)*(70+Math.random()*30),80+Math.random()*20,Math.sin(a)*(70+Math.random()*30)-5);
-        m.rotation.x=-Math.cos(a)*0.3;m.rotation.z=Math.sin(a)*0.3;hairGroup.add(m);}
-      for(var j=0;j<5;j++){var m2=new THREE.Mesh(new THREE.ConeGeometry(12,60+Math.random()*30,5),mat);
-        m2.position.set((Math.random()-0.5)*40,100+Math.random()*20,(Math.random()-0.5)*40);hairGroup.add(m2);}break;
-    }
-    case 'slickback':{
-      var m=new THREE.Mesh(new THREE.SphereGeometry(115,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);
-      m.position.set(0,55,-15);m.scale.set(1,0.7,1.2);hairGroup.add(m);break;
-    }
-    case 'topbun':{
-      var m1=new THREE.Mesh(new THREE.SphereGeometry(110,16,10,0,Math.PI*2,0,Math.PI*0.45),mat);
-      m1.position.set(0,60,-5);hairGroup.add(m1);
-      var m2=new THREE.Mesh(new THREE.SphereGeometry(35,12,12),mat);
-      m2.position.set(0,135,-5);hairGroup.add(m2);break;
-    }
-    case 'ponytail':{
-      var m1=new THREE.Mesh(new THREE.SphereGeometry(110,16,10,0,Math.PI*2,0,Math.PI*0.5),mat);
-      m1.position.set(0,55,-5);hairGroup.add(m1);
-      var m2=new THREE.Mesh(new THREE.CylinderGeometry(18,12,100,8),mat);
-      m2.position.set(0,30,-100);m2.rotation.x=Math.PI*0.35;hairGroup.add(m2);break;
-    }
-    case 'afro':{
-      var m=new THREE.Mesh(new THREE.SphereGeometry(145,20,16),mat);
-      m.position.set(0,80,-5);m.scale.set(1,0.85,1);hairGroup.add(m);break;
-    }
-    case 'mohawk':{
-      for(var i=0;i<8;i++){var t=i/7;
-        var m=new THREE.Mesh(new THREE.BoxGeometry(12,40+t*25,20),mat);
-        m.position.set(0,90+t*10,-80+i*22);hairGroup.add(m);}break;
-    }
-    case 'sidepart':{
-      var m=new THREE.Mesh(new THREE.SphereGeometry(115,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);
-      m.position.set(10,55,-5);m.scale.set(1.05,0.75,1.1);hairGroup.add(m);break;
-    }
-    case 'messy':{
-      for(var i=0;i<18;i++){var a=(i/18)*Math.PI*2+Math.random()*0.5;
-        var m=new THREE.Mesh(new THREE.SphereGeometry(20+Math.random()*15,6,6),mat);
-        m.position.set(Math.cos(a)*(80+Math.random()*30),70+Math.random()*40,Math.sin(a)*(80+Math.random()*30)-5);hairGroup.add(m);}break;
-    }
-    case 'curly':{
-      for(var i=0;i<25;i++){var a=(i/25)*Math.PI*2+Math.random()*0.3;var r=85+Math.random()*20;var el=Math.random()*Math.PI*0.4;
-        var m=new THREE.Mesh(new THREE.SphereGeometry(18+Math.random()*10,6,6),mat);
-        m.position.set(Math.cos(a)*r*Math.cos(el),60+Math.sin(el)*r,Math.sin(a)*r*Math.cos(el)-5);hairGroup.add(m);}break;
-    }
-    case 'bob':{
-      var m1=new THREE.Mesh(new THREE.SphereGeometry(120,16,12,0,Math.PI*2,0,Math.PI*0.55),mat);
-      m1.position.set(0,50,-5);m1.scale.set(1,0.8,1);hairGroup.add(m1);
-      [-1,1].forEach(function(s){var m=new THREE.Mesh(new THREE.BoxGeometry(40,80,30),mat);
-        m.position.set(s*90,-10,5);hairGroup.add(m);});break;
-    }
-  }
-
-  // outlines on hair
-  var olMat = new THREE.MeshBasicMaterial({color:0x000000, side: THREE.BackSide});
-  hairGroup.traverse(function(c){
-    if(c.isMesh){var ol=new THREE.Mesh(c.geometry,olMat);ol.scale.multiplyScalar(1.04);c.add(ol);}
-  });
-
-  headNode.add(hairGroup);
-}
-
-/* ── presets ── */
-function applyPreset(role){
-  var p = ROLES[role]; if(!p) return;
-  $('skinColor').value = p.skin;
-  $('hairStyle').value = p.hair;
-  $('hairColor').value = p.hc;
-  $('shirtColor').value = p.shirt;
-  $('pantsColor').value = p.pants;
-  $('eyeColor').value = p.eyes;
-  $('headScale').value = 1.0;
-  $('bodyWidth').value = 1.0;
-  $('eyeScale').value = 1.0;
-  updateVals();
-  applyColors();
-  applyProportions();
-  rebuildHair();
-}
-
-/* ── randomize ── */
 function randomize(){
-  var skins = SKIN_PRESETS.map(function(s){return s.h;});
-  var hairs = ['none','buzz','spiky','slickback','topbun','ponytail','afro','mohawk','sidepart','messy','curly','bob'];
-  var rc = function(){return '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');};
+  var skins=SKIN_PRESETS.map(function(s){return s.h;});
+  var hairs=['none','buzz','spiky','slickback','topbun','ponytail','afro','mohawk','sidepart','messy','curly','bob'];
+  var roles=['engineer','designer','pm','sales','ceo','intern'];
+  var firstNames=['Alex','Sam','Jordan','Casey','Riley','Morgan','Taylor','Quinn','Avery','Blake','Jamie','Drew','Skyler','Reese','Dakota','Emery','Kai','Sage','Phoenix','River'];
+  var lastNames=['Chen','Kim','Patel','Silva','Nguyen','Russo','Okonkwo','Larsson','Williams','Morrison','Sharma','Petrov','Santos','Tanaka','Mueller','Dubois'];
+  var rc=function(){return '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');};
+  $('charName').value = firstNames[Math.floor(Math.random()*firstNames.length)]+' '+lastNames[Math.floor(Math.random()*lastNames.length)];
+  $('charRole').value = roles[Math.floor(Math.random()*roles.length)];
   $('skinColor').value = skins[Math.floor(Math.random()*skins.length)];
   $('hairStyle').value = hairs[Math.floor(Math.random()*hairs.length)];
   $('hairColor').value = rc();
@@ -434,46 +487,29 @@ function randomize(){
   $('headScale').value = (0.9+Math.random()*0.25).toFixed(2);
   $('bodyWidth').value = (0.85+Math.random()*0.35).toFixed(2);
   $('eyeScale').value = (0.7+Math.random()*0.8).toFixed(2);
-  updateVals();
-  applyColors();
-  applyProportions();
-  rebuildHair();
-}
-
-/* ── copy JSON ── */
-function copyJSON(){
-  var d = {
-    skin:$('skinColor').value, hair:$('hairStyle').value, hairColor:$('hairColor').value,
-    shirt:$('shirtColor').value, pants:$('pantsColor').value, eyes:$('eyeColor').value,
-    eyeScale:+parseFloat($('eyeScale').value).toFixed(2),
-    headScale:+parseFloat($('headScale').value).toFixed(2),
-    bodyWidth:+parseFloat($('bodyWidth').value).toFixed(2)
-  };
-  navigator.clipboard.writeText(JSON.stringify(d, null, 2));
-  alert('Character JSON copied!');
+  editingId = null;
+  updateVals(); applyColors(); applyProportions(); rebuildHair();
 }
 
 /* ── animation ── */
 function applyAnimation(dt){
   if(!character) return;
-  animTime += dt; var t = animTime;
-  character.position.y = baseY; // reset
-  character.rotation.x = 0; character.rotation.z = 0;
+  animTime+=dt; var t=animTime;
+  character.position.y=baseY; character.rotation.x=0; character.rotation.z=0;
   switch(currentAnim){
-    case 'idle':  character.position.y = baseY + Math.sin(t*2)*0.015; break;
-    case 'walk':  character.position.y = baseY + Math.abs(Math.sin(t*6))*0.04; character.rotation.z = Math.sin(t*6)*0.06; break;
-    case 'wave':  character.position.y = baseY + Math.sin(t*2)*0.01; character.rotation.z = Math.sin(t*4)*0.1; break;
-    case 'sit':   character.position.y = baseY - 0.15; character.rotation.x = -0.1; break;
+    case 'idle':character.position.y=baseY+Math.sin(t*2)*0.015;break;
+    case 'walk':character.position.y=baseY+Math.abs(Math.sin(t*6))*0.04;character.rotation.z=Math.sin(t*6)*0.06;break;
+    case 'wave':character.position.y=baseY+Math.sin(t*2)*0.01;character.rotation.z=Math.sin(t*4)*0.1;break;
+    case 'sit':character.position.y=baseY-0.15;character.rotation.x=-0.1;break;
   }
 }
 
 function animate(){
   requestAnimationFrame(animate);
-  var dt = clock.getDelta();
+  var dt=clock.getDelta();
   applyAnimation(dt);
-  if($('turntable').checked && character) character.rotation.y += dt * 0.5;
-  controls.update();
-  renderer.render(scene, camera);
+  if($('turntable').checked&&character) character.rotation.y+=dt*0.5;
+  controls.update(); renderer.render(scene,camera);
 }
 
 init();
