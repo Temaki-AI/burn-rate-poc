@@ -212,6 +212,7 @@ function loadModel(){
     character.traverse(function(c){ if(c.isMesh && c.material) c.material = c.material.clone(); });
     saveOrigScales();
     getHeadMetrics();
+    savePoses();
     scene.add(character);
     var box = new THREE.Box3().setFromObject(character);
     character.position.y = -box.min.y;
@@ -605,16 +606,82 @@ function randomize(){
   updateVals(); applyColors(); applyProportions(); rebuildHair();
 }
 
-/* ── animation ── */
+/* ── animation with mesh-node transforms ── */
+var origPoses = {};  // original positions/rotations of mesh nodes
+var poseNodes = {};  // quick refs to LowerBody, UpperBody, etc.
+
+function savePoses(){
+  ['LowerBody_F','UpperBody_M','Hands_M','Head_M'].forEach(function(name){
+    character.traverse(function(c){
+      if(c.name === name){
+        poseNodes[name] = c;
+        origPoses[name] = {pos: c.position.clone(), rot: c.rotation.clone()};
+      }
+    });
+  });
+}
+
+function resetPoses(){
+  Object.keys(origPoses).forEach(function(name){
+    var node = poseNodes[name]; if(!node) return;
+    var o = origPoses[name];
+    node.position.copy(o.pos);
+    node.rotation.copy(o.rot);
+  });
+}
+
 function applyAnimation(dt){
-  if(!character) return;
+  if(!character || !Object.keys(origPoses).length) return;
   animTime+=dt; var t=animTime;
+
+  // always reset to original pose first
+  resetPoses();
   character.position.y=baseY; character.rotation.x=0; character.rotation.z=0;
+
+  var lb=poseNodes['LowerBody_F'], ub=poseNodes['UpperBody_M'];
+  var hm=poseNodes['Hands_M'], hd=poseNodes['Head_M'];
+  var oLB=origPoses['LowerBody_F'], oUB=origPoses['UpperBody_M'];
+  var oHM=origPoses['Hands_M'], oHD=origPoses['Head_M'];
+
   switch(currentAnim){
-    case 'idle':character.position.y=baseY+Math.sin(t*2)*0.015;break;
-    case 'walk':character.position.y=baseY+Math.abs(Math.sin(t*6))*0.04;character.rotation.z=Math.sin(t*6)*0.06;break;
-    case 'wave':character.position.y=baseY+Math.sin(t*2)*0.01;character.rotation.z=Math.sin(t*4)*0.1;break;
-    case 'sit':character.position.y=baseY-0.15;character.rotation.x=-0.1;break;
+    case 'idle':
+      character.position.y = baseY + Math.sin(t*2)*0.015;
+      break;
+
+    case 'walk':
+      character.position.y = baseY + Math.abs(Math.sin(t*6))*0.04;
+      character.rotation.z = Math.sin(t*6)*0.06;
+      // subtle arm swing
+      if(hm) hm.rotation.x = oHM.rot.x + Math.sin(t*6)*0.15;
+      break;
+
+    case 'wave':
+      character.position.y = baseY + Math.sin(t*2)*0.01;
+      // wave uses arm/hand rotation
+      if(hm) hm.rotation.z = oHM.rot.z + Math.sin(t*5)*0.3;
+      break;
+
+    case 'sit':
+      // legs rotate forward (like sitting on a chair)
+      if(lb){
+        lb.rotation.x = oLB.rot.x - 1.5;
+        lb.position.y = oLB.pos.y - 35;
+        lb.position.z = oLB.pos.z + 40;
+      }
+      // upper body drops down to match
+      var drop = 50;
+      if(ub){
+        ub.position.y = oUB.pos.y - drop;
+        ub.rotation.x = oUB.rot.x - 0.05;
+      }
+      if(hm) hm.position.y = oHM.pos.y - drop;
+      if(hd) hd.position.y = oHD.pos.y - drop;
+      // hair follows head
+      if(hairGroup) hairGroup.position.y = -drop * 0.0035;
+      // subtle breathing while sitting
+      if(ub) ub.position.y += Math.sin(t*1.5)*2;
+      if(hd) hd.position.y += Math.sin(t*1.5)*2;
+      break;
   }
 }
 
