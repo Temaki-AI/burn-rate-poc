@@ -206,7 +206,15 @@ function applyColors(){
   var pants = new THREE.Color($('pantsColor').value);
   var eyes  = new THREE.Color($('eyeColor').value);
 
-  // Just tint existing materials — don't replace them (keeps textures/maps intact)
+  // Clone shared materials on first run so each mesh gets its own
+  if(!character.userData._matsCloned){
+    character.traverse(function(c){
+      if(c.isMesh && c.material) c.material = c.material.clone();
+    });
+    character.userData._matsCloned = true;
+  }
+
+  // Now safe to tint individually
   character.traverse(function(c){
     if(!c.isMesh || !c.material || !c.material.color) return;
     var n = c.name;
