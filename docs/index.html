@@ -3398,6 +3398,12 @@ function poseGLBCharacterSitting(wrapper) {
   
   // Head slightly tilted down (looking at screen)
   addRotX(boneMap['Head'], 0.15);
+  
+  var posedQuats = {};
+  Object.keys(boneMap).forEach(function(name) {
+    posedQuats[name] = boneMap[name].quaternion.clone();
+  });
+  wrapper.userData.posedQuats = posedQuats;
 }
 
 
@@ -3466,27 +3472,24 @@ function animateGLBWalk(wrapper, phase) {
 function animateGLBTyping(wrapper, time) {
   if (!wrapper.userData.isGLB || !wrapper.userData.boneMap) return;
   var bones = wrapper.userData.boneMap;
-  if (!bones['LeftForeArm']) return;
-  // We DON'T reset to rest poses here — the sitting pose is already applied
-  // Just add subtle finger/forearm movement on top
+  var posed = wrapper.userData.posedQuats;
+  if (!bones['LeftForeArm'] || !posed) return;
+  
   var qTemp = new THREE.Quaternion();
   var axisX = new THREE.Vector3(1, 0, 0);
-  var axisZ = new THREE.Vector3(0, 0, 1);
+  var axisY = new THREE.Vector3(0, 1, 0);
   
-  // Subtle forearm typing motion (small oscillation)
-  if (bones['LeftForeArm']) {
-    qTemp.setFromAxisAngle(axisX, Math.sin(time * 6) * 0.05);
-    bones['LeftForeArm'].quaternion.multiply(qTemp);
-  }
-  if (bones['RightForeArm']) {
-    qTemp.setFromAxisAngle(axisX, Math.sin(time * 6 + 1.5) * 0.05);
-    bones['RightForeArm'].quaternion.multiply(qTemp);
-  }
-  // Subtle head movement (looking at screen)
-  if (bones['Head']) {
-    qTemp.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.sin(time * 0.8) * 0.04);
-    bones['Head'].quaternion.multiply(qTemp);
-  }
+  // Reset to posed (sitting) state, then add subtle oscillation
+  var applyOn = function(name, axis, angle) {
+    if (!bones[name] || !posed[name]) return;
+    bones[name].quaternion.copy(posed[name]);
+    qTemp.setFromAxisAngle(axis, angle);
+    bones[name].quaternion.multiply(qTemp);
+  };
+  
+  applyOn('LeftForeArm', axisX, Math.sin(time * 6) * 0.05);
+  applyOn('RightForeArm', axisX, Math.sin(time * 6 + 1.5) * 0.05);
+  applyOn('Head', axisY, Math.sin(time * 0.8) * 0.04);
 }
 
 function buildCharacters() {
