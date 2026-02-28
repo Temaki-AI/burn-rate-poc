@@ -3347,6 +3347,36 @@ function createGLBCharacter(role, seed) {
 }
 
 
+
+function poseGLBCharacterSitting(wrapper) {
+  if (!wrapper || !wrapper.userData.glbClone) return;
+  var clone = wrapper.userData.glbClone;
+  // Find skeleton bones and rotate for sitting pose
+  clone.traverse(function(bone) {
+    if (!bone.isBone) return;
+    var n = bone.name;
+    // Rotate upper legs forward for sitting
+    if (n === 'LeftUpLeg' || n === 'RightUpLeg') {
+      bone.rotation.x -= 1.2; // bend legs forward ~70 degrees
+    }
+    // Bend lower legs back
+    if (n === 'LeftLeg' || n === 'RightLeg') {
+      bone.rotation.x += 1.4; // bend knees
+    }
+    // Slight spine lean forward (working posture)
+    if (n === 'Spine1') {
+      bone.rotation.x -= 0.15;
+    }
+    // Arms forward slightly (typing)
+    if (n === 'LeftArm' || n === 'RightArm') {
+      bone.rotation.x -= 0.5;
+    }
+    if (n === 'LeftForeArm' || n === 'RightForeArm') {
+      bone.rotation.x -= 0.7;
+    }
+  });
+}
+
 function buildCharacters() {
   var startX = -FLOOR_W*TILE/2 + 2;
   var deskZ = -FLOOR_H*TILE/2 + 1.8;
@@ -3360,13 +3390,14 @@ function buildCharacters() {
     // Try GLB model first, fallback to procedural
     var glbChar = createGLBCharacter(gc.role, 2000 + i * 333);
     if (glbChar) {
-      glbChar.position.set(startX + i * 1.5, -0.35, deskZ + 0.55);
+      glbChar.position.set(startX + i * 1.5, 0.15, deskZ + 0.55);
       glbChar.rotation.y = Math.PI;
+      poseGLBCharacterSitting(glbChar);
       scene.add(glbChar);
       gc.mesh = glbChar;
       gc.activity = 'seated';
       gameCharacters.push(gc);
-      characters.push({ mesh: glbChar, baseY: -0.35, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
+      characters.push({ mesh: glbChar, baseY: 0.15, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.005, charData: gc });
       seatedCharData.push({ head: glbChar.userData.headMesh, arms: glbChar.userData.armMeshes || [], charData: gc });
       createStatusBubble(glbChar, getCharStatusMessage(gc), i);
     } else {
