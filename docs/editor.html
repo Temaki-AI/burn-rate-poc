@@ -95,7 +95,7 @@ var scene,camera,renderer,controls,clock;
 var baseModel=null,character=null,accessories={},hairGroup=null;
 var currentAnim='idle',animTime=0;
 
-var MESH_NAMES={head:'Head M_Material_0',eyes:'Eyes M_eyes_0',nose:' M__0',ears:'Ears M_Material_0',upperBody:'UpperBody M__0',hands:'Hands M_Material_0',lowerBody:'LowerBody F__0'};
+var MESH_NAMES={head:'Head_M_Material_0',eyes:'Eyes_M_eyes_0',nose:'_M__0',ears:'Ears_M_Material_0',upperBody:'UpperBody_M__0',hands:'Hands_M_Material_0',lowerBody:'LowerBody_F__0'};
 
 var SKIN_PRESETS=[
   {name:'Light',hex:'#FDDCB5'},{name:'Peach',hex:'#F5D0A9'},{name:'Tan',hex:'#D4A574'},
@@ -134,7 +134,7 @@ function init(){
   var vp=document.getElementById('viewport');
   var w=vp.clientWidth,h=vp.clientHeight;
   camera=new THREE.PerspectiveCamera(35,w/h,0.1,100);
-  camera.position.set(0,1.0,3.5);
+  camera.position.set(0,1.2,4.5);
   renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(w,h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
@@ -252,7 +252,7 @@ function addHair(){
   var mat=makeToon(color);
   var olMat=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide});
   var headNode=null;
-  character.traverse(function(c){if(c.name==='Head M')headNode=c;});
+  character.traverse(function(c){if(c.name==='Head_M')headNode=c;});
   if(!headNode)return;
 
   switch(style){
@@ -318,7 +318,7 @@ function addHair(){
 
 function addAccessories(){
   var headNode=null,bodyNode=null;
-  character.traverse(function(c){if(c.name==='Head M')headNode=c;if(c.name==='UpperBody M')bodyNode=c;});
+  character.traverse(function(c){if(c.name==='Head_M')headNode=c;if(c.name==='UpperBody_M')bodyNode=c;});
   if(!headNode)return;
 
   if(document.getElementById('accGlasses').checked){
