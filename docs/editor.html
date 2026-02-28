@@ -134,7 +134,7 @@ function init(){
   var vp=document.getElementById('viewport');
   var w=vp.clientWidth,h=vp.clientHeight;
   camera=new THREE.PerspectiveCamera(35,w/h,0.1,100);
-  camera.position.set(0,1.2,4);
+  camera.position.set(0,1.5,5);
   renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setSize(w,h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
@@ -188,7 +188,7 @@ function buildCharacter(){
   accessories={};hairGroup=null;
 
   character=baseModel.clone();
-  character.scale.set(0.012,0.012,0.012);
+  character.scale.set(0.22,0.22,0.22);
   character.position.set(0,0,0);
   character.rotation.set(0,0,0);
 
