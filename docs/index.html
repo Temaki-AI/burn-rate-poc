@@ -764,6 +764,8 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/shaders/CopyShader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/utils/SkeletonUtils.js"></script>
 <script>
 // =============================================
 // BURN RATE — Visual PoC — Three.js Isometric Office
@@ -946,7 +948,10 @@ function init() {
   buildFurniture();
   buildAmenities();
   buildDecorations();
-  buildCharacters();
+  // Load GLB model first, then build characters
+  loadGLBCharacterModel(function() {
+    buildCharacters();
+  });
   buildSteamParticles();
   buildPingPongBall();
 
@@ -3149,6 +3154,199 @@ function updateSpriteAnimations(dt) {
   });
 }
 
+
+// === GLB CHARACTER SYSTEM ===
+var glbCharacterModel = null;
+var glbMixers = [];
+var glbModelReady = false;
+
+// Mesh categories for mix-and-match character creation
+var GLB_PARTS = {
+  body: ['Body_010'],
+  emotion: ['Male_emotion_usual_001', 'Male_emotion_happy_002', 'Male_emotion_angry_003'],
+  hair: ['Hairstyle_male_010', 'Hairstyle_male_012'],
+  hat: ['Hat_010', 'Hat_049', 'Hat_057'],
+  headwear: ['Headphones_002'],
+  glasses: ['Glasses_004', 'Glasses_006'],
+  top: ['T_Shirt_009', 'Costume_10_001', 'Costume_6_001'],
+  outerwear: ['Outerwear_029', 'Outerwear_036'],
+  pants: ['Pants_010', 'Pants_014'],
+  shorts: ['Shorts_003'],
+  shoes: ['Shoe_Sneakers_009', 'Shoe_Slippers_002', 'Shoe_Slippers_005'],
+  socks: ['Socks_008'],
+  gloves: ['Gloves_006', 'Gloves_014'],
+  facial: ['Moustache_001', 'Moustache_002', 'Clown_nose_001'],
+  accessories: ['Pacifier_001'],
+};
+
+// Role-based outfit presets
+var ROLE_OUTFITS = {
+  engineer: {
+    emotion: 'Male_emotion_usual_001',
+    hair: ['Hairstyle_male_010', 'Hairstyle_male_012'],
+    top: ['T_Shirt_009'],
+    pants: ['Pants_010', 'Pants_014'],
+    shoes: ['Shoe_Sneakers_009'],
+    glasses: ['Glasses_004', null],
+    headwear: ['Headphones_002', null, null],
+    extras: []
+  },
+  designer: {
+    emotion: 'Male_emotion_happy_002',
+    hair: ['Hairstyle_male_010', 'Hairstyle_male_012'],
+    hat: ['Hat_010', null, null],
+    top: ['Costume_10_001', 'T_Shirt_009'],
+    pants: ['Pants_014'],
+    shoes: ['Shoe_Slippers_002', 'Shoe_Sneakers_009'],
+    glasses: ['Glasses_006', null],
+    extras: []
+  },
+  sales: {
+    emotion: 'Male_emotion_happy_002',
+    hair: ['Hairstyle_male_010'],
+    top: ['Costume_6_001', 'T_Shirt_009'],
+    outerwear: ['Outerwear_029', null],
+    pants: ['Pants_010'],
+    shoes: ['Shoe_Sneakers_009'],
+    glasses: [null, null, 'Glasses_004'],
+    extras: []
+  },
+  pm: {
+    emotion: 'Male_emotion_usual_001',
+    hair: ['Hairstyle_male_012', 'Hairstyle_male_010'],
+    top: ['Costume_6_001'],
+    outerwear: ['Outerwear_036', null],
+    pants: ['Pants_010', 'Pants_014'],
+    shoes: ['Shoe_Sneakers_009'],
+    glasses: ['Glasses_006', null, null],
+    extras: ['Moustache_001', null, null, null]
+  },
+  ceo: {
+    emotion: 'Male_emotion_happy_002',
+    hair: ['Hairstyle_male_010'],
+    top: ['Costume_6_001'],
+    outerwear: ['Outerwear_036'],
+    pants: ['Pants_010'],
+    shoes: ['Shoe_Sneakers_009'],
+    glasses: ['Glasses_004'],
+    extras: []
+  }
+};
+
+function loadGLBCharacterModel(callback) {
+  var loader = new THREE.GLTFLoader();
+  loader.load('assets/creative-character.glb', function(gltf) {
+    glbCharacterModel = gltf;
+    glbModelReady = true;
+    console.log('[GLB] Character model loaded. Meshes:', gltf.scene.children.filter(function(c){return c.isMesh || c.isSkinnedMesh;}).map(function(c){return c.name;}));
+    if (callback) callback();
+  }, function(progress) {
+    if (progress.total > 0) console.log('[GLB] Loading: ' + Math.round(progress.loaded / progress.total * 100) + '%');
+  }, function(err) {
+    console.error('[GLB] Failed to load character model:', err);
+    glbModelReady = false;
+    if (callback) callback();
+  });
+}
+
+function createGLBCharacter(role, seed) {
+  if (!glbCharacterModel) return null;
+  
+  var rng = mulberry32(seed || Math.floor(Math.random() * 99999));
+  var pick = function(arr) { 
+    if (!arr || arr.length === 0) return null;
+    return arr[Math.floor(rng() * arr.length)]; 
+  };
+  
+  // Clone the model
+  var source = glbCharacterModel.scene;
+  var clone = THREE.SkeletonUtils ? THREE.SkeletonUtils.clone(source) : source.clone(true);
+  
+  // Get all mesh names in the clone
+  var allMeshes = {};
+  clone.traverse(function(child) {
+    if (child.isMesh || child.isSkinnedMesh) {
+      allMeshes[child.name] = child;
+      child.visible = false; // Hide all by default
+      child.castShadow = true;
+      child.receiveShadow = true;
+      child.frustumCulled = false;
+    }
+  });
+  
+  // Always show body
+  if (allMeshes['Body_010']) allMeshes['Body_010'].visible = true;
+  
+  // Get outfit config for role
+  var outfit = ROLE_OUTFITS[role] || ROLE_OUTFITS['engineer'];
+  
+  // Apply outfit pieces
+  var showPart = function(name) {
+    if (name && allMeshes[name]) {
+      allMeshes[name].visible = true;
+    }
+  };
+  
+  // Emotion (face)
+  showPart(outfit.emotion || pick(GLB_PARTS.emotion));
+  
+  // Hair (unless wearing a hat)
+  var hatChoice = outfit.hat ? pick(outfit.hat) : null;
+  if (hatChoice) {
+    showPart(hatChoice);
+  } else {
+    showPart(pick(outfit.hair || GLB_PARTS.hair));
+  }
+  
+  // Top
+  showPart(pick(outfit.top || GLB_PARTS.top));
+  
+  // Outerwear
+  if (outfit.outerwear) showPart(pick(outfit.outerwear));
+  
+  // Pants or shorts
+  if (outfit.shorts) {
+    showPart(pick(outfit.shorts));
+  } else {
+    showPart(pick(outfit.pants || GLB_PARTS.pants));
+  }
+  
+  // Shoes
+  showPart(pick(outfit.shoes || GLB_PARTS.shoes));
+  
+  // Glasses
+  if (outfit.glasses) showPart(pick(outfit.glasses));
+  
+  // Headwear
+  if (outfit.headwear) showPart(pick(outfit.headwear));
+  
+  // Extras (facial hair, accessories)
+  if (outfit.extras) {
+    outfit.extras.forEach(function(e) {
+      if (e && rng() < 0.4) showPart(e);
+    });
+  }
+  
+  // Scale to match game world (model is ~1.8m, we want ~0.8 units tall)
+  var wrapper = new THREE.Group();
+  clone.scale.setScalar(0.44);
+  clone.position.y = 0;
+  wrapper.add(clone);
+  
+  // Store references for animation
+  wrapper.userData.glbClone = clone;
+  wrapper.userData.allMeshes = allMeshes;
+  wrapper.userData.isGLB = true;
+  
+  // Store head mesh ref for mood visuals
+  var headMesh = allMeshes['Body_010'];
+  wrapper.userData.headMesh = headMesh;
+  wrapper.userData.armMeshes = [];
+  
+  return wrapper;
+}
+
+
 function buildCharacters() {
   var startX = -FLOOR_W*TILE/2 + 2;
   var deskZ = -FLOOR_H*TILE/2 + 1.8;
@@ -3159,16 +3357,18 @@ function buildCharacters() {
     var gc = generateCharacter(deskRoles[i], deskLevels[i], 1000 + i * 777);
     gc.hiredDay = 1;
     var roleColor = getRoleColor(gc.role);
-    if (i === 0) {
-      // 2D sprite character proof of concept — first desk engineer
-      var spriteMesh = createSpriteCharacter(startX, 0.6, deskZ + 0.55);
-      scene.add(spriteMesh);
-      gc.mesh = spriteMesh;
+    // Try GLB model first, fallback to procedural
+    var glbChar = createGLBCharacter(gc.role, 2000 + i * 333);
+    if (glbChar) {
+      glbChar.position.set(startX + i * 1.5, 0, deskZ + 0.55);
+      glbChar.rotation.y = Math.PI;
+      scene.add(glbChar);
+      gc.mesh = glbChar;
       gc.activity = 'seated';
       gameCharacters.push(gc);
-      characters.push({ mesh: spriteMesh, baseY: 0.6, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
-      seatedCharData.push({ head: null, arms: [], charData: gc });
-      createStatusBubble(spriteMesh, getCharStatusMessage(gc), i);
+      characters.push({ mesh: glbChar, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
+      seatedCharData.push({ head: glbChar.userData.headMesh, arms: glbChar.userData.armMeshes || [], charData: gc });
+      createStatusBubble(glbChar, getCharStatusMessage(gc), i);
     } else {
       var char = createCharacter(roleColor, gc.appearance.skinTone);
       char.position.set(startX + i * 1.5, 0, deskZ + 0.55);
@@ -3188,9 +3388,10 @@ function buildCharacters() {
   ceoData.name = 'The Founder';
   ceoData.hiredDay = 1;
   ceoData.mood = 90;
-  var ceo = createCharacter(COLORS.ceo, ceoData.appearance.skinTone);
+  var ceoGlb = createGLBCharacter('ceo', 7777);
+  var ceo = ceoGlb || createCharacter(COLORS.ceo, ceoData.appearance.skinTone);
   ceo.position.set(FLOOR_W*TILE/2 - 1.5, 0.35, -FLOOR_H*TILE/2 + 1.5);
-  ceo.scale.set(1.1, 1.1, 1.1);
+  ceo.scale.set(ceoGlb ? 0.5 : 1.1, ceoGlb ? 0.5 : 1.1, ceoGlb ? 0.5 : 1.1);
   scene.add(ceo);
   ceoData.mesh = ceo;
   ceoData.activity = 'standing';
@@ -3201,7 +3402,8 @@ function buildCharacters() {
   // Character at ping pong
   var ppData = generateCharacter('sales', 'mid', 8888);
   ppData.hiredDay = 1;
-  var ppChar = createCharacter(COLORS.sales, ppData.appearance.skinTone);
+  var ppGlb = createGLBCharacter('sales', 8888);
+  var ppChar = ppGlb || createCharacter(COLORS.sales, ppData.appearance.skinTone);
   ppChar.position.set(FLOOR_W*TILE/2 - 2.6, 0, FLOOR_H*TILE/2 - 1.5);
   ppChar.rotation.y = Math.PI/2;
   scene.add(ppChar);
@@ -3215,7 +3417,8 @@ function buildCharacters() {
   var walker1Data = generateCharacter('designer', 'mid', 5555);
   walker1Data.hiredDay = 1;
   if (walker1Data.traits.indexOf('coffee_addict') < 0) walker1Data.traits.push('coffee_addict');
-  var walker1 = createCharacter(COLORS.designer, walker1Data.appearance.skinTone);
+  var w1Glb = createGLBCharacter('designer', 5555);
+  var walker1 = w1Glb || createCharacter(COLORS.designer, walker1Data.appearance.skinTone);
   walker1.position.set(-2, 0, 0);
   scene.add(walker1);
   walker1Data.mesh = walker1;
@@ -3234,7 +3437,8 @@ function buildCharacters() {
   var walker2Data = generateCharacter('pm', 'senior', 6666);
   walker2Data.hiredDay = 1;
   if (walker2Data.traits.indexOf('linkedin_influencer') < 0) walker2Data.traits.push('linkedin_influencer');
-  var walker2 = createCharacter(COLORS.pm, walker2Data.appearance.skinTone);
+  var w2Glb = createGLBCharacter('pm', 6666);
+  var walker2 = w2Glb || createCharacter(COLORS.pm, walker2Data.appearance.skinTone);
   walker2.position.set(3, 0, -1);
   scene.add(walker2);
   walker2Data.mesh = walker2;
