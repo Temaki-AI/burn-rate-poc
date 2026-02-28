@@ -182,8 +182,14 @@ function loadModel(){
   },undefined,function(err){console.error('GLB load error:',err);});
 }
 
+var _buildPending=false;
 function buildCharacter(){
   if(!baseModel)return;
+  if(_buildPending)return;
+  _buildPending=true;
+  requestAnimationFrame(function(){_buildPending=false;_doBuildCharacter();});
+}
+function _doBuildCharacter(){
   if(character)scene.remove(character);
   accessories={};hairGroup=null;
 
