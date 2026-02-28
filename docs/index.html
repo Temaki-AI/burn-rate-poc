@@ -3357,12 +3357,8 @@ function createGLBCharacter(role, seed) {
 
 
 function poseGLBCharacterSitting(wrapper) {
-  if (!wrapper || !wrapper.userData.glbClone) return;
-  var clone = wrapper.userData.glbClone;
-  var boneMap = {};
-  clone.traverse(function(node) {
-    if (node.isBone) boneMap[node.name] = node;
-  });
+  if (!wrapper || !wrapper.userData.boneMap) return;
+  var boneMap = wrapper.userData.boneMap;
   
   // Helper: apply additional rotation via quaternion multiply
   var addRotX = function(bone, angle) {
