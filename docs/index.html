@@ -3338,6 +3338,18 @@ function createGLBCharacter(role, seed) {
   wrapper.userData.allMeshes = allMeshes;
   wrapper.userData.isGLB = true;
   
+  // Cache bone map and rest poses for procedural animation
+  var boneMap = {};
+  var restPoses = {};
+  clone.traverse(function(node) {
+    if (node.isBone) {
+      boneMap[node.name] = node;
+      restPoses[node.name] = node.quaternion.clone();
+    }
+  });
+  wrapper.userData.boneMap = boneMap;
+  wrapper.userData.restPoses = restPoses;
+  
   // Store head mesh ref for mood visuals
   var headMesh = allMeshes['Body_010'];
   wrapper.userData.headMesh = headMesh;
@@ -3390,6 +3402,95 @@ function poseGLBCharacterSitting(wrapper) {
   
   // Head slightly tilted down (looking at screen)
   addRotX(boneMap['Head'], 0.15);
+}
+
+
+// Procedural walk cycle animation for GLB characters
+function animateGLBWalk(wrapper, time, speed) {
+  if (!wrapper.userData.isGLB || !wrapper.userData.boneMap) return;
+  var bones = wrapper.userData.boneMap;
+  var rest = wrapper.userData.restPoses;
+  if (!bones['LeftUpLeg']) return;
+  
+  var t = time * speed * 4; // walk cycle frequency
+  var stride = 0.6; // leg swing amplitude
+  var armSwing = 0.4;
+  
+  var qTemp = new THREE.Quaternion();
+  var axisX = new THREE.Vector3(1, 0, 0);
+  var axisZ = new THREE.Vector3(0, 0, 1);
+  
+  var applyBone = function(name, axisAngle) {
+    var bone = bones[name];
+    if (!bone || !rest[name]) return;
+    bone.quaternion.copy(rest[name]);
+    qTemp.setFromAxisAngle(axisAngle[0], axisAngle[1]);
+    bone.quaternion.multiply(qTemp);
+  };
+  
+  // Legs: opposite phase
+  var legL = Math.sin(t) * stride;
+  var legR = Math.sin(t + Math.PI) * stride;
+  applyBone('LeftUpLeg', [axisX, legL]);
+  applyBone('RightUpLeg', [axisX, legR]);
+  
+  // Knees: only bend backward (positive X), more when leg is forward
+  var kneeL = Math.max(0, -legL) * 1.2 + 0.15;
+  var kneeR = Math.max(0, -legR) * 1.2 + 0.15;
+  applyBone('LeftLeg', [axisX, kneeL]);
+  applyBone('RightLeg', [axisX, kneeR]);
+  
+  // Arms: counter-swing to legs
+  var armL = Math.sin(t + Math.PI) * armSwing;
+  var armR = Math.sin(t) * armSwing;
+  applyBone('LeftArm', [axisX, armL - 0.2]);
+  applyBone('RightArm', [axisX, armR - 0.2]);
+  
+  // Forearms: slight bend
+  applyBone('LeftForeArm', [axisX, -0.3 + Math.sin(t + Math.PI) * 0.15]);
+  applyBone('RightForeArm', [axisX, -0.3 + Math.sin(t) * 0.15]);
+  
+  // Subtle spine twist (counter-rotation)
+  var spineQ = new THREE.Quaternion();
+  spineQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.sin(t) * 0.06);
+  if (bones['Spine'] && rest['Spine']) {
+    bones['Spine'].quaternion.copy(rest['Spine']);
+    bones['Spine'].quaternion.multiply(spineQ);
+  }
+  
+  // Subtle head bob
+  if (bones['Head'] && rest['Head']) {
+    bones['Head'].quaternion.copy(rest['Head']);
+    qTemp.setFromAxisAngle(axisX, Math.sin(t * 2) * 0.04);
+    bones['Head'].quaternion.multiply(qTemp);
+  }
+}
+
+// Procedural idle typing animation for seated GLB characters  
+function animateGLBTyping(wrapper, time) {
+  if (!wrapper.userData.isGLB || !wrapper.userData.boneMap) return;
+  var bones = wrapper.userData.boneMap;
+  if (!bones['LeftForeArm']) return;
+  // We DON'T reset to rest poses here — the sitting pose is already applied
+  // Just add subtle finger/forearm movement on top
+  var qTemp = new THREE.Quaternion();
+  var axisX = new THREE.Vector3(1, 0, 0);
+  var axisZ = new THREE.Vector3(0, 0, 1);
+  
+  // Subtle forearm typing motion (small oscillation)
+  if (bones['LeftForeArm']) {
+    qTemp.setFromAxisAngle(axisX, Math.sin(time * 6) * 0.05);
+    bones['LeftForeArm'].quaternion.multiply(qTemp);
+  }
+  if (bones['RightForeArm']) {
+    qTemp.setFromAxisAngle(axisX, Math.sin(time * 6 + 1.5) * 0.05);
+    bones['RightForeArm'].quaternion.multiply(qTemp);
+  }
+  // Subtle head movement (looking at screen)
+  if (bones['Head']) {
+    qTemp.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.sin(time * 0.8) * 0.04);
+    bones['Head'].quaternion.multiply(qTemp);
+  }
 }
 
 function buildCharacters() {
@@ -4156,10 +4257,14 @@ function animate() {
     camera.updateProjectionMatrix();
   }
 
-  // Character bobbing
+  // Character bobbing + seated typing animation
   characters.forEach((c, i) => {
     const bob = Math.sin(elapsed * c.bobSpeed + i) * c.bobAmount;
     c.mesh.position.y = c.baseY + bob;
+    // Typing animation for seated GLB characters
+    if (c.charData && c.charData.activity === 'seated' && c.mesh.userData && c.mesh.userData.isGLB) {
+      animateGLBTyping(c.mesh, elapsed + i * 0.7);
+    }
   });
 
   // Update 2D sprite animations
@@ -4170,6 +4275,17 @@ function animate() {
     if (w.paused) {
       w.pauseTimer -= dt;
       if (w.pauseTimer <= 0) w.paused = false;
+      // Idle breathing animation when paused
+      if (w.mesh.userData && w.mesh.userData.isGLB && w.mesh.userData.boneMap) {
+        var bones = w.mesh.userData.boneMap;
+        var rest = w.mesh.userData.restPoses;
+        if (bones['Spine'] && rest['Spine']) {
+          bones['Spine'].quaternion.copy(rest['Spine']);
+          var bq = new THREE.Quaternion();
+          bq.setFromAxisAngle(new THREE.Vector3(1,0,0), Math.sin(elapsed * 1.5) * 0.02);
+          bones['Spine'].quaternion.multiply(bq);
+        }
+      }
       return;
     }
     var current = w.path[(w.currentTarget - 1 + w.path.length) % w.path.length];
@@ -4198,6 +4314,11 @@ function animate() {
 
     var bobAmp = w.charData ? (w.charData.mood >= 70 ? 0.04 : w.charData.mood >= 40 ? 0.025 : 0.015) : 0.03;
     w.mesh.position.y = Math.abs(Math.sin(elapsed * 8 * w.speed)) * bobAmp;
+    
+    // Procedural walk animation for GLB characters
+    if (w.mesh.userData && w.mesh.userData.isGLB) {
+      animateGLBWalk(w.mesh, elapsed, w.speed);
+    }
   });
 
   // Steam particles
