@@ -496,8 +496,8 @@ function buildHeadphones(parent, r, hs) {
   for (var i = -1; i <= 1; i += 2) {
     var cup = addMesh(new THREE.CylinderGeometry(0.055, 0.055, 0.035, 12), hm, parent);
     cup.position.set(i*r*1.02, 0, 0); cup.rotation.z = Math.PI/2;
-    addMesh(new THREE.CylinderGeometry(0.04, 0.04, 0.01, 12), toon('#00d4ff'), parent)
-      .position.set(i*(r*1.02+0.02), 0, 0).rotation.z = Math.PI/2;
+    var pad = addMesh(new THREE.CylinderGeometry(0.04, 0.04, 0.01, 12), toon('#00d4ff'), parent);
+    pad.position.set(i*(r*1.02+0.02), 0, 0); pad.rotation.z = Math.PI/2;
   }
 }
 
