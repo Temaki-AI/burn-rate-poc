@@ -3329,7 +3329,7 @@ function createGLBCharacter(role, seed) {
   
   // Scale to match game world (model is ~1.8m, we want ~0.8 units tall)
   var wrapper = new THREE.Group();
-  clone.scale.setScalar(0.44);
+  clone.scale.setScalar(0.55);
   clone.position.y = 0;
   wrapper.add(clone);
   
@@ -3360,13 +3360,13 @@ function buildCharacters() {
     // Try GLB model first, fallback to procedural
     var glbChar = createGLBCharacter(gc.role, 2000 + i * 333);
     if (glbChar) {
-      glbChar.position.set(startX + i * 1.5, 0, deskZ + 0.55);
+      glbChar.position.set(startX + i * 1.5, -0.35, deskZ + 0.55);
       glbChar.rotation.y = Math.PI;
       scene.add(glbChar);
       gc.mesh = glbChar;
       gc.activity = 'seated';
       gameCharacters.push(gc);
-      characters.push({ mesh: glbChar, baseY: 0, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
+      characters.push({ mesh: glbChar, baseY: -0.35, bobSpeed: 1.5 + Math.random() * 0.5, bobAmount: 0.01, charData: gc });
       seatedCharData.push({ head: glbChar.userData.headMesh, arms: glbChar.userData.armMeshes || [], charData: gc });
       createStatusBubble(glbChar, getCharStatusMessage(gc), i);
     } else {
@@ -3391,7 +3391,7 @@ function buildCharacters() {
   var ceoGlb = createGLBCharacter('ceo', 7777);
   var ceo = ceoGlb || createCharacter(COLORS.ceo, ceoData.appearance.skinTone);
   ceo.position.set(FLOOR_W*TILE/2 - 1.5, 0.35, -FLOOR_H*TILE/2 + 1.5);
-  ceo.scale.set(ceoGlb ? 0.5 : 1.1, ceoGlb ? 0.5 : 1.1, ceoGlb ? 0.5 : 1.1);
+  if (!ceoGlb) ceo.scale.set(1.1, 1.1, 1.1);
   scene.add(ceo);
   ceoData.mesh = ceo;
   ceoData.activity = 'standing';
