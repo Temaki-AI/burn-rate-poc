@@ -3402,13 +3402,13 @@ function poseGLBCharacterSitting(wrapper) {
 
 
 // Procedural walk cycle animation for GLB characters
-function animateGLBWalk(wrapper, time, speed) {
+function animateGLBWalk(wrapper, phase) {
   if (!wrapper.userData.isGLB || !wrapper.userData.boneMap) return;
   var bones = wrapper.userData.boneMap;
   var rest = wrapper.userData.restPoses;
   if (!bones['LeftUpLeg']) return;
   
-  var t = time * speed * 4; // walk cycle frequency
+  var t = phase; // walk cycle phase (driven by distance traveled)
   var stride = 0.4; // leg swing amplitude
   var armSwing = 0.3;
   
@@ -4270,7 +4270,7 @@ function animate() {
   walkingCharacters.forEach(function(w) {
     if (w.paused) {
       w.pauseTimer -= dt;
-      if (w.pauseTimer <= 0) w.paused = false;
+      if (w.pauseTimer <= 0) { w.paused = false; }
       // Idle breathing animation when paused
       if (w.mesh.userData && w.mesh.userData.isGLB && w.mesh.userData.boneMap) {
         var bones = w.mesh.userData.boneMap;
@@ -4309,11 +4309,16 @@ function animate() {
     if (dir.length() > 0.01) w.mesh.rotation.y = Math.atan2(dir.x, dir.z);
 
     var bobAmp = w.charData ? (w.charData.mood >= 70 ? 0.04 : w.charData.mood >= 40 ? 0.025 : 0.015) : 0.03;
-    w.mesh.position.y = Math.abs(Math.sin(elapsed * 8 * w.speed)) * bobAmp;
+    var walkP = w.walkPhase || 0;
+    w.mesh.position.y = Math.abs(Math.sin(walkP * 2)) * bobAmp;
     
     // Procedural walk animation for GLB characters
     if (w.mesh.userData && w.mesh.userData.isGLB) {
-      animateGLBWalk(w.mesh, elapsed, w.speed);
+      // Accumulate walk phase based on actual movement speed
+      if (!w.walkPhase) w.walkPhase = 0;
+      var actualSpeed = dt * w.speed * (w.charData ? (0.6 + w.charData.mood / 150) : 1) / dist;
+      w.walkPhase += actualSpeed * 28; // scale factor to match stride to foot plant
+      animateGLBWalk(w.mesh, w.walkPhase);
     }
   });
 
