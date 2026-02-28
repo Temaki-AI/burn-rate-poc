@@ -3351,30 +3351,45 @@ function createGLBCharacter(role, seed) {
 function poseGLBCharacterSitting(wrapper) {
   if (!wrapper || !wrapper.userData.glbClone) return;
   var clone = wrapper.userData.glbClone;
-  // Find skeleton bones and rotate for sitting pose
-  clone.traverse(function(bone) {
-    if (!bone.isBone) return;
-    var n = bone.name;
-    // Rotate upper legs forward for sitting
-    if (n === 'LeftUpLeg' || n === 'RightUpLeg') {
-      bone.rotation.x -= 1.2; // bend legs forward ~70 degrees
-    }
-    // Bend lower legs back
-    if (n === 'LeftLeg' || n === 'RightLeg') {
-      bone.rotation.x += 1.4; // bend knees
-    }
-    // Slight spine lean forward (working posture)
-    if (n === 'Spine1') {
-      bone.rotation.x -= 0.15;
-    }
-    // Arms forward slightly (typing)
-    if (n === 'LeftArm' || n === 'RightArm') {
-      bone.rotation.x -= 0.5;
-    }
-    if (n === 'LeftForeArm' || n === 'RightForeArm') {
-      bone.rotation.x -= 0.7;
-    }
+  var boneMap = {};
+  clone.traverse(function(node) {
+    if (node.isBone) boneMap[node.name] = node;
   });
+  
+  // Helper: apply additional rotation via quaternion multiply
+  var addRotX = function(bone, angle) {
+    if (!bone) return;
+    var q = new THREE.Quaternion();
+    q.setFromAxisAngle(new THREE.Vector3(1, 0, 0), angle);
+    bone.quaternion.multiply(q);
+  };
+  var addRotZ = function(bone, angle) {
+    if (!bone) return;
+    var q = new THREE.Quaternion();
+    q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
+    bone.quaternion.multiply(q);
+  };
+  
+  // Bend upper legs forward (sitting ~90 degrees)
+  addRotX(boneMap['LeftUpLeg'], -1.3);
+  addRotX(boneMap['RightUpLeg'], -1.3);
+  
+  // Bend knees (lower legs hang down)  
+  addRotX(boneMap['LeftLeg'], 1.5);
+  addRotX(boneMap['RightLeg'], 1.5);
+  
+  // Slight forward lean (working posture)
+  addRotX(boneMap['Spine'], -0.1);
+  addRotX(boneMap['Spine1'], -0.1);
+  
+  // Arms: bring forward and bend for typing
+  addRotX(boneMap['LeftArm'], -0.4);
+  addRotX(boneMap['RightArm'], -0.4);
+  addRotX(boneMap['LeftForeArm'], -0.6);
+  addRotX(boneMap['RightForeArm'], -0.6);
+  
+  // Head slightly tilted down (looking at screen)
+  addRotX(boneMap['Head'], 0.15);
 }
 
 function buildCharacters() {
