@@ -201,38 +201,23 @@ function loadModel(){
 /* ── apply colors (no rebuild!) ── */
 function applyColors(){
   if(!character) return;
-  var skin  = $('skinColor').value;
-  var shirt = $('shirtColor').value;
-  var pants = $('pantsColor').value;
-  var eyes  = $('eyeColor').value;
+  var skin  = new THREE.Color($('skinColor').value);
+  var shirt = new THREE.Color($('shirtColor').value);
+  var pants = new THREE.Color($('pantsColor').value);
+  var eyes  = new THREE.Color($('eyeColor').value);
 
-  // apply to each mesh by name pattern
+  // Just tint existing materials — don't replace them (keeps textures/maps intact)
   character.traverse(function(c){
-    if(!c.isMesh || c.name.indexOf('outline_') === 0) return;
+    if(!c.isMesh || !c.material || !c.material.color) return;
     var n = c.name;
     if(n.indexOf('Head') === 0 || n.indexOf('Ears') === 0 || n.indexOf('Hands') === 0 || (n.charAt(0) === '_' && n.indexOf('__0') >= 0)){
-      c.material = makeToon(skin);
+      c.material.color.copy(skin);
     } else if(n.indexOf('Eyes') === 0){
-      c.material = makeToon(eyes);
+      c.material.color.copy(eyes);
     } else if(n.indexOf('UpperBody') === 0){
-      c.material = makeToon(shirt);
+      c.material.color.copy(shirt);
     } else if(n.indexOf('LowerBody') === 0){
-      c.material = makeToon(pants);
-    }
-  });
-
-  // outlines (add once, skip if already there)
-  var outMat = new THREE.MeshBasicMaterial({color:0x000000, side: THREE.BackSide});
-  character.traverse(function(c){
-    if(c.isMesh && c.name.indexOf('outline_') !== 0){
-      var hasOutline = false;
-      c.children.forEach(function(ch){ if(ch.name === 'outline_'+c.name) hasOutline = true; });
-      if(!hasOutline){
-        var ol = new THREE.Mesh(c.geometry, outMat);
-        ol.scale.multiplyScalar(1.03);
-        ol.name = 'outline_' + c.name;
-        c.add(ol);
-      }
+      c.material.color.copy(pants);
     }
   });
 }
