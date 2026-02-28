@@ -311,7 +311,9 @@ function getCharacterData(){
   };
 }
 
+var _loading = false;
 function loadCharacterToEditor(ch){
+  _loading = true;
   editingId = ch.id || null;
   $('charName').value = ch.name || '';
   $('charRole').value = ch.role || 'engineer';
@@ -328,6 +330,7 @@ function loadCharacterToEditor(ch){
   applyColors();
   applyProportions();
   rebuildHair();
+  _loading = false;
 }
 
 function slugify(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
@@ -455,11 +458,11 @@ function buildUI(){
     sr.appendChild(d);
   });
   // live color updates
-  ['skinColor','shirtColor','pantsColor','eyeColor'].forEach(function(id){ $(id).addEventListener('input',applyColors); });
+  ['skinColor','shirtColor','pantsColor','eyeColor'].forEach(function(id){ $(id).addEventListener('input',function(){if(!_loading)applyColors();}); });
   // live proportions
-  ['headScale','bodyWidth','eyeScale'].forEach(function(id){ $(id).addEventListener('input',function(){updateVals();applyProportions();}); });
+  ['headScale','bodyWidth','eyeScale'].forEach(function(id){ $(id).addEventListener('input',function(){if(!_loading){updateVals();applyProportions();}}); });
   // hair
-  ['hairStyle','hairColor'].forEach(function(id){ $(id).addEventListener('change',rebuildHair); $(id).addEventListener('input',rebuildHair); });
+  ['hairStyle','hairColor'].forEach(function(id){ $(id).addEventListener('change',function(){if(!_loading)rebuildHair();}); $(id).addEventListener('input',function(){if(!_loading)rebuildHair();}); });
   // animations
   $('animRow').querySelectorAll('.btn').forEach(function(b){
     b.onclick=function(){ currentAnim=b.dataset.anim; $('animRow').querySelectorAll('.btn').forEach(function(x){x.classList.remove('active');}); b.classList.add('active'); };
