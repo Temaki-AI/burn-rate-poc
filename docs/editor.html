@@ -377,12 +377,12 @@ function rebuildHair(){
       } break;
     }
     case 'bob':{
-      // dome cap hugging head + side panels framing face
+      // dome cap hugging head + side panels at jaw level (behind ears)
       var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.05,16,14,0,Math.PI*2,0,Math.PI*0.45),mat);
       m1.position.set(0,cy,cz); m1.scale.set(1,0.95,1); hairGroup.add(m1);
       [-1,1].forEach(function(s){
-        var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.2,R*0.45,R*0.35),mat);
-        m.position.set(s*R*0.7,cy-R*0.35,cz-R*0.08); hairGroup.add(m);
+        var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.18,R*0.45,R*0.3),mat);
+        m.position.set(s*R*0.85,cy-R*0.35,cz-R*0.25); hairGroup.add(m);
       }); break;
     }
   }
