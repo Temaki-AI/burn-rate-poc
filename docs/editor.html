@@ -211,6 +211,7 @@ function loadModel(){
     // clone materials so each mesh is independent
     character.traverse(function(c){ if(c.isMesh && c.material) c.material = c.material.clone(); });
     saveOrigScales();
+    getHeadMetrics();
     scene.add(character);
     var box = new THREE.Box3().setFromObject(character);
     character.position.y = -box.min.y;
@@ -261,33 +262,111 @@ function applyProportions(){
 }
 
 /* ── hair ── */
+/* Hair is added as child of character group (not Head_M node)
+   using character-local coordinates derived from head bounding box:
+   Head center Y=4.3, Z=-0.12, radius=1.81, top Y=5.75 */
 var hairGroup = null;
+var HAIR = { cx:0, cy:4.3, cz:-0.12, r:1.81, top:5.75 };
+
+function getHeadMetrics(){
+  if(!character) return;
+  var headMesh=null;
+  character.traverse(function(c){if(c.name==='Head_M_Material_0')headMesh=c;});
+  if(!headMesh) return;
+  character.updateMatrixWorld(true);
+  var bbox=new THREE.Box3().setFromObject(headMesh);
+  var hs=new THREE.Vector3(); bbox.getSize(hs);
+  var invMat=new THREE.Matrix4().copy(character.matrixWorld).invert();
+  var center=new THREE.Vector3((bbox.max.x+bbox.min.x)/2,(bbox.max.y+bbox.min.y)/2,(bbox.max.z+bbox.min.z)/2).applyMatrix4(invMat);
+  var top=new THREE.Vector3(center.x,0,center.z); top.y=new THREE.Vector3(0,bbox.max.y,0).applyMatrix4(invMat).y;
+  HAIR.cx=center.x; HAIR.cy=center.y; HAIR.cz=center.z;
+  HAIR.r=Math.max(hs.x,hs.z)/(2*character.scale.x);
+  HAIR.top=top.y;
+}
+
 function rebuildHair(){
   if(!character) return;
-  var headNode=null;
-  character.traverse(function(c){if(c.name.indexOf('Head')===0&&!c.isMesh)headNode=c;});
-  if(!headNode) return;
-  if(hairGroup){headNode.remove(hairGroup);hairGroup=null;}
+  if(hairGroup){character.remove(hairGroup);hairGroup=null;}
   var style=$('hairStyle').value;
   if(style==='none') return;
   var mat=makeToon($('hairColor').value);
-  hairGroup=new THREE.Group(); hairGroup.name='hair';
-  switch(style){
-    case 'buzz':{var m=new THREE.Mesh(new THREE.SphereGeometry(110,16,12,0,Math.PI*2,0,Math.PI*0.55),mat);m.position.set(0,60,-5);hairGroup.add(m);break;}
-    case 'spiky':{for(var i=0;i<12;i++){var a=(i/12)*Math.PI*2;var m=new THREE.Mesh(new THREE.ConeGeometry(15,40+Math.random()*50,5),mat);m.position.set(Math.cos(a)*(70+Math.random()*30),80+Math.random()*20,Math.sin(a)*(70+Math.random()*30)-5);m.rotation.x=-Math.cos(a)*0.3;m.rotation.z=Math.sin(a)*0.3;hairGroup.add(m);}for(var j=0;j<5;j++){var m2=new THREE.Mesh(new THREE.ConeGeometry(12,60+Math.random()*30,5),mat);m2.position.set((Math.random()-0.5)*40,100+Math.random()*20,(Math.random()-0.5)*40);hairGroup.add(m2);}break;}
-    case 'slickback':{var m=new THREE.Mesh(new THREE.SphereGeometry(115,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);m.position.set(0,55,-15);m.scale.set(1,0.7,1.2);hairGroup.add(m);break;}
-    case 'topbun':{var m1=new THREE.Mesh(new THREE.SphereGeometry(110,16,10,0,Math.PI*2,0,Math.PI*0.45),mat);m1.position.set(0,60,-5);hairGroup.add(m1);var m2=new THREE.Mesh(new THREE.SphereGeometry(35,12,12),mat);m2.position.set(0,135,-5);hairGroup.add(m2);break;}
-    case 'ponytail':{var m1=new THREE.Mesh(new THREE.SphereGeometry(110,16,10,0,Math.PI*2,0,Math.PI*0.5),mat);m1.position.set(0,55,-5);hairGroup.add(m1);var m2=new THREE.Mesh(new THREE.CylinderGeometry(18,12,100,8),mat);m2.position.set(0,30,-100);m2.rotation.x=Math.PI*0.35;hairGroup.add(m2);break;}
-    case 'afro':{var m=new THREE.Mesh(new THREE.SphereGeometry(145,20,16),mat);m.position.set(0,80,-5);m.scale.set(1,0.85,1);hairGroup.add(m);break;}
-    case 'mohawk':{for(var i=0;i<8;i++){var t=i/7;var m=new THREE.Mesh(new THREE.BoxGeometry(12,40+t*25,20),mat);m.position.set(0,90+t*10,-80+i*22);hairGroup.add(m);}break;}
-    case 'sidepart':{var m=new THREE.Mesh(new THREE.SphereGeometry(115,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);m.position.set(10,55,-5);m.scale.set(1.05,0.75,1.1);hairGroup.add(m);break;}
-    case 'messy':{for(var i=0;i<18;i++){var a=(i/18)*Math.PI*2+Math.random()*0.5;var m=new THREE.Mesh(new THREE.SphereGeometry(20+Math.random()*15,6,6),mat);m.position.set(Math.cos(a)*(80+Math.random()*30),70+Math.random()*40,Math.sin(a)*(80+Math.random()*30)-5);hairGroup.add(m);}break;}
-    case 'curly':{for(var i=0;i<25;i++){var a=(i/25)*Math.PI*2+Math.random()*0.3;var r2=85+Math.random()*20;var el=Math.random()*Math.PI*0.4;var m=new THREE.Mesh(new THREE.SphereGeometry(18+Math.random()*10,6,6),mat);m.position.set(Math.cos(a)*r2*Math.cos(el),60+Math.sin(el)*r2,Math.sin(a)*r2*Math.cos(el)-5);hairGroup.add(m);}break;}
-    case 'bob':{var m1=new THREE.Mesh(new THREE.SphereGeometry(120,16,12,0,Math.PI*2,0,Math.PI*0.55),mat);m1.position.set(0,50,-5);m1.scale.set(1,0.8,1);hairGroup.add(m1);[-1,1].forEach(function(s){var m=new THREE.Mesh(new THREE.BoxGeometry(40,80,30),mat);m.position.set(s*90,-10,5);hairGroup.add(m);});break;}
-  }
   var olMat=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.BackSide});
-  hairGroup.traverse(function(c){if(c.isMesh){var ol=new THREE.Mesh(c.geometry,olMat);ol.scale.multiplyScalar(1.04);c.add(ol);}});
-  headNode.add(hairGroup);
+  hairGroup=new THREE.Group(); hairGroup.name='hair';
+  var R=HAIR.r, cy=HAIR.cy, cz=HAIR.cz, top=HAIR.top;
+  switch(style){
+    case 'buzz':{
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);
+      m.position.set(0,cy+R*0.3,cz); hairGroup.add(m); break;
+    }
+    case 'spiky':{
+      for(var i=0;i<14;i++){var a=(i/14)*Math.PI*2;
+        var spike=new THREE.Mesh(new THREE.ConeGeometry(R*0.15, R*0.5+Math.random()*R*0.4, 5),mat);
+        spike.position.set(Math.cos(a)*R*0.65, top+Math.random()*R*0.3, cz+Math.sin(a)*R*0.65);
+        spike.rotation.x=-Math.cos(a)*0.3; spike.rotation.z=Math.sin(a)*0.3; hairGroup.add(spike);
+      }
+      for(var j=0;j<6;j++){
+        var s2=new THREE.Mesh(new THREE.ConeGeometry(R*0.12, R*0.6+Math.random()*R*0.3, 5),mat);
+        s2.position.set((Math.random()-0.5)*R*0.5, top+R*0.15+Math.random()*R*0.2, cz+(Math.random()-0.5)*R*0.5);
+        hairGroup.add(s2);
+      } break;
+    }
+    case 'slickback':{
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.05,16,12,0,Math.PI*2,0,Math.PI*0.45),mat);
+      m.position.set(0,cy+R*0.2,cz-R*0.15); m.scale.set(1,0.7,1.2); hairGroup.add(m); break;
+    }
+    case 'topbun':{
+      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,16,10,0,Math.PI*2,0,Math.PI*0.42),mat);
+      m1.position.set(0,cy+R*0.25,cz); hairGroup.add(m1);
+      var m2=new THREE.Mesh(new THREE.SphereGeometry(R*0.3,12,12),mat);
+      m2.position.set(0,top+R*0.35,cz); hairGroup.add(m2); break;
+    }
+    case 'ponytail':{
+      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.02,16,10,0,Math.PI*2,0,Math.PI*0.45),mat);
+      m1.position.set(0,cy+R*0.2,cz); hairGroup.add(m1);
+      var m2=new THREE.Mesh(new THREE.CylinderGeometry(R*0.15,R*0.1,R*0.8,8),mat);
+      m2.position.set(0,cy-R*0.1,cz-R*0.8); m2.rotation.x=Math.PI*0.35; hairGroup.add(m2); break;
+    }
+    case 'afro':{
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.35,20,16),mat);
+      m.position.set(0,cy+R*0.35,cz); m.scale.set(1,0.85,1); hairGroup.add(m); break;
+    }
+    case 'mohawk':{
+      for(var i=0;i<8;i++){var t=i/7;
+        var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.12, R*(0.3+t*0.2), R*0.15),mat);
+        m.position.set(0, top+R*0.1*t, cz-R*0.6+i*R*0.17); hairGroup.add(m);
+      } break;
+    }
+    case 'sidepart':{
+      var m=new THREE.Mesh(new THREE.SphereGeometry(R*1.05,16,12,0,Math.PI*2,0,Math.PI*0.45),mat);
+      m.position.set(R*0.1,cy+R*0.2,cz); m.scale.set(1.05,0.7,1.1); hairGroup.add(m); break;
+    }
+    case 'messy':{
+      for(var i=0;i<18;i++){var a=(i/18)*Math.PI*2+Math.random()*0.5;
+        var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.15+Math.random()*R*0.12,6,6),mat);
+        m.position.set(Math.cos(a)*(R*0.65+Math.random()*R*0.25), top-R*0.15+Math.random()*R*0.4, cz+Math.sin(a)*(R*0.65+Math.random()*R*0.25));
+        hairGroup.add(m);
+      } break;
+    }
+    case 'curly':{
+      for(var i=0;i<25;i++){var a=(i/25)*Math.PI*2+Math.random()*0.3; var rr=R*0.7+Math.random()*R*0.2; var el=Math.random()*Math.PI*0.35;
+        var m=new THREE.Mesh(new THREE.SphereGeometry(R*0.13+Math.random()*R*0.08,6,6),mat);
+        m.position.set(Math.cos(a)*rr*Math.cos(el), cy+R*0.3+Math.sin(el)*rr, cz+Math.sin(a)*rr*Math.cos(el));
+        hairGroup.add(m);
+      } break;
+    }
+    case 'bob':{
+      var m1=new THREE.Mesh(new THREE.SphereGeometry(R*1.08,16,12,0,Math.PI*2,0,Math.PI*0.5),mat);
+      m1.position.set(0,cy+R*0.15,cz); m1.scale.set(1,0.8,1); hairGroup.add(m1);
+      [-1,1].forEach(function(s){var m=new THREE.Mesh(new THREE.BoxGeometry(R*0.3,R*0.6,R*0.25),mat);
+        m.position.set(s*R*0.8,cy-R*0.15,cz); hairGroup.add(m);});
+      break;
+    }
+  }
+  // add outlines
+  hairGroup.children.forEach(function(m){
+    if(m.isMesh){var ol=new THREE.Mesh(m.geometry,olMat);ol.scale.multiplyScalar(1.04);m.add(ol);}
+  });
+  character.add(hairGroup);
 }
 
 /* ═══════════════════════════════════════
