@@ -3,107 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Burn Rate — Character Editor</title>
+<title>Burn Rate — Funko Character Editor</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
-html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Inter',sans-serif;color:#fff;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0f0f1a;font-family:'Inter',sans-serif;color:#fff;}
 #app{display:flex;width:100%;height:100%;}
-#viewport{flex:0 0 65%;height:100%;position:relative;}
+#viewport{flex:0 0 60%;height:100%;position:relative;}
 #viewport canvas{display:block;}
-#loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:#00d4ff;text-align:center;}
-#loading .spinner{width:40px;height:40px;border:3px solid #333;border-top-color:#00d4ff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;}
-@keyframes spin{to{transform:rotate(360deg);}}
-#panel{flex:0 0 35%;height:100%;overflow-y:auto;background:#16213e;border-left:1px solid #333;padding:16px;}
+#panel{flex:0 0 40%;height:100%;overflow-y:auto;background:#161625;border-left:1px solid #2a2a40;padding:20px;}
 #panel::-webkit-scrollbar{width:6px;}
-#panel::-webkit-scrollbar-track{background:#16213e;}
-#panel::-webkit-scrollbar-thumb{background:#00d4ff44;border-radius:3px;}
-.section{margin-bottom:16px;}
-.section-title{font-size:13px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #333;}
-.ctrl{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;}
-.ctrl label{flex:0 0 40%;color:#ccc;}
-.ctrl select{flex:1;background:#0f1a30;color:#fff;border:1px solid #444;border-radius:4px;padding:4px 8px;font-size:11px;}
+#panel::-webkit-scrollbar-track{background:#161625;}
+#panel::-webkit-scrollbar-thumb{background:#00d4ff33;border-radius:3px;}
+.section{margin-bottom:20px;}
+.section-title{font-size:12px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #2a2a40;display:flex;align-items:center;gap:6px;}
+.ctrl{display:flex;align-items:center;margin-bottom:8px;font-size:12px;}
+.ctrl label{flex:0 0 38%;color:#999;}
+.ctrl input[type=range]{flex:1;accent-color:#00d4ff;height:4px;}
+.ctrl input[type=color]{width:32px;height:24px;border:1px solid #444;border-radius:4px;background:transparent;cursor:pointer;padding:0;}
+.ctrl select{flex:1;background:#1a1a2e;color:#fff;border:1px solid #333;border-radius:6px;padding:5px 8px;font-size:11px;}
 .ctrl input[type=checkbox]{accent-color:#00d4ff;width:16px;height:16px;}
-.ctrl input[type=range]{flex:1;accent-color:#00d4ff;}
-.val{color:#00d4ff;font-size:10px;width:32px;text-align:right;margin-left:4px;}
+.val{color:#00d4ff;font-size:10px;width:36px;text-align:right;margin-left:6px;font-weight:600;}
 .btn-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
-.btn{padding:6px 12px;border:1px solid #444;border-radius:6px;background:#0f1a30;color:#fff;font-size:11px;cursor:pointer;transition:all .2s;}
-.btn:hover{border-color:#00d4ff;background:#1a2a4e;box-shadow:0 0 8px #00d4ff33;}
-.btn.active{border-color:#00d4ff;background:#00d4ff22;color:#00d4ff;}
-.btn.accent{background:linear-gradient(135deg,#00d4ff,#a78bfa);color:#fff;border:none;font-weight:700;}
-.mesh-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;}
-.mesh-toggle{padding:5px 8px;border:1px solid #333;border-radius:4px;background:#0f1a30;color:#999;font-size:10px;cursor:pointer;text-align:center;transition:all .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.mesh-toggle.on{border-color:#00d4ff;color:#00d4ff;background:#00d4ff15;}
-.mesh-toggle:hover{border-color:#666;}
-.role-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;margin:2px;cursor:pointer;transition:all .2s;border:1px solid transparent;}
-.role-tag:hover{opacity:0.9;}
-.role-tag.active{border-color:#fff;box-shadow:0 0 6px rgba(255,255,255,0.3);}
-.role-tag.engineer{background:#3b82f6;color:#fff;}
-.role-tag.designer{background:#ec4899;color:#fff;}
-.role-tag.sales{background:#22c55e;color:#fff;}
-.role-tag.pm{background:#f59e0b;color:#fff;}
-.role-tag.ceo{background:#8b5cf6;color:#fff;}
-.role-tag.intern{background:#06b6d4;color:#fff;}
-.info{font-size:10px;color:#666;margin-top:4px;line-height:1.3;}
+.btn{padding:7px 14px;border:1px solid #333;border-radius:8px;background:#1a1a2e;color:#fff;font-size:11px;cursor:pointer;transition:all .15s;font-weight:500;}
+.btn:hover{border-color:#00d4ff;background:#1a2a4e;box-shadow:0 0 12px #00d4ff22;}
+.btn.active{border-color:#00d4ff;background:#00d4ff18;color:#00d4ff;}
+.btn.accent{background:linear-gradient(135deg,#00d4ff,#7c3aed);color:#fff;border:none;font-weight:700;padding:8px 16px;}
+.btn.accent:hover{box-shadow:0 0 20px #00d4ff44;}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.color-swatch{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.color-swatch:hover{transform:scale(1.15);}
+.color-swatch.active{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,0.3);}
+.preset-card{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #333;border-radius:8px;background:#1a1a2e;cursor:pointer;transition:all .15s;margin:3px;}
+.preset-card:hover{border-color:#00d4ff;background:#1a2a4e;}
+.preset-card.active{border-color:#00d4ff;background:#00d4ff18;}
+.preset-card .dot{width:10px;height:10px;border-radius:50%;}
+.preset-card span{font-size:11px;font-weight:500;}
+#title{position:absolute;top:16px;left:16px;font-size:18px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.5);z-index:1;}
+#title small{font-size:11px;font-weight:400;color:#00d4ff;display:block;margin-top:2px;}
 </style>
 </head>
 <body>
 <div id="app">
 <div id="viewport">
-  <div id="loading"><div class="spinner"></div>Loading character model...</div>
+  <div id="title">Character Editor<small>Burn Rate — Funko Style</small></div>
 </div>
 <div id="panel">
 
 <div class="section">
 <div class="section-title">📋 Role Presets</div>
-<div class="btn-row" id="roleButtons">
-<span class="role-tag engineer active" onclick="loadRole('engineer',this)">👨‍💻 Engineer</span>
-<span class="role-tag designer" onclick="loadRole('designer',this)">🎨 Designer</span>
-<span class="role-tag sales" onclick="loadRole('sales',this)">💼 Sales</span>
-<span class="role-tag pm" onclick="loadRole('pm',this)">📊 PM</span>
-<span class="role-tag ceo" onclick="loadRole('ceo',this)">👔 CEO</span>
-<span class="role-tag intern" onclick="loadRole('intern',this)">🎓 Intern</span>
-</div>
+<div id="presetRow"></div>
 </div>
 
 <div class="section">
-<div class="section-title">😊 Face / Emotion</div>
-<div class="mesh-grid" id="emotionGrid"></div>
+<div class="section-title">🎨 Colors</div>
+<div class="ctrl"><label>Skin</label><input type="color" id="skinColor" value="#FFCEA8"><span class="val" id="skinV"></span></div>
+<div class="ctrl"><label>Hair</label><input type="color" id="hairColor" value="#3B2216"><span class="val" id="hairV"></span></div>
+<div class="ctrl"><label>Shirt</label><input type="color" id="shirtColor" value="#4287f5"><span class="val" id="shirtV"></span></div>
+<div class="ctrl"><label>Pants</label><input type="color" id="pantsColor" value="#2C3E50"><span class="val" id="pantsV"></span></div>
+<div class="ctrl"><label>Shoes</label><input type="color" id="shoeColor" value="#222222"><span class="val" id="shoeV"></span></div>
+</div>
+
+<div class="section">
+<div class="section-title">🧬 Proportions</div>
+<div class="ctrl"><label>Head Size</label><input type="range" id="headSize" min="0.7" max="1.5" step="0.02" value="1.0"><span class="val">1.0</span></div>
+<div class="ctrl"><label>Body Height</label><input type="range" id="bodyHeight" min="0.3" max="0.8" step="0.02" value="0.5"><span class="val">0.5</span></div>
+<div class="ctrl"><label>Body Width</label><input type="range" id="bodyWidth" min="0.6" max="1.3" step="0.02" value="1.0"><span class="val">1.0</span></div>
 </div>
 
 <div class="section">
 <div class="section-title">💇 Hair</div>
-<div class="mesh-grid" id="hairGrid"></div>
+<div class="btn-row" id="hairRow"></div>
 </div>
 
 <div class="section">
-<div class="section-title">👕 Top</div>
-<div class="mesh-grid" id="topGrid"></div>
+<div class="section-title">😊 Face</div>
+<div class="ctrl"><label>Eye Size</label><input type="range" id="eyeSize" min="0.5" max="2.0" step="0.05" value="1.2"><span class="val">1.2</span></div>
+<div class="ctrl"><label>Eye Spacing</label><input type="range" id="eyeSpacing" min="0.4" max="1.2" step="0.02" value="0.7"><span class="val">0.7</span></div>
+<div class="ctrl"><label>Eye Color</label><input type="color" id="eyeColor" value="#222222"></div>
+<div class="ctrl"><label>Mouth</label><select id="mouth"><option value="none">None (Funko)</option><option value="smile">Smile</option><option value="line">Line</option><option value="open">Open</option></select></div>
+<div class="ctrl"><label>Blush</label><input type="checkbox" id="blush"></div>
 </div>
 
 <div class="section">
-<div class="section-title">🧥 Outerwear</div>
-<div class="mesh-grid" id="outerwearGrid"></div>
+<div class="section-title">👔 Clothing</div>
+<div class="ctrl"><label>Style</label><select id="clothStyle"><option value="tshirt">T-Shirt</option><option value="hoodie">Hoodie</option><option value="buttonup">Button-Up</option><option value="suit">Suit</option><option value="turtleneck">Turtleneck</option></select></div>
 </div>
 
 <div class="section">
-<div class="section-title">👖 Bottoms</div>
-<div class="mesh-grid" id="bottomsGrid"></div>
-</div>
-
-<div class="section">
-<div class="section-title">👟 Shoes</div>
-<div class="mesh-grid" id="shoesGrid"></div>
-</div>
-
-<div class="section">
-<div class="section-title">🎩 Headwear</div>
-<div class="mesh-grid" id="hatGrid"></div>
-</div>
-
-<div class="section">
-<div class="section-title">👓 Accessories</div>
-<div class="mesh-grid" id="accessoryGrid"></div>
+<div class="section-title">🎩 Accessories</div>
+<div class="ctrl"><label>Glasses</label><input type="checkbox" id="glasses"></div>
+<div class="ctrl"><label>Headphones</label><input type="checkbox" id="headphones"></div>
+<div class="ctrl"><label>Hat</label><select id="hat"><option value="none">None</option><option value="beanie">Beanie</option><option value="cap">Cap</option><option value="tophat">Top Hat</option></select></div>
+<div class="ctrl"><label>Beard</label><input type="checkbox" id="beard"></div>
+<div class="ctrl"><label>Lanyard</label><input type="checkbox" id="lanyard"></div>
 </div>
 
 <div class="section">
@@ -112,31 +105,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:
 <button class="btn active" onclick="setAnim('idle',this)">Idle</button>
 <button class="btn" onclick="setAnim('walk',this)">Walk</button>
 <button class="btn" onclick="setAnim('sit',this)">Sit</button>
-<button class="btn" onclick="setAnim('celebrate',this)">Celebrate</button>
+<button class="btn" onclick="setAnim('wave',this)">Wave</button>
 </div>
 <div class="ctrl"><label>Turntable</label><input type="checkbox" id="turntable" checked></div>
-<div class="ctrl"><label>Speed</label><input type="range" id="animSpeed" min="0.2" max="3" step="0.1" value="1"><span class="val" id="animSpeedV">1.0</span></div>
 </div>
 
 <div class="section">
-<div class="section-title">⚙️ Display</div>
-<div class="ctrl"><label>Scale</label><input type="range" id="charScale" min="0.3" max="1.2" step="0.05" value="0.55"><span class="val" id="charScaleV">0.55</span></div>
-<div class="ctrl"><label>Background</label><select id="bgColor" onchange="setBg(this.value)">
-<option value="#cccccc">Light Gray</option>
-<option value="#1a1a2e" selected>Dark Blue</option>
-<option value="#111111">Near Black</option>
-<option value="#2d5016">Forest</option>
-<option value="#f5f5dc">Beige</option>
-</select></div>
-</div>
-
-<div class="section">
-<div class="section-title">💾 Export</div>
+<div class="section-title">💾 Actions</div>
 <div class="btn-row">
-<button class="btn accent" onclick="copyConfig()">📋 Copy Config</button>
-<button class="btn" onclick="randomize()">🎲 Randomize</button>
+<button class="btn accent" onclick="copyJSON()">📋 Copy JSON</button>
+<button class="btn" onclick="randomize()">🎲 Random</button>
 </div>
-<div class="info">Config exports as JSON — paste into game code to create this character.</div>
 </div>
 
 </div>
@@ -144,293 +123,581 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/utils/SkeletonUtils.js"></script>
 <script>
-var PARTS = {
-  body: ['Body_010'],
-  emotion: ['Male_emotion_happy_002', 'Male_emotion_usual_001', 'Male_emotion_angry_003'],
-  hair: ['Hairstyle_male_010', 'Hairstyle_male_012'],
-  top: ['T_Shirt_009', 'Costume_10_001', 'Costume_6_001'],
-  outerwear: ['Outerwear_029', 'Outerwear_036'],
-  pants: ['Pants_010', 'Pants_014'],
-  shorts: ['Shorts_003'],
-  shoes: ['Shoe_Sneakers_009', 'Shoe_Slippers_002', 'Shoe_Slippers_005'],
-  hat: ['Hat_010', 'Hat_049'],
-  glasses: ['Glasses_004'],
-  headphones: ['Headphones_002'],
-  gloves: ['Gloves_006', 'Gloves_014'],
-  moustache: ['Moustache_001', 'Moustache_002'],
-  clown_nose: ['Clown_nose_001'],
-  pacifier: ['Pacifier_001'],
-  socks: ['Socks_008']
-};
-
-var PART_NAMES = {
-  'Body_010': 'Body',
-  'Male_emotion_happy_002': 'Happy 😊', 'Male_emotion_usual_001': 'Neutral 😐', 'Male_emotion_angry_003': 'Angry 😠',
-  'Hairstyle_male_010': 'Hair A', 'Hairstyle_male_012': 'Hair B',
-  'T_Shirt_009': 'T-Shirt', 'Costume_10_001': 'Costume A', 'Costume_6_001': 'Costume B',
-  'Outerwear_029': 'Jacket', 'Outerwear_036': 'Coat',
-  'Pants_010': 'Pants A', 'Pants_014': 'Pants B', 'Shorts_003': 'Shorts',
-  'Shoe_Sneakers_009': 'Sneakers', 'Shoe_Slippers_002': 'Slippers A', 'Shoe_Slippers_005': 'Slippers B',
-  'Hat_010': 'Hat A', 'Hat_049': 'Hat B',
-  'Glasses_004': 'Glasses',
-  'Headphones_002': 'Headphones',
-  'Gloves_006': 'Gloves A', 'Gloves_014': 'Gloves B',
-  'Moustache_001': 'Moustache A', 'Moustache_002': 'Moustache B',
-  'Clown_nose_001': 'Clown Nose', 'Pacifier_001': 'Pacifier', 'Socks_008': 'Socks'
-};
-
-var ROLE_OUTFITS = {
-  engineer: { emotion:'Male_emotion_usual_001', hair:'Hairstyle_male_010', top:'T_Shirt_009', pants:'Pants_010', shoes:'Shoe_Sneakers_009', optional:['Glasses_004','Headphones_002'] },
-  designer: { emotion:'Male_emotion_happy_002', hair:'Hairstyle_male_012', top:'Costume_10_001', pants:'Pants_014', shoes:'Shoe_Slippers_002', optional:['Hat_010'] },
-  sales: { emotion:'Male_emotion_happy_002', hair:'Hairstyle_male_010', top:'Costume_6_001', outerwear:'Outerwear_029', pants:'Pants_010', shoes:'Shoe_Slippers_005', optional:[] },
-  pm: { emotion:'Male_emotion_usual_001', hair:'Hairstyle_male_012', top:'T_Shirt_009', outerwear:'Outerwear_036', pants:'Pants_014', shoes:'Shoe_Sneakers_009', optional:['Glasses_004'] },
-  ceo: { emotion:'Male_emotion_happy_002', hair:'Hairstyle_male_010', top:'Costume_6_001', outerwear:'Outerwear_029', pants:'Pants_010', shoes:'Shoe_Slippers_005', optional:['Glasses_004','Moustache_001'] },
-  intern: { emotion:'Male_emotion_happy_002', hair:'Hairstyle_male_010', top:'T_Shirt_009', pants:'Shorts_003', shoes:'Shoe_Sneakers_009', optional:['Hat_049'] }
-};
-
-// === THREE.JS SETUP ===
+// ============ SCENE SETUP ============
 var container = document.getElementById('viewport');
 var scene = new THREE.Scene();
 scene.background = new THREE.Color(0x1a1a2e);
-var camera = new THREE.PerspectiveCamera(35, container.clientWidth/container.clientHeight, 0.1, 100);
-camera.position.set(0, 1.0, 4.5);
+// Gradient background
+var bgCanvas = document.createElement('canvas');
+bgCanvas.width = 2; bgCanvas.height = 256;
+var bgCtx = bgCanvas.getContext('2d');
+var grad = bgCtx.createLinearGradient(0,0,0,256);
+grad.addColorStop(0, '#1a1a3e');
+grad.addColorStop(1, '#0a0a15');
+bgCtx.fillStyle = grad;
+bgCtx.fillRect(0,0,2,256);
+var bgTex = new THREE.CanvasTexture(bgCanvas);
+scene.background = bgTex;
+
+var camera = new THREE.PerspectiveCamera(30, container.clientWidth/container.clientHeight, 0.1, 100);
+camera.position.set(0, 1.2, 5);
 var renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.toneMappingExposure = 1.3;
 container.appendChild(renderer.domElement);
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0.5, 0);
+controls.target.set(0, 0.8, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.update();
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-var key = new THREE.DirectionalLight(0xffffff, 0.8);
-key.position.set(3,5,4); key.castShadow=true; scene.add(key);
-scene.add(new THREE.DirectionalLight(0x88aaff,0.3)).position.set(-2,3,-2);
-scene.add(new THREE.DirectionalLight(0xffd4a0,0.4)).position.set(0,2,-4);
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+var key = new THREE.DirectionalLight(0xffffff, 0.9);
+key.position.set(3,6,4); key.castShadow = true;
+key.shadow.mapSize.set(1024,1024);
+key.shadow.camera.near = 0.5; key.shadow.camera.far = 20;
+key.shadow.camera.left = -3; key.shadow.camera.right = 3;
+key.shadow.camera.top = 3; key.shadow.camera.bottom = -1;
+scene.add(key);
+scene.add(new THREE.DirectionalLight(0x88aaff,0.3)).position.set(-3,3,-2);
+scene.add(new THREE.DirectionalLight(0xffa040,0.2)).position.set(0,1,-4);
 
-var floorMat = new THREE.MeshStandardMaterial({color:0x333355,metalness:0.2,roughness:0.8});
-var floor = new THREE.Mesh(new THREE.CircleGeometry(1.5,64), floorMat);
-floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
-var grid = new THREE.GridHelper(6,30,0x444466,0x333355);
-grid.position.y=0.001; scene.add(grid);
+// Floor
+var floorGeo = new THREE.CircleGeometry(2, 64);
+var floorMat = new THREE.MeshStandardMaterial({color:0x2a2a40, metalness:0.1, roughness:0.9});
+var floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
 
-// === GLB CHARACTER ===
-var glbModel=null, charWrapper=null, allMeshes={}, boneMap={}, restPoses={};
-var currentAnim='idle', animTime=0, currentRole='engineer';
-var nameMap = {};
+// Subtle grid
+var grid = new THREE.GridHelper(8, 40, 0x333350, 0x222240);
+grid.position.y = 0.001; scene.add(grid);
 
-var loader = new THREE.GLTFLoader();
-loader.load('assets/creative-character.glb', function(gltf) {
-  glbModel = gltf;
-  document.getElementById('loading').style.display = 'none';
-  var meshNames = [];
-  gltf.scene.traverse(function(c) { if(c.isMesh||c.isSkinnedMesh) meshNames.push(c.name); });
-  console.log('[Editor] GLB meshes:', meshNames);
-  buildMeshNameMapping(meshNames);
-  buildUI();
-  spawnCharacter();
-  loadRole('engineer');
-}, function(p) {
-  if(p.total>0) document.getElementById('loading').innerHTML='<div class="spinner"></div>Loading... '+Math.round(p.loaded/p.total*100)+'%';
-}, function(err) {
-  document.getElementById('loading').innerHTML='❌ Failed to load model.<br>'+err.message;
-});
+// ============ TOON MATERIAL ============
+var gradColors = new Uint8Array([60, 120, 200, 255]);
+var gradTex = new THREE.DataTexture(gradColors, gradColors.length, 1, THREE.LuminanceFormat);
+gradTex.minFilter = THREE.NearestFilter; gradTex.magFilter = THREE.NearestFilter; gradTex.needsUpdate = true;
 
-function buildMeshNameMapping(actualNames) {
-  var allAssumed=[];
-  Object.values(PARTS).forEach(function(a){allAssumed=allAssumed.concat(a);});
-  allAssumed.forEach(function(n){ if(actualNames.indexOf(n)>=0) nameMap[n]=n; });
-  if(Object.keys(nameMap).length===0 && actualNames.length>0) {
-    console.log('[Editor] No name matches, mapping by index');
-    var idx=0;
-    Object.keys(PARTS).forEach(function(cat){
-      PARTS[cat].forEach(function(assumed){ if(idx<actualNames.length){nameMap[assumed]=actualNames[idx];idx++;} });
-    });
+function toon(c) { return new THREE.MeshToonMaterial({color:c, gradientMap:gradTex}); }
+function outline() { return new THREE.MeshBasicMaterial({color:0x000000, side:THREE.BackSide}); }
+
+// ============ CHARACTER GROUP ============
+var charGroup = new THREE.Group();
+scene.add(charGroup);
+var parts = {}; // animation references
+var currentAnim = 'idle';
+var animTime = 0;
+
+// ============ HELPERS ============
+function el(id) { return document.getElementById(id); }
+function fv(id) { return parseFloat(el(id).value); }
+function cv(id) { return el(id).value; }
+function bv(id) { return el(id).checked; }
+
+function addMesh(geo, mat, parent) {
+  var m = new THREE.Mesh(geo, mat);
+  m.castShadow = true;
+  parent.add(m);
+  return m;
+}
+function addOutline(mesh, s) {
+  var om = new THREE.Mesh(mesh.geometry, outline());
+  om.scale.multiplyScalar(s || 1.04);
+  om.position.copy(mesh.position);
+  om.rotation.copy(mesh.rotation);
+  mesh.parent.add(om);
+}
+
+// ============ HAIR STYLES ============
+var HAIR_STYLES = ['bald','buzz','spiky','slickback','topbun','ponytail','afro','mohawk','sidepart','messy','curly','bob'];
+var HAIR_NAMES = {bald:'Bald',buzz:'Buzz Cut',spiky:'Spiky',slickback:'Slick Back',topbun:'Top Bun',ponytail:'Ponytail',afro:'Afro',mohawk:'Mohawk',sidepart:'Side Part',messy:'Messy',curly:'Curly',bob:'Bob'};
+var currentHair = 'spiky';
+
+// ============ PRESETS ============
+var PRESETS = {
+  engineer: {shirtColor:'#333366',pantsColor:'#2C3E50',hairColor:'#3B2216',hairStyle:'buzz',clothStyle:'hoodie',glasses:true,headphones:true},
+  designer: {shirtColor:'#111111',pantsColor:'#111111',hairColor:'#D4A017',hairStyle:'topbun',clothStyle:'turtleneck',glasses:true},
+  sales: {shirtColor:'#2196F3',pantsColor:'#1a1a2e',hairColor:'#3B2216',hairStyle:'slickback',clothStyle:'buttonup'},
+  pm: {shirtColor:'#7B68EE',pantsColor:'#2C3E50',hairColor:'#8B4513',hairStyle:'ponytail',clothStyle:'tshirt',lanyard:true},
+  ceo: {shirtColor:'#1a1a2e',pantsColor:'#1a1a2e',hairColor:'#555555',hairStyle:'sidepart',clothStyle:'suit',glasses:true},
+  intern: {shirtColor:'#42A5F5',pantsColor:'#4CAF50',hairColor:'#222222',hairStyle:'messy',clothStyle:'tshirt',hat:'cap',lanyard:true}
+};
+
+// ============ BUILD CHARACTER ============
+function buildCharacter() {
+  while (charGroup.children.length) charGroup.remove(charGroup.children[0]);
+  parts = {};
+
+  var hs = fv('headSize'), bh = fv('bodyHeight'), bw = fv('bodyWidth');
+  var skinC = cv('skinColor'), hairC = cv('hairColor'), shirtC = cv('shirtColor');
+  var pantsC = cv('pantsColor'), shoeC = cv('shoeColor');
+  var es = fv('eyeSize'), esp = fv('eyeSpacing'), eyeC = cv('eyeColor');
+  var clothS = cv('clothStyle'), hatS = cv('hat');
+
+  var skinMat = toon(skinC), hairMat = toon(hairC);
+  var shirtMat = toon(shirtC), pantsMat = toon(pantsC), shoeMat = toon(shoeC);
+
+  var root = new THREE.Group();
+  charGroup.add(root);
+  parts.root = root;
+
+  var legH = 0.25;
+  var bodyY = legH + bh/2 + 0.02;
+
+  // === LEGS ===
+  for (var li = -1; li <= 1; li += 2) {
+    var legGrp = new THREE.Group();
+    legGrp.position.set(li * 0.08 * bw, legH + 0.02, 0);
+    root.add(legGrp);
+    if (li === -1) parts.legL = legGrp; else parts.legR = legGrp;
+    var leg = addMesh(new THREE.CylinderGeometry(0.065*bw, 0.06*bw, legH, 12), pantsMat, legGrp);
+    leg.position.y = -legH/2;
+    addOutline(leg);
+    // Shoes - chunky funko feet
+    var shoe = addMesh(new THREE.BoxGeometry(0.13, 0.06, 0.16), shoeMat, legGrp);
+    shoe.position.set(0, -legH - 0.01, 0.02);
+    var shoeR = addMesh(new THREE.SphereGeometry(0.065, 8, 8, 0, Math.PI*2, 0, Math.PI/2), shoeMat, legGrp);
+    shoeR.position.set(0, -legH - 0.01, 0.06);
+    shoeR.rotation.x = Math.PI;
+    addOutline(shoe);
   }
-  console.log('[Editor] Name map:', nameMap);
+
+  // === BODY ===
+  var bodyGrp = new THREE.Group();
+  bodyGrp.position.y = bodyY;
+  root.add(bodyGrp);
+  parts.body = bodyGrp;
+  parts.bodyBaseY = bodyY;
+
+  var torsoW = 0.24*bw;
+  if (clothS === 'suit') {
+    // Suit jacket - slightly wider
+    var jacket = addMesh(new THREE.CapsuleGeometry(torsoW*1.05, bh*0.5, 8, 16), shirtMat, bodyGrp);
+    addOutline(jacket);
+    // Lapels
+    for (var lp = -1; lp <= 1; lp += 2) {
+      var lapel = addMesh(new THREE.PlaneGeometry(0.06, bh*0.3), toon('#ffffff'), bodyGrp);
+      lapel.position.set(lp*0.08, bh*0.1, torsoW+0.005);
+      lapel.rotation.z = lp * 0.15;
+    }
+    // Tie
+    addMesh(new THREE.CylinderGeometry(0.015, 0.025, bh*0.4, 6), toon('#cc0000'), bodyGrp).position.set(0, -0.02, torsoW+0.005);
+  } else if (clothS === 'hoodie') {
+    var hBody = addMesh(new THREE.CapsuleGeometry(torsoW*1.08, bh*0.52, 8, 16), shirtMat, bodyGrp);
+    addOutline(hBody);
+    // Pocket
+    addMesh(new THREE.BoxGeometry(0.18*bw, 0.06, 0.01), toon(new THREE.Color(shirtC).offsetHSL(0,0,-0.1).getStyle()), bodyGrp)
+      .position.set(0, -bh*0.15, torsoW+0.005);
+    // Drawstrings
+    for (var ds = -1; ds <= 1; ds += 2) {
+      addMesh(new THREE.CylinderGeometry(0.004, 0.004, 0.08, 4), toon('#dddddd'), bodyGrp)
+        .position.set(ds*0.04, bh*0.2, torsoW+0.008);
+    }
+  } else {
+    var torso = addMesh(new THREE.CapsuleGeometry(torsoW, bh*0.5, 8, 16), shirtMat, bodyGrp);
+    addOutline(torso);
+    if (clothS === 'buttonup') {
+      for (var bi = 0; bi < 3; bi++) {
+        addMesh(new THREE.SphereGeometry(0.012, 8, 8), toon('#ffffff'), bodyGrp)
+          .position.set(0, bh*0.15 - bi*bh*0.15, torsoW+0.008);
+      }
+      // Collar
+      for (var ci = -1; ci <= 1; ci += 2) {
+        var col = addMesh(new THREE.PlaneGeometry(0.05, 0.04), shirtMat, bodyGrp);
+        col.position.set(ci*0.06, bh*0.28, torsoW*0.5);
+        col.rotation.set(-0.4, ci*0.3, 0);
+      }
+    }
+    if (clothS === 'turtleneck') {
+      addMesh(new THREE.CylinderGeometry(0.1*bw, 0.12*bw, 0.08, 16), shirtMat, bodyGrp)
+        .position.y = bh*0.3;
+    }
+  }
+
+  // === ARMS ===
+  var armMat = (clothS === 'tshirt') ? skinMat : shirtMat;
+  for (var ai = -1; ai <= 1; ai += 2) {
+    var armGrp = new THREE.Group();
+    armGrp.position.set(ai*(torsoW + 0.08), bodyY + bh*0.15, 0);
+    root.add(armGrp);
+    if (ai === -1) parts.armL = armGrp; else parts.armR = armGrp;
+    var arm = addMesh(new THREE.CapsuleGeometry(0.045, 0.28, 8, 8), armMat, armGrp);
+    arm.position.y = -0.16;
+    addOutline(arm);
+    // Hand
+    addMesh(new THREE.SphereGeometry(0.045, 8, 8), skinMat, armGrp).position.y = -0.32;
+  }
+
+  // === HEAD (the star — big funko head) ===
+  var headY = bodyY + bh/2 + 0.22*hs;
+  var headGrp = new THREE.Group();
+  headGrp.position.y = headY;
+  root.add(headGrp);
+  parts.head = headGrp;
+
+  var headR = 0.28 * hs;
+  // Main head sphere
+  var head = addMesh(new THREE.SphereGeometry(headR, 24, 24), skinMat, headGrp);
+  addOutline(head, 1.03);
+
+  // Ears
+  for (var ei = -1; ei <= 1; ei += 2) {
+    addMesh(new THREE.SphereGeometry(headR*0.15, 8, 8), skinMat, headGrp)
+      .position.set(ei * headR * 0.95, -0.02, 0);
+  }
+
+  // === EYES (big funko eyes — black circles) ===
+  var eyeR = 0.04 * es;
+  var eyeSp = esp * 0.12 * hs;
+  for (var ey = -1; ey <= 1; ey += 2) {
+    // White
+    var eyeW = addMesh(new THREE.CircleGeometry(eyeR*1.4, 16), new THREE.MeshBasicMaterial({color:0xffffff}), headGrp);
+    eyeW.position.set(ey*eyeSp, 0.01, headR*0.97);
+    // Iris
+    var iris = addMesh(new THREE.CircleGeometry(eyeR, 16), new THREE.MeshBasicMaterial({color:eyeC}), headGrp);
+    iris.position.set(ey*eyeSp, 0.0, headR*0.975);
+    // Pupil
+    addMesh(new THREE.CircleGeometry(eyeR*0.5, 12), new THREE.MeshBasicMaterial({color:0x000000}), headGrp)
+      .position.set(ey*eyeSp, 0.0, headR*0.98);
+    // Shine
+    addMesh(new THREE.CircleGeometry(eyeR*0.25, 8), new THREE.MeshBasicMaterial({color:0xffffff}), headGrp)
+      .position.set(ey*eyeSp + eyeR*0.3, 0.02, headR*0.985);
+  }
+
+  // Eyebrows
+  for (var eb = -1; eb <= 1; eb += 2) {
+    var brow = addMesh(new THREE.BoxGeometry(eyeR*2.5, 0.015, 0.01), new THREE.MeshBasicMaterial({color:cv('hairColor')}), headGrp);
+    brow.position.set(eb*eyeSp, 0.01 + eyeR*1.6, headR*0.97);
+  }
+
+  // Mouth
+  var mouthS = cv('mouth');
+  if (mouthS === 'smile') {
+    var sm = addMesh(new THREE.TorusGeometry(0.03*hs, 0.005, 8, 12, Math.PI), new THREE.MeshBasicMaterial({color:0x993333}), headGrp);
+    sm.position.set(0, -0.08*hs, headR*0.96); sm.rotation.x = Math.PI;
+  } else if (mouthS === 'line') {
+    addMesh(new THREE.BoxGeometry(0.05*hs, 0.006, 0.005), new THREE.MeshBasicMaterial({color:0x993333}), headGrp)
+      .position.set(0, -0.08*hs, headR*0.97);
+  } else if (mouthS === 'open') {
+    addMesh(new THREE.CircleGeometry(0.02*hs, 12), new THREE.MeshBasicMaterial({color:0x661111}), headGrp)
+      .position.set(0, -0.08*hs, headR*0.97);
+  }
+
+  // Blush
+  if (bv('blush')) {
+    for (var bl = -1; bl <= 1; bl += 2) {
+      addMesh(new THREE.CircleGeometry(0.03*hs, 12), new THREE.MeshBasicMaterial({color:0xFF9999, transparent:true, opacity:0.4}), headGrp)
+        .position.set(bl*eyeSp*1.3, -0.04*hs, headR*0.94);
+    }
+  }
+
+  // Nose (subtle bump)
+  addMesh(new THREE.SphereGeometry(0.025*hs, 8, 8), skinMat, headGrp)
+    .position.set(0, -0.02, headR*0.95);
+
+  // === HAIR ===
+  buildHair(headGrp, currentHair, hairMat, headR, hs);
+
+  // === HOODIE HOOD ===
+  if (clothS === 'hoodie') {
+    var hood = addMesh(new THREE.SphereGeometry(headR*1.12, 16, 16, 0, Math.PI*2, Math.PI*0.35, Math.PI*0.3), shirtMat, headGrp);
+    hood.position.set(0, 0.02, -0.04);
+  }
+
+  // === ACCESSORIES ===
+  if (bv('glasses')) buildGlasses(headGrp, headR, hs, es, esp);
+  if (bv('headphones')) buildHeadphones(headGrp, headR, hs);
+  if (bv('beard')) buildBeard(headGrp, headR, hs, hairMat);
+  if (hatS !== 'none') buildHat(headGrp, headR, hs, hatS);
+  if (bv('lanyard')) buildLanyard(bodyGrp, bh, bw);
 }
 
-function spawnCharacter() {
-  if(charWrapper) scene.remove(charWrapper);
-  var source = glbModel.scene;
-  var clone = THREE.SkeletonUtils ? THREE.SkeletonUtils.clone(source) : source.clone(true);
-  charWrapper = new THREE.Group();
-  var scale = parseFloat(document.getElementById('charScale').value)||0.55;
-  clone.scale.setScalar(scale);
-  charWrapper.add(clone);
-  allMeshes={}; boneMap={}; restPoses={};
-  clone.traverse(function(child){
-    if(child.isMesh||child.isSkinnedMesh){allMeshes[child.name]=child;child.visible=false;child.castShadow=true;child.receiveShadow=true;child.frustumCulled=false;}
-    if(child.isBone){boneMap[child.name]=child;restPoses[child.name]=child.quaternion.clone();}
+// ============ HAIR BUILDER ============
+function buildHair(parent, style, mat, r, hs) {
+  if (style === 'bald') return;
+  if (style === 'buzz') {
+    addMesh(new THREE.SphereGeometry(r*1.04, 16, 16, 0, Math.PI*2, 0, Math.PI*0.52), mat, parent).position.y = 0.01;
+  } else if (style === 'spiky') {
+    addMesh(new THREE.SphereGeometry(r*1.03, 16, 16, 0, Math.PI*2, 0, Math.PI*0.48), mat, parent).position.y = 0.01;
+    for (var i = 0; i < 7; i++) {
+      var a = (i/7)*Math.PI*2;
+      var sp = addMesh(new THREE.ConeGeometry(0.025, 0.1*hs, 5), mat, parent);
+      sp.position.set(Math.sin(a)*r*0.55, r*0.85, Math.cos(a)*r*0.55);
+      sp.rotation.set(Math.cos(a)*0.3, 0, -Math.sin(a)*0.3);
+    }
+  } else if (style === 'slickback') {
+    addMesh(new THREE.SphereGeometry(r*1.05, 16, 16, 0, Math.PI*2, 0, Math.PI*0.55), mat, parent).position.y = 0.01;
+    addMesh(new THREE.BoxGeometry(r*1.6, 0.06, r*1.2), mat, parent).position.set(0, -0.04, -r*0.3);
+  } else if (style === 'topbun') {
+    addMesh(new THREE.SphereGeometry(r*1.03, 16, 16, 0, Math.PI*2, 0, Math.PI*0.5), mat, parent).position.y = 0.01;
+    addMesh(new THREE.SphereGeometry(0.06*hs, 10, 10), mat, parent).position.y = r + 0.04;
+  } else if (style === 'ponytail') {
+    addMesh(new THREE.SphereGeometry(r*1.03, 16, 16, 0, Math.PI*2, 0, Math.PI*0.5), mat, parent).position.y = 0.01;
+    var pt = addMesh(new THREE.CylinderGeometry(0.025, 0.018, 0.18*hs, 8), mat, parent);
+    pt.position.set(0, -0.05, -r*0.85); pt.rotation.x = 0.5;
+  } else if (style === 'afro') {
+    addMesh(new THREE.SphereGeometry(r*1.45, 16, 16), mat, parent).position.y = 0.04;
+  } else if (style === 'mohawk') {
+    for (var mi = 0; mi < 6; mi++) {
+      addMesh(new THREE.BoxGeometry(0.02, 0.1*hs*(1-mi*0.08), 0.04), mat, parent)
+        .position.set(0, r*0.7+mi*0.01, -r*0.3+mi*r*0.25);
+    }
+  } else if (style === 'sidepart') {
+    addMesh(new THREE.SphereGeometry(r*1.06, 16, 16, 0, Math.PI*2, 0, Math.PI*0.52), mat, parent).position.y = 0.01;
+    addMesh(new THREE.SphereGeometry(r*0.3, 8, 8), mat, parent).position.set(r*0.6, r*0.4, r*0.3);
+  } else if (style === 'messy') {
+    addMesh(new THREE.SphereGeometry(r*1.08, 12, 12, 0, Math.PI*2, 0, Math.PI*0.55), mat, parent).position.y = 0.02;
+    for (var mi2 = 0; mi2 < 5; mi2++) {
+      var a2 = (mi2/5)*Math.PI*2 + 0.3;
+      var tuft = addMesh(new THREE.SphereGeometry(0.04*hs, 6, 6), mat, parent);
+      tuft.position.set(Math.sin(a2)*r*0.75, r*0.65+Math.random()*0.05, Math.cos(a2)*r*0.75);
+    }
+  } else if (style === 'curly') {
+    for (var ci = 0; ci < 22; ci++) {
+      var ca = Math.random()*Math.PI*2, cp = Math.random()*Math.PI*0.6;
+      addMesh(new THREE.SphereGeometry(0.035*hs, 6, 6), mat, parent)
+        .position.set(Math.sin(ca)*Math.sin(cp)*r*1.12, Math.cos(cp)*r+0.01, Math.cos(ca)*Math.sin(cp)*r*1.12);
+    }
+  } else if (style === 'bob') {
+    addMesh(new THREE.SphereGeometry(r*1.07, 16, 16, 0, Math.PI*2, 0, Math.PI*0.58), mat, parent).position.y = 0.01;
+    addMesh(new THREE.CylinderGeometry(r*1.06, r*0.96, 0.1, 16), mat, parent).position.y = -0.05;
+  }
+}
+
+// ============ ACCESSORIES ============
+function buildGlasses(parent, r, hs, es, esp) {
+  var gm = new THREE.MeshBasicMaterial({color:0x222222});
+  var lensR = 0.035 * es;
+  var sp = esp * 0.12 * hs;
+  for (var i = -1; i <= 1; i += 2) {
+    addMesh(new THREE.TorusGeometry(lensR, 0.004, 8, 16), gm, parent)
+      .position.set(i*sp, 0.01, r*0.98);
+    addMesh(new THREE.CircleGeometry(lensR*0.9, 12), new THREE.MeshBasicMaterial({color:0x88ccff, transparent:true, opacity:0.15}), parent)
+      .position.set(i*sp, 0.01, r*0.975);
+  }
+  var bridge = addMesh(new THREE.CylinderGeometry(0.003, 0.003, sp*1.5, 6), gm, parent);
+  bridge.position.set(0, 0.01, r*0.98); bridge.rotation.z = Math.PI/2;
+  for (var t = -1; t <= 1; t += 2) {
+    var temple = addMesh(new THREE.CylinderGeometry(0.003, 0.003, r*0.6, 6), gm, parent);
+    temple.position.set(t*(sp+lensR), 0.01, r*0.5); temple.rotation.x = Math.PI/2;
+  }
+}
+
+function buildHeadphones(parent, r, hs) {
+  var hm = toon('#333333');
+  var band = addMesh(new THREE.TorusGeometry(r*1.05, 0.015, 8, 24, Math.PI), hm, parent);
+  band.position.y = 0.03; band.rotation.set(0, Math.PI/2, Math.PI);
+  for (var i = -1; i <= 1; i += 2) {
+    var cup = addMesh(new THREE.CylinderGeometry(0.055, 0.055, 0.035, 12), hm, parent);
+    cup.position.set(i*r*1.02, 0, 0); cup.rotation.z = Math.PI/2;
+    addMesh(new THREE.CylinderGeometry(0.04, 0.04, 0.01, 12), toon('#00d4ff'), parent)
+      .position.set(i*(r*1.02+0.02), 0, 0).rotation.z = Math.PI/2;
+  }
+}
+
+function buildBeard(parent, r, hs, mat) {
+  for (var i = 0; i < 10; i++) {
+    var a = -Math.PI*0.25 + (i/9)*Math.PI*0.5;
+    addMesh(new THREE.SphereGeometry(0.02*hs, 6, 6), mat, parent)
+      .position.set(Math.sin(a)*r*0.88, -0.1-Math.abs(Math.sin(a))*0.02, Math.cos(a)*r*0.88);
+  }
+}
+
+function buildHat(parent, r, hs, style) {
+  var hm = toon('#444466');
+  if (style === 'beanie') {
+    addMesh(new THREE.SphereGeometry(r*1.1, 16, 16, 0, Math.PI*2, 0, Math.PI*0.48), hm, parent).position.y = 0.02;
+    addMesh(new THREE.CylinderGeometry(r*1.12, r*1.12, 0.025, 16), hm, parent).position.y = -0.01;
+    addMesh(new THREE.SphereGeometry(0.02, 8, 8), hm, parent).position.y = r*1.08;
+  } else if (style === 'cap') {
+    addMesh(new THREE.SphereGeometry(r*1.08, 16, 16, 0, Math.PI*2, 0, Math.PI*0.4), hm, parent).position.y = 0.02;
+    var brim = addMesh(new THREE.CylinderGeometry(r*0.4, r*0.5, 0.015, 16, 1, false, -Math.PI/2, Math.PI), hm, parent);
+    brim.position.set(0, 0, r*0.85); brim.rotation.x = -0.15;
+  } else if (style === 'tophat') {
+    addMesh(new THREE.CylinderGeometry(r*0.6, r*0.65, r*0.8, 16), hm, parent).position.y = r*0.6;
+    addMesh(new THREE.CylinderGeometry(r*1.0, r*1.0, 0.03, 16), hm, parent).position.y = r*0.22;
+  }
+}
+
+function buildLanyard(bodyGrp, bh, bw) {
+  var lm = toon('#00d4ff');
+  addMesh(new THREE.CylinderGeometry(0.006, 0.006, bh*0.6, 6), lm, bodyGrp).position.set(0.04, -0.05, 0.24*bw+0.02);
+  var badge = addMesh(new THREE.BoxGeometry(0.05, 0.07, 0.008), new THREE.MeshBasicMaterial({color:0xffffff}), bodyGrp);
+  badge.position.set(0.04, -bh*0.3, 0.24*bw+0.02);
+}
+
+// ============ ANIMATION ============
+function setAnim(name, btn) {
+  currentAnim = name; animTime = 0;
+  document.querySelectorAll('#panel .btn-row .btn').forEach(function(b) {
+    if (b.parentElement === btn.parentElement) b.classList.remove('active');
   });
-  scene.add(charWrapper);
-  showMesh('Body_010',true);
-}
-
-function showMesh(assumed,vis){var actual=nameMap[assumed]||assumed;if(allMeshes[actual])allMeshes[actual].visible=vis;}
-function isMeshVisible(assumed){var actual=nameMap[assumed]||assumed;return allMeshes[actual]?allMeshes[actual].visible:false;}
-function toggleMesh(assumed){var actual=nameMap[assumed]||assumed;if(allMeshes[actual])allMeshes[actual].visible=!allMeshes[actual].visible;updateToggleButtons();}
-
-function buildUI(){
-  buildMeshGrid('emotionGrid',PARTS.emotion,true);
-  buildMeshGrid('hairGrid',PARTS.hair,true);
-  buildMeshGrid('topGrid',PARTS.top,true);
-  buildMeshGrid('outerwearGrid',PARTS.outerwear,false);
-  buildMeshGrid('bottomsGrid',PARTS.pants.concat(PARTS.shorts),true);
-  buildMeshGrid('shoesGrid',PARTS.shoes,true);
-  buildMeshGrid('hatGrid',PARTS.hat,false);
-  var accParts=PARTS.glasses.concat(PARTS.headphones,PARTS.gloves,PARTS.moustache,PARTS.clown_nose,PARTS.pacifier,PARTS.socks);
-  buildMeshGrid('accessoryGrid',accParts,false);
-}
-
-function buildMeshGrid(containerId,parts,exclusive){
-  var cont=document.getElementById(containerId);if(!cont)return;cont.innerHTML='';
-  parts.forEach(function(partName){
-    var btn=document.createElement('div');
-    btn.className='mesh-toggle';btn.textContent=PART_NAMES[partName]||partName;
-    btn.dataset.mesh=partName;btn.dataset.group=containerId;
-    btn.onclick=function(){
-      if(exclusive){
-        var sibs=cont.querySelectorAll('.mesh-toggle');
-        sibs.forEach(function(s){showMesh(s.dataset.mesh,false);});
-        showMesh(partName,true);
-      } else { toggleMesh(partName); }
-      updateToggleButtons();
-    };
-    cont.appendChild(btn);
-  });
-}
-
-function updateToggleButtons(){
-  document.querySelectorAll('.mesh-toggle').forEach(function(btn){btn.classList.toggle('on',isMeshVisible(btn.dataset.mesh));});
-}
-
-function loadRole(role,btnEl){
-  currentRole=role;
-  document.querySelectorAll('.role-tag').forEach(function(b){b.classList.remove('active');});
-  if(btnEl){btnEl.classList.add('active');}
-  else{var rb=document.querySelector('.role-tag.'+role);if(rb)rb.classList.add('active');}
-  var outfit=ROLE_OUTFITS[role];if(!outfit)return;
-  Object.keys(allMeshes).forEach(function(name){allMeshes[name].visible=false;});
-  showMesh('Body_010',true);
-  if(outfit.emotion)showMesh(outfit.emotion,true);
-  if(outfit.hair)showMesh(outfit.hair,true);
-  if(outfit.top)showMesh(outfit.top,true);
-  if(outfit.outerwear)showMesh(outfit.outerwear,true);
-  if(outfit.pants)showMesh(outfit.pants,true);
-  if(outfit.shoes)showMesh(outfit.shoes,true);
-  if(outfit.optional)outfit.optional.forEach(function(o){showMesh(o,true);});
-  updateToggleButtons();
-}
-
-// === ANIMATIONS ===
-function setAnim(name,btn){
-  currentAnim=name;animTime=0;resetBones();if(charWrapper)charWrapper.position.y=0;
-  document.querySelectorAll('#panel .btn-row .btn').forEach(function(b){if(b.parentElement===btn.parentElement)b.classList.remove('active');});
   btn.classList.add('active');
 }
 
-function resetBones(){Object.keys(restPoses).forEach(function(n){if(boneMap[n])boneMap[n].quaternion.copy(restPoses[n]);});}
+function applyAnimation(dt) {
+  animTime += dt;
+  var t = animTime, p = parts;
+  if (!p.body) return;
 
-function applyBoneRot(name,axis,angle){
-  if(!boneMap[name])return;
-  var q=new THREE.Quaternion();q.setFromAxisAngle(axis,angle);boneMap[name].quaternion.multiply(q);
-}
+  // Reset
+  p.body.position.y = p.bodyBaseY;
+  if (p.armL) { p.armL.rotation.set(0,0,0); }
+  if (p.armR) { p.armR.rotation.set(0,0,0); }
+  if (p.legL) { p.legL.rotation.set(0,0,0); }
+  if (p.legR) { p.legR.rotation.set(0,0,0); }
+  if (p.head) { p.head.rotation.set(0,0,0); }
 
-var axisX=new THREE.Vector3(1,0,0),axisY=new THREE.Vector3(0,1,0),axisZ=new THREE.Vector3(0,0,1);
-
-function animateCharacter(dt){
-  animTime+=dt;
-  var speed=parseFloat(document.getElementById('animSpeed').value)||1;
-  var t=animTime*speed;
-  resetBones();
-  if(charWrapper)charWrapper.position.y=0;
-
-  if(currentAnim==='idle'){
-    applyBoneRot('Spine',axisX,Math.sin(t*1.5)*0.02);
-    applyBoneRot('Head',axisX,Math.sin(t*0.8)*0.03);
-    applyBoneRot('Head',axisY,Math.sin(t*0.5)*0.02);
-    applyBoneRot('LeftArm',axisX,Math.sin(t*0.7)*0.03);
-    applyBoneRot('RightArm',axisX,Math.sin(t*0.7+0.5)*0.03);
-  } else if(currentAnim==='walk'){
-    var wt=t*4,stride=0.4,armSw=0.3;
-    var lL=Math.sin(wt)*stride,lR=Math.sin(wt+Math.PI)*stride;
-    applyBoneRot('LeftUpLeg',axisZ,-lL);applyBoneRot('RightUpLeg',axisZ,-lR);
-    applyBoneRot('LeftLeg',axisZ,-Math.max(0,lL)*1.0-0.1);applyBoneRot('RightLeg',axisZ,-Math.max(0,lR)*1.0-0.1);
-    applyBoneRot('LeftArm',axisZ,Math.sin(wt+Math.PI)*armSw);applyBoneRot('RightArm',axisZ,Math.sin(wt)*armSw);
-    applyBoneRot('LeftForeArm',axisZ,Math.sin(wt+Math.PI)*0.15);applyBoneRot('RightForeArm',axisZ,Math.sin(wt)*0.15);
-    applyBoneRot('Spine',axisY,Math.sin(wt)*0.06);applyBoneRot('Head',axisX,Math.sin(wt*2)*0.04);
-    if(charWrapper)charWrapper.position.y=Math.abs(Math.sin(wt))*0.02;
-  } else if(currentAnim==='sit'){
-    applyBoneRot('LeftUpLeg',axisZ,1.3);applyBoneRot('RightUpLeg',axisZ,1.3);
-    applyBoneRot('LeftLeg',axisZ,-1.5);applyBoneRot('RightLeg',axisZ,-1.5);
-    applyBoneRot('Spine',axisX,-0.1);applyBoneRot('Spine1',axisX,-0.1);
-    applyBoneRot('LeftArm',axisZ,-0.4);applyBoneRot('RightArm',axisZ,-0.4);
-    applyBoneRot('LeftForeArm',axisZ,0.6+Math.sin(t*6)*0.05);applyBoneRot('RightForeArm',axisZ,0.6+Math.sin(t*6+1.5)*0.05);
-    applyBoneRot('Head',axisX,0.15);applyBoneRot('Head',axisY,Math.sin(t*0.8)*0.04);
-  } else if(currentAnim==='celebrate'){
-    applyBoneRot('LeftArm',axisZ,-Math.PI*0.4+Math.sin(t*4)*0.15);
-    applyBoneRot('RightArm',axisZ,Math.PI*0.55+Math.sin(t*4+1)*0.15);
-    applyBoneRot('LeftForeArm',axisX,-0.5+Math.sin(t*5)*0.3);applyBoneRot('RightForeArm',axisX,-0.5+Math.sin(t*5+1)*0.3);
-    if(charWrapper)charWrapper.position.y=Math.abs(Math.sin(t*5))*0.06;
-    applyBoneRot('Head',axisZ,Math.sin(t*3)*0.1);applyBoneRot('Spine',axisX,Math.sin(t*3)*0.05);
+  if (currentAnim === 'idle') {
+    p.body.position.y = p.bodyBaseY + Math.sin(t*2) * 0.008;
+    if (p.head) p.head.rotation.z = Math.sin(t*0.8) * 0.02;
+  } else if (currentAnim === 'walk') {
+    var sw = Math.sin(t*6) * 0.35;
+    if (p.legL) p.legL.rotation.x = sw;
+    if (p.legR) p.legR.rotation.x = -sw;
+    if (p.armL) p.armL.rotation.x = -sw*0.5;
+    if (p.armR) p.armR.rotation.x = sw*0.5;
+    p.body.position.y = p.bodyBaseY + Math.abs(Math.sin(t*6)) * 0.015;
+    if (p.head) p.head.rotation.x = Math.sin(t*12) * 0.015;
+  } else if (currentAnim === 'sit') {
+    if (p.legL) p.legL.rotation.x = -Math.PI/2.5;
+    if (p.legR) p.legR.rotation.x = -Math.PI/2.5;
+    p.body.position.y = p.bodyBaseY - 0.08;
+    if (p.armL) p.armL.rotation.x = -0.3;
+    if (p.armR) p.armR.rotation.x = -0.3;
+  } else if (currentAnim === 'wave') {
+    if (p.armR) {
+      p.armR.rotation.z = Math.PI*0.6 + Math.sin(t*5)*0.15;
+      p.armR.rotation.x = -0.2;
+    }
+    p.body.position.y = p.bodyBaseY + Math.sin(t*3) * 0.01;
+    if (p.head) p.head.rotation.z = Math.sin(t*3) * 0.06;
   }
 }
 
-// === CONTROLS ===
-document.getElementById('animSpeed').addEventListener('input',function(){document.getElementById('animSpeedV').textContent=parseFloat(this.value).toFixed(1);});
-document.getElementById('charScale').addEventListener('input',function(){
-  document.getElementById('charScaleV').textContent=parseFloat(this.value).toFixed(2);
-  if(charWrapper&&charWrapper.children[0])charWrapper.children[0].scale.setScalar(parseFloat(this.value));
-});
-function setBg(c){scene.background=new THREE.Color(c);}
-
-function randomize(){
-  Object.keys(allMeshes).forEach(function(n){allMeshes[n].visible=false;});
-  showMesh('Body_010',true);
-  function pick(a){return a[Math.floor(Math.random()*a.length)];}
-  showMesh(pick(PARTS.emotion),true);showMesh(pick(PARTS.hair),true);showMesh(pick(PARTS.top),true);
-  if(Math.random()>0.5)showMesh(pick(PARTS.outerwear),true);
-  if(Math.random()>0.3)showMesh(pick(PARTS.pants),true);else showMesh(PARTS.shorts[0],true);
-  showMesh(pick(PARTS.shoes),true);
-  if(Math.random()>0.6)showMesh(pick(PARTS.hat),true);
-  if(Math.random()>0.6)showMesh(pick(PARTS.glasses),true);
-  if(Math.random()>0.7)showMesh(pick(PARTS.headphones),true);
-  if(Math.random()>0.8)showMesh(pick(PARTS.moustache),true);
-  if(Math.random()>0.95)showMesh(PARTS.clown_nose[0],true);
-  updateToggleButtons();
+// ============ PRESETS & UI ============
+function loadPreset(name) {
+  var p = PRESETS[name]; if (!p) return;
+  // Reset
+  ['glasses','headphones','beard','blush','lanyard'].forEach(function(id){el(id).checked=false;});
+  el('hat').value = 'none'; el('mouth').value = 'none';
+  // Apply
+  Object.keys(p).forEach(function(k) {
+    if (k === 'hairStyle') { currentHair = p[k]; updateHairUI(); return; }
+    var e = el(k); if (!e) return;
+    if (e.type === 'checkbox') e.checked = p[k]; else e.value = p[k];
+  });
+  updateSliderLabels();
+  buildCharacter();
+  // Update preset active state
+  document.querySelectorAll('.preset-card').forEach(function(c){c.classList.remove('active');});
+  var card = document.querySelector('.preset-card[data-role="'+name+'"]');
+  if (card) card.classList.add('active');
 }
 
-function copyConfig(){
-  var config={role:currentRole,visibleMeshes:[],scale:parseFloat(document.getElementById('charScale').value),animation:currentAnim};
-  Object.keys(allMeshes).forEach(function(name){
-    if(allMeshes[name].visible){
-      var assumed=name;Object.keys(nameMap).forEach(function(k){if(nameMap[k]===name)assumed=k;});
-      config.visibleMeshes.push(assumed);
+// Build preset cards
+(function() {
+  var row = el('presetRow');
+  var colors = {engineer:'#3b82f6',designer:'#ec4899',sales:'#22c55e',pm:'#f59e0b',ceo:'#8b5cf6',intern:'#06b6d4'};
+  var icons = {engineer:'👨‍💻',designer:'🎨',sales:'💼',pm:'📊',ceo:'👔',intern:'🎓'};
+  Object.keys(PRESETS).forEach(function(role) {
+    var card = document.createElement('div');
+    card.className = 'preset-card' + (role === 'engineer' ? ' active' : '');
+    card.dataset.role = role;
+    card.innerHTML = '<div class="dot" style="background:'+colors[role]+'"></div><span>'+icons[role]+' '+role.charAt(0).toUpperCase()+role.slice(1)+'</span>';
+    card.onclick = function() { loadPreset(role); };
+    row.appendChild(card);
+  });
+})();
+
+// Build hair buttons
+function updateHairUI() {
+  var row = el('hairRow');
+  row.innerHTML = '';
+  HAIR_STYLES.forEach(function(s) {
+    var btn = document.createElement('button');
+    btn.className = 'btn' + (s === currentHair ? ' active' : '');
+    btn.textContent = HAIR_NAMES[s];
+    btn.onclick = function() {
+      currentHair = s;
+      updateHairUI();
+      buildCharacter();
+    };
+    row.appendChild(btn);
+  });
+}
+updateHairUI();
+
+// Slider labels
+function updateSliderLabels() {
+  document.querySelectorAll('.ctrl .val').forEach(function(v) {
+    var inp = v.parentElement.querySelector('input[type=range]');
+    if (inp) v.textContent = parseFloat(inp.value).toFixed(2);
+  });
+}
+
+// Wire up all inputs
+document.querySelectorAll('#panel input, #panel select').forEach(function(inp) {
+  inp.addEventListener('input', function() { updateSliderLabels(); buildCharacter(); });
+  inp.addEventListener('change', function() { updateSliderLabels(); buildCharacter(); });
+});
+
+function randomize() {
+  function rc() { return '#'+Math.floor(Math.random()*0xffffff).toString(16).padStart(6,'0'); }
+  var skins = ['#FFCEA8','#F1C27D','#E0AC69','#C68642','#8D5524','#FFDFC4'];
+  el('skinColor').value = skins[Math.floor(Math.random()*skins.length)];
+  el('hairColor').value = rc(); el('shirtColor').value = rc();
+  el('pantsColor').value = rc(); el('shoeColor').value = rc(); el('eyeColor').value = rc();
+  el('headSize').value = 0.8 + Math.random()*0.5;
+  el('bodyHeight').value = 0.35 + Math.random()*0.35;
+  el('bodyWidth').value = 0.7 + Math.random()*0.4;
+  el('eyeSize').value = 0.7 + Math.random()*1.0;
+  el('eyeSpacing').value = 0.5 + Math.random()*0.5;
+  currentHair = HAIR_STYLES[Math.floor(Math.random()*HAIR_STYLES.length)];
+  el('clothStyle').selectedIndex = Math.floor(Math.random()*5);
+  el('hat').selectedIndex = Math.floor(Math.random()*4);
+  el('mouth').selectedIndex = Math.floor(Math.random()*4);
+  ['glasses','headphones','beard','blush','lanyard'].forEach(function(id){el(id).checked=Math.random()>0.65;});
+  updateHairUI(); updateSliderLabels(); buildCharacter();
+}
+
+function copyJSON() {
+  var data = {};
+  document.querySelectorAll('#panel input, #panel select').forEach(function(inp) {
+    if (inp.id) {
+      if (inp.type === 'checkbox') data[inp.id] = inp.checked;
+      else if (inp.type === 'range') data[inp.id] = parseFloat(inp.value);
+      else data[inp.id] = inp.value;
     }
   });
-  navigator.clipboard.writeText(JSON.stringify(config,null,2)).then(function(){alert('Character config copied!');});
+  data.hairStyle = currentHair;
+  navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(function(){alert('Copied!');});
 }
 
-// === RENDER LOOP ===
-var clock=new THREE.Clock(),turntableAngle=0;
-function animate(){
+// ============ RENDER LOOP ============
+var clock = new THREE.Clock();
+var turntableAngle = 0;
+function animate() {
   requestAnimationFrame(animate);
-  var dt=clock.getDelta();
-  if(document.getElementById('turntable').checked&&charWrapper){turntableAngle+=dt*0.5;charWrapper.rotation.y=turntableAngle;}
-  if(Object.keys(boneMap).length>0)animateCharacter(dt);
-  controls.update();renderer.render(scene,camera);
+  var dt = clock.getDelta();
+  if (bv('turntable')) { turntableAngle += dt*0.5; charGroup.rotation.y = turntableAngle; }
+  applyAnimation(dt);
+  controls.update();
+  renderer.render(scene, camera);
 }
-window.addEventListener('resize',function(){camera.aspect=container.clientWidth/container.clientHeight;camera.updateProjectionMatrix();renderer.setSize(container.clientWidth,container.clientHeight);});
+window.addEventListener('resize', function() {
+  camera.aspect = container.clientWidth/container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+buildCharacter();
 animate();
 </script>
 </body>
