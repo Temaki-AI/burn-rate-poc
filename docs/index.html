@@ -3413,8 +3413,8 @@ function animateGLBWalk(wrapper, time, speed) {
   if (!bones['LeftUpLeg']) return;
   
   var t = time * speed * 4; // walk cycle frequency
-  var stride = 0.6; // leg swing amplitude
-  var armSwing = 0.4;
+  var stride = 0.4; // leg swing amplitude
+  var armSwing = 0.3;
   
   var qTemp = new THREE.Quaternion();
   var axisX = new THREE.Vector3(1, 0, 0);
