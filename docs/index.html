@@ -4317,7 +4317,7 @@ function animate() {
       // Accumulate walk phase based on actual movement speed
       if (!w.walkPhase) w.walkPhase = 0;
       var actualSpeed = dt * w.speed * (w.charData ? (0.6 + w.charData.mood / 150) : 1) / dist;
-      w.walkPhase += actualSpeed * 28; // scale factor to match stride to foot plant
+      w.walkPhase += actualSpeed * 18; // scale factor to match stride to foot plant
       animateGLBWalk(w.mesh, w.walkPhase);
     }
   });
