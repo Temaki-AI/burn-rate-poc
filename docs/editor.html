@@ -9,88 +9,101 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Inter',sans-serif;color:#fff;}
 #app{display:flex;width:100%;height:100%;}
-#viewport{flex:0 0 70%;height:100%;position:relative;}
+#viewport{flex:0 0 65%;height:100%;position:relative;}
 #viewport canvas{display:block;}
-#panel{flex:0 0 30%;height:100%;overflow-y:auto;background:#16213e;border-left:1px solid #333;padding:16px;}
+#loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:#00d4ff;text-align:center;}
+#loading .spinner{width:40px;height:40px;border:3px solid #333;border-top-color:#00d4ff;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#panel{flex:0 0 35%;height:100%;overflow-y:auto;background:#16213e;border-left:1px solid #333;padding:16px;}
 #panel::-webkit-scrollbar{width:6px;}
 #panel::-webkit-scrollbar-track{background:#16213e;}
 #panel::-webkit-scrollbar-thumb{background:#00d4ff44;border-radius:3px;}
 .section{margin-bottom:16px;}
 .section-title{font-size:13px;font-weight:700;color:#00d4ff;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #333;}
 .ctrl{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:12px;}
-.ctrl label{flex:0 0 45%;color:#ccc;}
-.ctrl input[type=range]{flex:1;accent-color:#00d4ff;background:transparent;}
-.ctrl input[type=color]{width:36px;height:24px;border:1px solid #555;border-radius:4px;background:#222;cursor:pointer;padding:0;}
-.ctrl select{flex:1;background:#0f1a30;color:#fff;border:1px solid #444;border-radius:4px;padding:3px 6px;font-size:11px;}
+.ctrl label{flex:0 0 40%;color:#ccc;}
+.ctrl select{flex:1;background:#0f1a30;color:#fff;border:1px solid #444;border-radius:4px;padding:4px 8px;font-size:11px;}
 .ctrl input[type=checkbox]{accent-color:#00d4ff;width:16px;height:16px;}
+.ctrl input[type=range]{flex:1;accent-color:#00d4ff;}
 .val{color:#00d4ff;font-size:10px;width:32px;text-align:right;margin-left:4px;}
 .btn-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
 .btn{padding:6px 12px;border:1px solid #444;border-radius:6px;background:#0f1a30;color:#fff;font-size:11px;cursor:pointer;transition:all .2s;}
 .btn:hover{border-color:#00d4ff;background:#1a2a4e;box-shadow:0 0 8px #00d4ff33;}
 .btn.active{border-color:#00d4ff;background:#00d4ff22;color:#00d4ff;}
 .btn.accent{background:linear-gradient(135deg,#00d4ff,#a78bfa);color:#fff;border:none;font-weight:700;}
-.sub-ctrl{margin-left:20px;margin-bottom:4px;}
+.mesh-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;}
+.mesh-toggle{padding:5px 8px;border:1px solid #333;border-radius:4px;background:#0f1a30;color:#999;font-size:10px;cursor:pointer;text-align:center;transition:all .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mesh-toggle.on{border-color:#00d4ff;color:#00d4ff;background:#00d4ff15;}
+.mesh-toggle:hover{border-color:#666;}
+.role-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;margin:2px;cursor:pointer;transition:all .2s;border:1px solid transparent;}
+.role-tag:hover{opacity:0.9;}
+.role-tag.active{border-color:#fff;box-shadow:0 0 6px rgba(255,255,255,0.3);}
+.role-tag.engineer{background:#3b82f6;color:#fff;}
+.role-tag.designer{background:#ec4899;color:#fff;}
+.role-tag.sales{background:#22c55e;color:#fff;}
+.role-tag.pm{background:#f59e0b;color:#fff;}
+.role-tag.ceo{background:#8b5cf6;color:#fff;}
+.role-tag.intern{background:#06b6d4;color:#fff;}
+.info{font-size:10px;color:#666;margin-top:4px;line-height:1.3;}
 </style>
 </head>
 <body>
 <div id="app">
-<div id="viewport"></div>
+<div id="viewport">
+  <div id="loading"><div class="spinner"></div>Loading character model...</div>
+</div>
 <div id="panel">
 
 <div class="section">
-<div class="section-title">🎭 Proportions</div>
-<div class="ctrl"><label>Head Size</label><input type="range" id="headSize" min="0.5" max="2" step="0.05" value="1"><span class="val" id="headSizeV">1.0</span></div>
-<div class="ctrl"><label>Body Height</label><input type="range" id="bodyHeight" min="0.3" max="1" step="0.05" value="0.5"><span class="val" id="bodyHeightV">0.5</span></div>
-<div class="ctrl"><label>Body Width</label><input type="range" id="bodyWidth" min="0.5" max="1.5" step="0.05" value="1"><span class="val" id="bodyWidthV">1.0</span></div>
-<div class="ctrl"><label>Leg Length</label><input type="range" id="legLength" min="0.1" max="0.5" step="0.02" value="0.25"><span class="val" id="legLengthV">0.25</span></div>
-<div class="ctrl"><label>Arm Length</label><input type="range" id="armLength" min="0.2" max="0.6" step="0.02" value="0.4"><span class="val" id="armLengthV">0.4</span></div>
-<div class="ctrl"><label>Overall Scale</label><input type="range" id="overallScale" min="0.5" max="2" step="0.05" value="1"><span class="val" id="overallScaleV">1.0</span></div>
+<div class="section-title">📋 Role Presets</div>
+<div class="btn-row" id="roleButtons">
+<span class="role-tag engineer active" onclick="loadRole('engineer',this)">👨‍💻 Engineer</span>
+<span class="role-tag designer" onclick="loadRole('designer',this)">🎨 Designer</span>
+<span class="role-tag sales" onclick="loadRole('sales',this)">💼 Sales</span>
+<span class="role-tag pm" onclick="loadRole('pm',this)">📊 PM</span>
+<span class="role-tag ceo" onclick="loadRole('ceo',this)">👔 CEO</span>
+<span class="role-tag intern" onclick="loadRole('intern',this)">🎓 Intern</span>
+</div>
 </div>
 
 <div class="section">
-<div class="section-title">🎨 Colors</div>
-<div class="ctrl"><label>Skin Tone</label><input type="color" id="skinColor" value="#FFDBAC"></div>
-<div class="ctrl"><label>Hair Color</label><input type="color" id="hairColor" value="#3B2F2F"></div>
-<div class="ctrl"><label>Shirt/Top</label><input type="color" id="shirtColor" value="#42A5F5"></div>
-<div class="ctrl"><label>Pants</label><input type="color" id="pantsColor" value="#2C3E50"></div>
-<div class="ctrl"><label>Shoes</label><input type="color" id="shoeColor" value="#222222"></div>
+<div class="section-title">😊 Face / Emotion</div>
+<div class="mesh-grid" id="emotionGrid"></div>
 </div>
 
 <div class="section">
-<div class="section-title">💇 Hair Style</div>
-<div class="ctrl"><label>Style</label><select id="hairStyle"><option>Buzz Cut</option><option>Spiky</option><option>Top Bun</option><option>Ponytail</option><option>Afro</option><option>Bald</option><option>Mohawk</option><option>Long Straight</option><option>Curly</option><option>Bob</option><option>Undercut</option><option>Braids</option></select></div>
+<div class="section-title">💇 Hair</div>
+<div class="mesh-grid" id="hairGrid"></div>
 </div>
 
 <div class="section">
-<div class="section-title">👔 Clothing Style</div>
-<div class="ctrl"><label>Style</label><select id="clothingStyle"><option>Hoodie</option><option>T-Shirt</option><option>Button-Up</option><option>Turtleneck</option><option>Vest</option><option>Tank Top</option></select></div>
+<div class="section-title">👕 Top</div>
+<div class="mesh-grid" id="topGrid"></div>
+</div>
+
+<div class="section">
+<div class="section-title">🧥 Outerwear</div>
+<div class="mesh-grid" id="outerwearGrid"></div>
+</div>
+
+<div class="section">
+<div class="section-title">👖 Bottoms</div>
+<div class="mesh-grid" id="bottomsGrid"></div>
+</div>
+
+<div class="section">
+<div class="section-title">👟 Shoes</div>
+<div class="mesh-grid" id="shoesGrid"></div>
+</div>
+
+<div class="section">
+<div class="section-title">🎩 Headwear</div>
+<div class="mesh-grid" id="hatGrid"></div>
 </div>
 
 <div class="section">
 <div class="section-title">👓 Accessories</div>
-<div class="ctrl"><label>Glasses</label><input type="checkbox" id="glasses"></div>
-<div class="sub-ctrl ctrl"><label>Style</label><select id="glassesStyle"><option>Round</option><option>Square</option><option>Aviator</option></select></div>
-<div class="sub-ctrl ctrl"><label>Color</label><input type="color" id="glassesColor" value="#222222"></div>
-<div class="ctrl"><label>Headphones</label><input type="checkbox" id="headphones"></div>
-<div class="sub-ctrl ctrl"><label>Color</label><input type="color" id="headphonesColor" value="#333333"></div>
-<div class="ctrl"><label>Beard</label><input type="checkbox" id="beard"></div>
-<div class="ctrl"><label>Hat</label><input type="checkbox" id="hat"></div>
-<div class="sub-ctrl ctrl"><label>Style</label><select id="hatStyle"><option>Beanie</option><option>Backwards Cap</option><option>Beret</option></select></div>
-<div class="ctrl"><label>Tie</label><input type="checkbox" id="tie"></div>
-<div class="sub-ctrl ctrl"><label>Color</label><input type="color" id="tieColor" value="#CC0000"></div>
-<div class="ctrl"><label>Lanyard/Badge</label><input type="checkbox" id="lanyard"></div>
-<div class="sub-ctrl ctrl"><label>Color</label><input type="color" id="lanyardColor" value="#00d4ff"></div>
-<div class="ctrl"><label>Scarf</label><input type="checkbox" id="scarf"></div>
-<div class="sub-ctrl ctrl"><label>Color</label><input type="color" id="scarfColor" value="#FF6B6B"></div>
-</div>
-
-<div class="section">
-<div class="section-title">😊 Face</div>
-<div class="ctrl"><label>Eye Size</label><input type="range" id="eyeSize" min="0.5" max="2" step="0.05" value="1"><span class="val" id="eyeSizeV">1.0</span></div>
-<div class="ctrl"><label>Eye Color</label><input type="color" id="eyeColor" value="#4488AA"></div>
-<div class="ctrl"><label>Mouth</label><select id="mouth"><option>Smile</option><option>Neutral</option><option>Open</option><option>Frown</option></select></div>
-<div class="ctrl"><label>Blush</label><input type="checkbox" id="blush"></div>
-<div class="ctrl"><label>Eyebrows</label><select id="eyebrows"><option>Normal</option><option>Angry</option><option>Surprised</option><option>Worried</option></select></div>
+<div class="mesh-grid" id="accessoryGrid"></div>
 </div>
 
 <div class="section">
@@ -101,27 +114,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:
 <button class="btn" onclick="setAnim('sit',this)">Sit</button>
 <button class="btn" onclick="setAnim('celebrate',this)">Celebrate</button>
 </div>
+<div class="ctrl"><label>Turntable</label><input type="checkbox" id="turntable" checked></div>
+<div class="ctrl"><label>Speed</label><input type="range" id="animSpeed" min="0.2" max="3" step="0.1" value="1"><span class="val" id="animSpeedV">1.0</span></div>
 </div>
 
 <div class="section">
-<div class="section-title">📋 Presets</div>
-<div class="btn-row">
-<button class="btn" onclick="loadPreset('engineer')">Engineer</button>
-<button class="btn" onclick="loadPreset('designer')">Designer</button>
-<button class="btn" onclick="loadPreset('sales')">Sales</button>
-<button class="btn" onclick="loadPreset('pm')">PM</button>
-<button class="btn" onclick="loadPreset('ceo')">CEO</button>
-<button class="btn" onclick="loadPreset('intern')">Intern</button>
-</div>
+<div class="section-title">⚙️ Display</div>
+<div class="ctrl"><label>Scale</label><input type="range" id="charScale" min="0.3" max="1.2" step="0.05" value="0.55"><span class="val" id="charScaleV">0.55</span></div>
+<div class="ctrl"><label>Background</label><select id="bgColor" onchange="setBg(this.value)">
+<option value="#cccccc">Light Gray</option>
+<option value="#1a1a2e" selected>Dark Blue</option>
+<option value="#111111">Near Black</option>
+<option value="#2d5016">Forest</option>
+<option value="#f5f5dc">Beige</option>
+</select></div>
 </div>
 
 <div class="section">
 <div class="section-title">💾 Export</div>
 <div class="btn-row">
-<button class="btn accent" onclick="copyCode()">📋 Copy JSON</button>
-<button class="btn" onclick="alert('GLB export coming soon!')">📦 Export GLB</button>
+<button class="btn accent" onclick="copyConfig()">📋 Copy Config</button>
 <button class="btn" onclick="randomize()">🎲 Randomize</button>
 </div>
+<div class="info">Config exports as JSON — paste into game code to create this character.</div>
 </div>
 
 </div>
@@ -129,479 +144,293 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.143.0/examples/js/utils/SkeletonUtils.js"></script>
 <script>
+var PARTS = {
+  body: ['Body_010'],
+  emotion: ['Emotion_happy_010', 'Emotion_neutral_010', 'Emotion_sad_010'],
+  hair: ['Hairstyle_male_010', 'Hairstyle_female_010'],
+  top: ['T_Shirt_009', 'Costume_Top_001', 'Costume_Top_002'],
+  outerwear: ['Outerwear_Top_005', 'Outerwear_Top_006'],
+  pants: ['Pants_011', 'Pants_012'],
+  shorts: ['Shorts_013'],
+  shoes: ['Shoes_014', 'Shoes_015', 'Shoes_016'],
+  hat: ['Hat_017', 'Hat_018', 'Hat_019'],
+  glasses: ['Glasses_020', 'Glasses_021'],
+  headphones: ['Headphones_022'],
+  gloves: ['Gloves_023', 'Gloves_024'],
+  moustache: ['Moustache_025', 'Moustache_026'],
+  clown_nose: ['Clown_Nose_027'],
+  pacifier: ['Pacifier_028'],
+  socks: ['Socks_029']
+};
+
+var PART_NAMES = {
+  'Body_010': 'Body',
+  'Emotion_happy_010': 'Happy 😊', 'Emotion_neutral_010': 'Neutral 😐', 'Emotion_sad_010': 'Sad 😢',
+  'Hairstyle_male_010': 'Short Hair', 'Hairstyle_female_010': 'Long Hair',
+  'T_Shirt_009': 'T-Shirt', 'Costume_Top_001': 'Costume A', 'Costume_Top_002': 'Costume B',
+  'Outerwear_Top_005': 'Jacket', 'Outerwear_Top_006': 'Coat',
+  'Pants_011': 'Pants A', 'Pants_012': 'Pants B', 'Shorts_013': 'Shorts',
+  'Shoes_014': 'Sneakers', 'Shoes_015': 'Boots', 'Shoes_016': 'Slippers',
+  'Hat_017': 'Cap', 'Hat_018': 'Beanie', 'Hat_019': 'Top Hat',
+  'Glasses_020': 'Round', 'Glasses_021': 'Square',
+  'Headphones_022': 'Headphones',
+  'Gloves_023': 'Gloves A', 'Gloves_024': 'Gloves B',
+  'Moustache_025': 'Handlebar', 'Moustache_026': 'Pencil',
+  'Clown_Nose_027': 'Clown Nose', 'Pacifier_028': 'Pacifier', 'Socks_029': 'Socks'
+};
+
+var ROLE_OUTFITS = {
+  engineer: { emotion:'Emotion_neutral_010', hair:'Hairstyle_male_010', top:'T_Shirt_009', pants:'Pants_011', shoes:'Shoes_014', optional:['Glasses_020','Headphones_022'] },
+  designer: { emotion:'Emotion_happy_010', hair:'Hairstyle_female_010', top:'Costume_Top_001', pants:'Pants_012', shoes:'Shoes_016', optional:['Hat_017'] },
+  sales: { emotion:'Emotion_happy_010', hair:'Hairstyle_male_010', top:'Costume_Top_002', outerwear:'Outerwear_Top_005', pants:'Pants_011', shoes:'Shoes_015', optional:[] },
+  pm: { emotion:'Emotion_neutral_010', hair:'Hairstyle_female_010', top:'T_Shirt_009', outerwear:'Outerwear_Top_006', pants:'Pants_012', shoes:'Shoes_014', optional:['Glasses_021'] },
+  ceo: { emotion:'Emotion_happy_010', hair:'Hairstyle_male_010', top:'Costume_Top_002', outerwear:'Outerwear_Top_005', pants:'Pants_011', shoes:'Shoes_015', optional:['Glasses_020','Moustache_025'] },
+  intern: { emotion:'Emotion_happy_010', hair:'Hairstyle_male_010', top:'T_Shirt_009', pants:'Shorts_013', shoes:'Shoes_014', optional:['Hat_018'] }
+};
+
+// === THREE.JS SETUP ===
 var container = document.getElementById('viewport');
 var scene = new THREE.Scene();
-scene.background = new THREE.Color(0xcccccc);
-var camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
-camera.position.set(0, 1.5, 4);
-var renderer = new THREE.WebGLRenderer({ antialias: true });
+scene.background = new THREE.Color(0x1a1a2e);
+var camera = new THREE.PerspectiveCamera(35, container.clientWidth/container.clientHeight, 0.1, 100);
+camera.position.set(0, 1.2, 3.5);
+var renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(container.clientWidth, container.clientHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
 renderer.shadowMap.enabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
 container.appendChild(renderer.domElement);
 
 var controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0.8, 0);
+controls.target.set(0, 0.7, 0);
 controls.enableDamping = true;
+controls.dampingFactor = 0.08;
 controls.update();
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-var spot = new THREE.SpotLight(0xffffff, 0.8, 20, Math.PI / 4, 0.5);
-spot.position.set(2, 5, 3);
-spot.castShadow = true;
-scene.add(spot);
-scene.add(new THREE.DirectionalLight(0xffffff, 0.3)).position.set(-2, 3, -1);
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+var key = new THREE.DirectionalLight(0xffffff, 0.8);
+key.position.set(3,5,4); key.castShadow=true; scene.add(key);
+scene.add(new THREE.DirectionalLight(0x88aaff,0.3)).position.set(-2,3,-2);
+scene.add(new THREE.DirectionalLight(0xffd4a0,0.4)).position.set(0,2,-4);
 
-scene.add(new THREE.GridHelper(10, 20, 0x888888, 0xbbbbbb));
+var floorMat = new THREE.MeshStandardMaterial({color:0x333355,metalness:0.2,roughness:0.8});
+var floor = new THREE.Mesh(new THREE.CircleGeometry(1.5,64), floorMat);
+floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+var grid = new THREE.GridHelper(6,30,0x444466,0x333355);
+grid.position.y=0.001; scene.add(grid);
 
-var platMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.3, roughness: 0.7 });
-var platform = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.65, 0.05, 32), platMat);
-platform.position.y = 0.025;
-platform.receiveShadow = true;
-scene.add(platform);
+// === GLB CHARACTER ===
+var glbModel=null, charWrapper=null, allMeshes={}, boneMap={}, restPoses={};
+var currentAnim='idle', animTime=0, currentRole='engineer';
+var nameMap = {};
 
-var gradColors = new Uint8Array([40, 80, 160, 255]);
-var gradTex = new THREE.DataTexture(gradColors, gradColors.length, 1, THREE.LuminanceFormat);
-gradTex.minFilter = THREE.NearestFilter;
-gradTex.magFilter = THREE.NearestFilter;
-gradTex.needsUpdate = true;
-
-function toonMat(c) { return new THREE.MeshToonMaterial({ color: c, gradientMap: gradTex }); }
-function outlineMat() { return new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.BackSide }); }
-
-var charGroup = new THREE.Group();
-scene.add(charGroup);
-var turntableAngle = 0;
-var currentAnim = 'idle';
-var animTime = 0;
-var animParts = {};
-
-function el(id) { return document.getElementById(id); }
-function fv(id) { return parseFloat(el(id).value); }
-function cv(id) { return el(id).value; }
-function bv(id) { return el(id).checked; }
-
-var sliderIds = ['headSize','bodyHeight','bodyWidth','legLength','armLength','overallScale','eyeSize'];
-sliderIds.forEach(function(id) {
-  el(id).addEventListener('input', function() {
-    var v = el(id + 'V');
-    if (v) v.textContent = parseFloat(this.value).toFixed(2);
-    rebuildCharacter();
-  });
+var loader = new THREE.GLTFLoader();
+loader.load('assets/creative-character.glb', function(gltf) {
+  glbModel = gltf;
+  document.getElementById('loading').style.display = 'none';
+  var meshNames = [];
+  gltf.scene.traverse(function(c) { if(c.isMesh||c.isSkinnedMesh) meshNames.push(c.name); });
+  console.log('[Editor] GLB meshes:', meshNames);
+  buildMeshNameMapping(meshNames);
+  buildUI();
+  spawnCharacter();
+  loadRole('engineer');
+}, function(p) {
+  if(p.total>0) document.getElementById('loading').innerHTML='<div class="spinner"></div>Loading... '+Math.round(p.loaded/p.total*100)+'%';
+}, function(err) {
+  document.getElementById('loading').innerHTML='❌ Failed to load model.<br>'+err.message;
 });
 
-var allInputs = document.querySelectorAll('#panel input, #panel select');
-allInputs.forEach(function(inp) {
-  if (sliderIds.indexOf(inp.id) === -1) {
-    inp.addEventListener('input', rebuildCharacter);
-    inp.addEventListener('change', rebuildCharacter);
+function buildMeshNameMapping(actualNames) {
+  var allAssumed=[];
+  Object.values(PARTS).forEach(function(a){allAssumed=allAssumed.concat(a);});
+  allAssumed.forEach(function(n){ if(actualNames.indexOf(n)>=0) nameMap[n]=n; });
+  if(Object.keys(nameMap).length===0 && actualNames.length>0) {
+    console.log('[Editor] No name matches, mapping by index');
+    var idx=0;
+    Object.keys(PARTS).forEach(function(cat){
+      PARTS[cat].forEach(function(assumed){ if(idx<actualNames.length){nameMap[assumed]=actualNames[idx];idx++;} });
+    });
   }
-});
-
-function addMesh(geo, mat, parent) {
-  var m = new THREE.Mesh(geo, mat);
-  m.castShadow = true;
-  parent.add(m);
-  return m;
+  console.log('[Editor] Name map:', nameMap);
 }
 
-function addOutline(mesh, s) {
-  var om = new THREE.Mesh(mesh.geometry, outlineMat());
-  om.scale.multiplyScalar(s || 1.04);
-  om.position.copy(mesh.position);
-  om.rotation.copy(mesh.rotation);
-  mesh.parent.add(om);
-}
-
-function rebuildCharacter() {
-  while (charGroup.children.length) charGroup.remove(charGroup.children[0]);
-  animParts = {};
-
-  var hs = fv('headSize'), bh = fv('bodyHeight'), bw = fv('bodyWidth');
-  var ll = fv('legLength'), al = fv('armLength'), sc = fv('overallScale');
-  var skinC = cv('skinColor'), hairC = cv('hairColor'), shirtC = cv('shirtColor');
-  var pantsC = cv('pantsColor'), shoeC = cv('shoeColor');
-  var hairS = cv('hairStyle'), clothS = cv('clothingStyle');
-  var es = fv('eyeSize'), eyeC = cv('eyeColor'), mouthS = cv('mouth'), browS = cv('eyebrows');
-
-  var skinMat = toonMat(skinC), hairMat = toonMat(hairC);
-  var shirtMat = toonMat(shirtC), pantsMat = toonMat(pantsC), shoeMat = toonMat(shoeC);
-  var showSkinArms = (clothS === 'T-Shirt' || clothS === 'Tank Top');
-
-  var root = new THREE.Group();
-  root.scale.setScalar(sc);
-  charGroup.add(root);
-
-  var bodyY = ll + bh / 2 + 0.05;
-
-  // Body
-  var bodyGrp = new THREE.Group();
-  bodyGrp.position.y = bodyY;
-  root.add(bodyGrp);
-  animParts.body = bodyGrp;
-  animParts.bodyBaseY = bodyY;
-
-  var torsoR = (clothS === 'Hoodie' ? 0.25 : 0.22) * bw;
-  var torso = addMesh(new THREE.CapsuleGeometry(torsoR, bh * 0.5, 8, 16), shirtMat, bodyGrp);
-  addOutline(torso);
-
-  if (clothS === 'Vest') {
-    addMesh(new THREE.CapsuleGeometry(0.21 * bw, bh * 0.48, 8, 16), toonMat('#dddddd'), bodyGrp);
-  }
-  if (clothS === 'Button-Up') {
-    for (var bi = 0; bi < 3; bi++) {
-      var btn = addMesh(new THREE.SphereGeometry(0.015, 8, 8), toonMat('#ffffff'), bodyGrp);
-      btn.position.set(0, bh * 0.15 - bi * bh * 0.15, torsoR + 0.01);
-    }
-    var col = addMesh(new THREE.TorusGeometry(0.12 * bw, 0.025, 8, 16, Math.PI), shirtMat, bodyGrp);
-    col.position.set(0, bh * 0.28, 0.05);
-    col.rotation.x = -0.3;
-  }
-  if (clothS === 'Turtleneck') {
-    var tn = addMesh(new THREE.CylinderGeometry(0.1 * bw, 0.12 * bw, 0.1, 16), shirtMat, bodyGrp);
-    tn.position.y = bh * 0.3;
-  }
-
-  // Head
-  var headY = bodyY + bh / 2 + 0.18 * hs;
-  var headGrp = new THREE.Group();
-  headGrp.position.y = headY;
-  root.add(headGrp);
-  animParts.head = headGrp;
-  var headR = 0.2 * hs;
-  var head = addMesh(new THREE.SphereGeometry(headR, 16, 16), skinMat, headGrp);
-  addOutline(head, 1.05);
-
-  if (clothS === 'Hoodie') {
-    var hood = addMesh(new THREE.SphereGeometry(headR * 1.15, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.6), shirtMat, headGrp);
-    hood.position.set(0, 0.02, -0.02);
-  }
-
-  // Eyes
-  var eyeR = 0.035 * es, eyeSpacing = 0.08 * hs;
-  for (var ei = -1; ei <= 1; ei += 2) {
-    addMesh(new THREE.SphereGeometry(eyeR, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), headGrp)
-      .position.set(ei * eyeSpacing, 0.02, headR * 0.85);
-    addMesh(new THREE.SphereGeometry(eyeR * 0.55, 8, 8), new THREE.MeshBasicMaterial({ color: eyeC }), headGrp)
-      .position.set(ei * eyeSpacing, 0.02, headR * 0.85 + eyeR * 0.4);
-    addMesh(new THREE.SphereGeometry(eyeR * 0.3, 8, 8), new THREE.MeshBasicMaterial({ color: 0x000000 }), headGrp)
-      .position.set(ei * eyeSpacing, 0.02, headR * 0.85 + eyeR * 0.7);
-  }
-
-  // Eyebrows
-  var browAngle = browS === 'Angry' ? 0.3 : browS === 'Worried' ? -0.2 : 0;
-  var browYOff = browS === 'Surprised' ? 0.02 : 0;
-  for (var bri = -1; bri <= 1; bri += 2) {
-    var brow = addMesh(new THREE.BoxGeometry(0.05 * hs, 0.012, 0.012), new THREE.MeshBasicMaterial({ color: hairC }), headGrp);
-    brow.position.set(bri * eyeSpacing, 0.06 + browYOff, headR * 0.88);
-    brow.rotation.z = bri * browAngle;
-  }
-
-  // Mouth
-  if (mouthS === 'Smile') {
-    var m = addMesh(new THREE.TorusGeometry(0.03 * hs, 0.006, 8, 12, Math.PI), new THREE.MeshBasicMaterial({ color: 0x993333 }), headGrp);
-    m.position.set(0, -0.05, headR * 0.88); m.rotation.x = Math.PI;
-  } else if (mouthS === 'Neutral') {
-    addMesh(new THREE.BoxGeometry(0.04 * hs, 0.008, 0.008), new THREE.MeshBasicMaterial({ color: 0x993333 }), headGrp)
-      .position.set(0, -0.05, headR * 0.88);
-  } else if (mouthS === 'Open') {
-    addMesh(new THREE.SphereGeometry(0.02 * hs, 8, 8), new THREE.MeshBasicMaterial({ color: 0x661111 }), headGrp)
-      .position.set(0, -0.05, headR * 0.88);
-  } else {
-    var fr = addMesh(new THREE.TorusGeometry(0.03 * hs, 0.006, 8, 12, Math.PI), new THREE.MeshBasicMaterial({ color: 0x993333 }), headGrp);
-    fr.position.set(0, -0.06, headR * 0.88);
-  }
-
-  // Blush
-  if (bv('blush')) {
-    for (var bli = -1; bli <= 1; bli += 2) {
-      addMesh(new THREE.SphereGeometry(0.025 * hs, 8, 8), new THREE.MeshBasicMaterial({ color: 0xFF9999, transparent: true, opacity: 0.5 }), headGrp)
-        .position.set(bli * 0.12 * hs, -0.02, headR * 0.78);
-    }
-  }
-
-  // Nose
-  addMesh(new THREE.SphereGeometry(0.02 * hs, 8, 8), skinMat, headGrp).position.set(0, -0.01, headR * 0.95);
-
-  // Hair
-  buildHair(headGrp, hairS, hairMat, headR, hs);
-
-  // Arms
-  var armMat = showSkinArms ? skinMat : shirtMat;
-  var armY = bodyY + bh * 0.2;
-  for (var ai = -1; ai <= 1; ai += 2) {
-    var armGrp = new THREE.Group();
-    armGrp.position.set(ai * (0.25 * bw + 0.05), armY, 0);
-    root.add(armGrp);
-    if (ai === -1) animParts.armL = armGrp; else animParts.armR = armGrp;
-    var arm = addMesh(new THREE.CapsuleGeometry(0.05, al, 8, 8), armMat, armGrp);
-    arm.position.y = -al / 2;
-    addOutline(arm);
-    addMesh(new THREE.SphereGeometry(0.05, 8, 8), skinMat, armGrp).position.y = -al - 0.03;
-  }
-
-  // Legs
-  for (var li = -1; li <= 1; li += 2) {
-    var legGrp = new THREE.Group();
-    legGrp.position.set(li * 0.09 * bw, ll + 0.05, 0);
-    root.add(legGrp);
-    if (li === -1) animParts.legL = legGrp; else animParts.legR = legGrp;
-    var leg = addMesh(new THREE.CapsuleGeometry(0.055, ll, 8, 8), pantsMat, legGrp);
-    leg.position.y = -ll / 2;
-    addOutline(leg);
-    var shoe = addMesh(new THREE.BoxGeometry(0.1, 0.06, 0.14), shoeMat, legGrp);
-    shoe.position.set(0, -ll - 0.02, 0.02);
-    addOutline(shoe);
-  }
-
-  // Accessories
-  if (bv('glasses')) buildGlasses(headGrp, headR, hs, es);
-  if (bv('headphones')) buildHeadphones(headGrp, headR, hs);
-  if (bv('beard')) buildBeard(headGrp, headR, hs, hairMat);
-  if (bv('hat')) buildHat(headGrp, headR, hs);
-  if (bv('tie')) buildTie(bodyGrp, bh, bw);
-  if (bv('lanyard')) buildLanyard(bodyGrp, bh, bw);
-  if (bv('scarf')) buildScarf(headGrp, bodyGrp, headR, hs, bh, bw);
-}
-
-function buildHair(parent, style, mat, r, hs) {
-  if (style === 'Bald') return;
-  if (style === 'Buzz Cut') {
-    addMesh(new THREE.SphereGeometry(r * 1.03, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), mat, parent).position.y = 0.01;
-  } else if (style === 'Spiky') {
-    for (var i = 0; i < 8; i++) {
-      var a = (i / 8) * Math.PI * 2;
-      var s = addMesh(new THREE.ConeGeometry(0.03, 0.1 * hs, 6), mat, parent);
-      s.position.set(Math.sin(a) * r * 0.6, r * 0.8, Math.cos(a) * r * 0.6);
-      s.rotation.set(Math.cos(a) * 0.3, 0, -Math.sin(a) * 0.3);
-    }
-  } else if (style === 'Top Bun') {
-    addMesh(new THREE.SphereGeometry(r * 1.02, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), mat, parent).position.y = 0.01;
-    addMesh(new THREE.SphereGeometry(0.07 * hs, 10, 10), mat, parent).position.y = r + 0.06;
-  } else if (style === 'Ponytail') {
-    addMesh(new THREE.SphereGeometry(r * 1.02, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), mat, parent).position.y = 0.01;
-    var t = addMesh(new THREE.CylinderGeometry(0.03, 0.02, 0.2 * hs, 8), mat, parent);
-    t.position.set(0, -0.02, -r * 0.8); t.rotation.x = 0.5;
-  } else if (style === 'Afro') {
-    addMesh(new THREE.SphereGeometry(r * 1.5, 16, 16), mat, parent).position.y = 0.03;
-  } else if (style === 'Mohawk') {
-    for (var mi = 0; mi < 6; mi++) {
-      addMesh(new THREE.BoxGeometry(0.02, 0.08 * hs, 0.04), mat, parent)
-        .position.set(0, r * 0.7 + mi * 0.01, -r * 0.3 + mi * r * 0.2);
-    }
-  } else if (style === 'Long Straight') {
-    addMesh(new THREE.SphereGeometry(r * 1.04, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), mat, parent).position.y = 0.01;
-    addMesh(new THREE.BoxGeometry(r * 1.6, 0.3 * hs, 0.08), mat, parent).position.set(0, -0.1, -r * 0.6);
-    for (var si = -1; si <= 1; si += 2) {
-      addMesh(new THREE.BoxGeometry(0.06, 0.25 * hs, 0.08), mat, parent).position.set(si * r * 0.9, -0.08, 0);
-    }
-  } else if (style === 'Curly') {
-    for (var ci = 0; ci < 20; ci++) {
-      var ca = Math.random() * Math.PI * 2, cp = Math.random() * Math.PI * 0.6;
-      addMesh(new THREE.SphereGeometry(0.04 * hs, 6, 6), mat, parent)
-        .position.set(Math.sin(ca) * Math.sin(cp) * r * 1.1, Math.cos(cp) * r, Math.cos(ca) * Math.sin(cp) * r * 1.1);
-    }
-  } else if (style === 'Bob') {
-    addMesh(new THREE.SphereGeometry(r * 1.06, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.6), mat, parent).position.y = 0.01;
-    addMesh(new THREE.CylinderGeometry(r * 1.05, r * 0.95, 0.12, 16), mat, parent).position.y = -0.06;
-  } else if (style === 'Undercut') {
-    addMesh(new THREE.BoxGeometry(r * 1.2, 0.06, r * 1.6), mat, parent).position.set(0, r * 0.85, 0.02);
-  } else if (style === 'Braids') {
-    addMesh(new THREE.SphereGeometry(r * 1.02, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), mat, parent).position.y = 0.01;
-    for (var bri2 = -1; bri2 <= 1; bri2 += 2) {
-      for (var brj = 0; brj < 4; brj++) {
-        addMesh(new THREE.SphereGeometry(0.02 * hs, 6, 6), mat, parent)
-          .position.set(bri2 * r * 0.7, -0.02 - brj * 0.06, -r * 0.4);
-      }
-    }
-  }
-}
-
-function buildGlasses(parent, r, hs, es) {
-  var gm = new THREE.MeshBasicMaterial({ color: cv('glassesColor') });
-  var gs = cv('glassesStyle'), lensR = 0.04 * es;
-  if (gs === 'Round') {
-    for (var i = -1; i <= 1; i += 2)
-      addMesh(new THREE.TorusGeometry(lensR, 0.005, 8, 16), gm, parent).position.set(i * 0.08 * hs, 0.02, r * 0.92);
-    var b = addMesh(new THREE.CylinderGeometry(0.004, 0.004, 0.06, 6), gm, parent);
-    b.position.set(0, 0.02, r * 0.92); b.rotation.z = Math.PI / 2;
-  } else if (gs === 'Square') {
-    for (var i2 = -1; i2 <= 1; i2 += 2)
-      addMesh(new THREE.BoxGeometry(lensR * 2.2, lensR * 1.8, 0.008), gm, parent).position.set(i2 * 0.08 * hs, 0.02, r * 0.93);
-    var b2 = addMesh(new THREE.CylinderGeometry(0.004, 0.004, 0.05, 6), gm, parent);
-    b2.position.set(0, 0.02, r * 0.93); b2.rotation.z = Math.PI / 2;
-  } else {
-    for (var i3 = -1; i3 <= 1; i3 += 2)
-      addMesh(new THREE.SphereGeometry(lensR * 1.3, 8, 8, 0, Math.PI * 2, 0, Math.PI * 0.5),
-        new THREE.MeshBasicMaterial({ color: 0x445566, transparent: true, opacity: 0.5 }), parent)
-        .position.set(i3 * 0.08 * hs, 0.01, r * 0.9);
-  }
-}
-
-function buildHeadphones(parent, r, hs) {
-  var hm = toonMat(cv('headphonesColor'));
-  var band = addMesh(new THREE.TorusGeometry(r * 1.1, 0.015, 8, 24, Math.PI), hm, parent);
-  band.position.y = 0.02; band.rotation.set(0, Math.PI / 2, Math.PI);
-  for (var i = -1; i <= 1; i += 2) {
-    var cup = addMesh(new THREE.CylinderGeometry(0.06, 0.06, 0.04, 12), hm, parent);
-    cup.position.set(i * r * 1.05, 0, 0); cup.rotation.z = Math.PI / 2;
-  }
-}
-
-function buildBeard(parent, r, hs, mat) {
-  for (var i = 0; i < 12; i++) {
-    var a = -Math.PI * 0.3 + (i / 11) * Math.PI * 0.6;
-    addMesh(new THREE.SphereGeometry(0.025 * hs, 6, 6), mat, parent)
-      .position.set(Math.sin(a) * r * 0.85, -0.08 - Math.abs(Math.sin(a)) * 0.03, Math.cos(a) * r * 0.85);
-  }
-}
-
-function buildHat(parent, r, hs) {
-  var ht = cv('hatStyle'), hm = toonMat('#444466');
-  if (ht === 'Beanie') {
-    addMesh(new THREE.SphereGeometry(r * 1.12, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), hm, parent).position.y = 0.02;
-    addMesh(new THREE.CylinderGeometry(r * 1.14, r * 1.14, 0.03, 16), hm, parent).position.y = -0.01;
-  } else if (ht === 'Backwards Cap') {
-    addMesh(new THREE.SphereGeometry(r * 1.08, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.45), hm, parent).position.y = 0.02;
-    addMesh(new THREE.BoxGeometry(0.15, 0.01, 0.08), hm, parent).position.set(0, 0, -r * 1.1);
-  } else {
-    var beret = addMesh(new THREE.SphereGeometry(r * 1.15, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.35), hm, parent);
-    beret.position.y = 0.04; beret.scale.y = 0.6;
-  }
-}
-
-function buildTie(bodyGrp, bh, bw) {
-  var tm = toonMat(cv('tieColor'));
-  addMesh(new THREE.SphereGeometry(0.02, 8, 8), tm, bodyGrp).position.set(0, bh * 0.26, 0.22 * bw + 0.02);
-  addMesh(new THREE.BoxGeometry(0.04, bh * 0.5, 0.01), tm, bodyGrp).position.set(0, 0, 0.22 * bw + 0.02);
-  var tip = addMesh(new THREE.ConeGeometry(0.025, 0.04, 4), tm, bodyGrp);
-  tip.position.set(0, -bh * 0.25, 0.22 * bw + 0.02); tip.rotation.z = Math.PI;
-}
-
-function buildLanyard(bodyGrp, bh, bw) {
-  var lm = toonMat(cv('lanyardColor'));
-  addMesh(new THREE.CylinderGeometry(0.008, 0.008, bh * 0.7, 6), lm, bodyGrp).position.set(0.05, -0.05, 0.22 * bw + 0.02);
-  addMesh(new THREE.BoxGeometry(0.06, 0.08, 0.01), new THREE.MeshBasicMaterial({ color: 0xffffff }), bodyGrp)
-    .position.set(0.05, -bh * 0.35, 0.22 * bw + 0.02);
-}
-
-function buildScarf(headGrp, bodyGrp, r, hs, bh, bw) {
-  var sm = toonMat(cv('scarfColor'));
-  var wrap = addMesh(new THREE.TorusGeometry(0.14 * hs, 0.03, 8, 16), sm, bodyGrp);
-  wrap.position.y = bh * 0.28; wrap.rotation.x = Math.PI / 2;
-  addMesh(new THREE.BoxGeometry(0.04, 0.15, 0.02), sm, bodyGrp).position.set(0.1, bh * 0.15, 0.12);
-}
-
-var presets = {
-  engineer: { hairStyle:'Buzz Cut', clothingStyle:'Hoodie', shirtColor:'#333355', pantsColor:'#2C3E50', glasses:true, glassesStyle:'Square', headphones:true },
-  designer: { hairStyle:'Top Bun', clothingStyle:'Turtleneck', shirtColor:'#111111', pantsColor:'#111111', shoeColor:'#ffffff', glasses:true, glassesStyle:'Round' },
-  sales: { hairStyle:'Bob', clothingStyle:'Button-Up', shirtColor:'#2196F3', pantsColor:'#1a1a2e', tie:true, tieColor:'#CC0000' },
-  pm: { hairStyle:'Ponytail', clothingStyle:'Vest', shirtColor:'#7B68EE', pantsColor:'#2C3E50', lanyard:true },
-  ceo: { hairStyle:'Undercut', clothingStyle:'Button-Up', shirtColor:'#1a1a2e', pantsColor:'#1a1a2e', shoeColor:'#8B4513', glasses:true, glassesStyle:'Aviator' },
-  intern: { hairStyle:'Spiky', clothingStyle:'T-Shirt', shirtColor:'#42A5F5', pantsColor:'#4CAF50', lanyard:true, lanyardColor:'#FFD700', hat:true, hatStyle:'Backwards Cap' }
-};
-
-function loadPreset(name) {
-  var p = presets[name]; if (!p) return;
-  ['glasses','headphones','beard','hat','tie','lanyard','scarf','blush'].forEach(function(id) { el(id).checked = false; });
-  Object.keys(p).forEach(function(k) {
-    var e = el(k); if (!e) return;
-    if (e.type === 'checkbox') e.checked = p[k]; else e.value = p[k];
+function spawnCharacter() {
+  if(charWrapper) scene.remove(charWrapper);
+  var source = glbModel.scene;
+  var clone = THREE.SkeletonUtils ? THREE.SkeletonUtils.clone(source) : source.clone(true);
+  charWrapper = new THREE.Group();
+  var scale = parseFloat(document.getElementById('charScale').value)||0.55;
+  clone.scale.setScalar(scale);
+  charWrapper.add(clone);
+  allMeshes={}; boneMap={}; restPoses={};
+  clone.traverse(function(child){
+    if(child.isMesh||child.isSkinnedMesh){allMeshes[child.name]=child;child.visible=false;child.castShadow=true;child.receiveShadow=true;child.frustumCulled=false;}
+    if(child.isBone){boneMap[child.name]=child;restPoses[child.name]=child.quaternion.clone();}
   });
-  sliderIds.forEach(function(id) { var v = el(id + 'V'); if (v) v.textContent = parseFloat(el(id).value).toFixed(2); });
-  rebuildCharacter();
+  scene.add(charWrapper);
+  showMesh('Body_010',true);
 }
 
-function randomize() {
-  function rr(a, b) { return a + Math.random() * (b - a); }
-  function rc() { return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'); }
-  el('headSize').value = rr(0.6, 1.6); el('bodyHeight').value = rr(0.35, 0.8);
-  el('bodyWidth').value = rr(0.6, 1.3); el('legLength').value = rr(0.15, 0.4);
-  el('armLength').value = rr(0.25, 0.55); el('overallScale').value = rr(0.7, 1.5);
-  el('eyeSize').value = rr(0.6, 1.8);
-  el('skinColor').value = ['#FFDBAC','#F1C27D','#E0AC69','#C68642','#8D5524','#FFDFC4'][Math.floor(Math.random()*6)];
-  el('hairColor').value = rc(); el('shirtColor').value = rc();
-  el('pantsColor').value = rc(); el('shoeColor').value = rc(); el('eyeColor').value = rc();
-  el('hairStyle').selectedIndex = Math.floor(Math.random() * 12);
-  el('clothingStyle').selectedIndex = Math.floor(Math.random() * 6);
-  el('mouth').selectedIndex = Math.floor(Math.random() * 4);
-  el('eyebrows').selectedIndex = Math.floor(Math.random() * 4);
-  ['glasses','headphones','beard','hat','tie','lanyard','scarf','blush'].forEach(function(id) { el(id).checked = Math.random() > 0.65; });
-  sliderIds.forEach(function(id) { var v = el(id + 'V'); if (v) v.textContent = parseFloat(el(id).value).toFixed(2); });
-  rebuildCharacter();
+function showMesh(assumed,vis){var actual=nameMap[assumed]||assumed;if(allMeshes[actual])allMeshes[actual].visible=vis;}
+function isMeshVisible(assumed){var actual=nameMap[assumed]||assumed;return allMeshes[actual]?allMeshes[actual].visible:false;}
+function toggleMesh(assumed){var actual=nameMap[assumed]||assumed;if(allMeshes[actual])allMeshes[actual].visible=!allMeshes[actual].visible;updateToggleButtons();}
+
+function buildUI(){
+  buildMeshGrid('emotionGrid',PARTS.emotion,true);
+  buildMeshGrid('hairGrid',PARTS.hair,true);
+  buildMeshGrid('topGrid',PARTS.top,true);
+  buildMeshGrid('outerwearGrid',PARTS.outerwear,false);
+  buildMeshGrid('bottomsGrid',PARTS.pants.concat(PARTS.shorts),true);
+  buildMeshGrid('shoesGrid',PARTS.shoes,true);
+  buildMeshGrid('hatGrid',PARTS.hat,false);
+  var accParts=PARTS.glasses.concat(PARTS.headphones,PARTS.gloves,PARTS.moustache,PARTS.clown_nose,PARTS.pacifier,PARTS.socks);
+  buildMeshGrid('accessoryGrid',accParts,false);
 }
 
-function copyCode() {
-  var data = {};
-  allInputs.forEach(function(inp) {
-    if (inp.id) {
-      if (inp.type === 'checkbox') data[inp.id] = inp.checked;
-      else if (inp.type === 'range') data[inp.id] = parseFloat(inp.value);
-      else data[inp.id] = inp.value;
-    }
+function buildMeshGrid(containerId,parts,exclusive){
+  var cont=document.getElementById(containerId);if(!cont)return;cont.innerHTML='';
+  parts.forEach(function(partName){
+    var btn=document.createElement('div');
+    btn.className='mesh-toggle';btn.textContent=PART_NAMES[partName]||partName;
+    btn.dataset.mesh=partName;btn.dataset.group=containerId;
+    btn.onclick=function(){
+      if(exclusive){
+        var sibs=cont.querySelectorAll('.mesh-toggle');
+        sibs.forEach(function(s){showMesh(s.dataset.mesh,false);});
+        showMesh(partName,true);
+      } else { toggleMesh(partName); }
+      updateToggleButtons();
+    };
+    cont.appendChild(btn);
   });
-  navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(function() { alert('JSON copied to clipboard!'); });
 }
 
-function setAnim(name, btn) {
-  currentAnim = name; animTime = 0;
-  document.querySelectorAll('.btn-row .btn').forEach(function(b) {
-    if (b.parentElement === btn.parentElement) b.classList.remove('active');
-  });
+function updateToggleButtons(){
+  document.querySelectorAll('.mesh-toggle').forEach(function(btn){btn.classList.toggle('on',isMeshVisible(btn.dataset.mesh));});
+}
+
+function loadRole(role,btnEl){
+  currentRole=role;
+  document.querySelectorAll('.role-tag').forEach(function(b){b.classList.remove('active');});
+  if(btnEl){btnEl.classList.add('active');}
+  else{var rb=document.querySelector('.role-tag.'+role);if(rb)rb.classList.add('active');}
+  var outfit=ROLE_OUTFITS[role];if(!outfit)return;
+  Object.keys(allMeshes).forEach(function(name){allMeshes[name].visible=false;});
+  showMesh('Body_010',true);
+  if(outfit.emotion)showMesh(outfit.emotion,true);
+  if(outfit.hair)showMesh(outfit.hair,true);
+  if(outfit.top)showMesh(outfit.top,true);
+  if(outfit.outerwear)showMesh(outfit.outerwear,true);
+  if(outfit.pants)showMesh(outfit.pants,true);
+  if(outfit.shoes)showMesh(outfit.shoes,true);
+  if(outfit.optional)outfit.optional.forEach(function(o){showMesh(o,true);});
+  updateToggleButtons();
+}
+
+// === ANIMATIONS ===
+function setAnim(name,btn){
+  currentAnim=name;animTime=0;resetBones();if(charWrapper)charWrapper.position.y=0;
+  document.querySelectorAll('#panel .btn-row .btn').forEach(function(b){if(b.parentElement===btn.parentElement)b.classList.remove('active');});
   btn.classList.add('active');
 }
 
-function applyAnimation(dt) {
-  animTime += dt;
-  var t = animTime, p = animParts;
-  if (!p.body) return;
+function resetBones(){Object.keys(restPoses).forEach(function(n){if(boneMap[n])boneMap[n].quaternion.copy(restPoses[n]);});}
 
-  p.body.scale.set(1, 1, 1);
-  p.body.position.y = p.bodyBaseY;
-  if (p.armL) p.armL.rotation.set(0, 0, 0);
-  if (p.armR) p.armR.rotation.set(0, 0, 0);
-  if (p.legL) p.legL.rotation.set(0, 0, 0);
-  if (p.legR) p.legR.rotation.set(0, 0, 0);
+function applyBoneRot(name,axis,angle){
+  if(!boneMap[name])return;
+  var q=new THREE.Quaternion();q.setFromAxisAngle(axis,angle);boneMap[name].quaternion.multiply(q);
+}
 
-  if (currentAnim === 'idle') {
-    p.body.scale.y = 1 + Math.sin(t * 2) * 0.015;
-  } else if (currentAnim === 'walk') {
-    var sw = Math.sin(t * 6) * 0.4;
-    if (p.legL) p.legL.rotation.x = sw;
-    if (p.legR) p.legR.rotation.x = -sw;
-    if (p.armL) p.armL.rotation.x = -sw * 0.6;
-    if (p.armR) p.armR.rotation.x = sw * 0.6;
-    p.body.position.y += Math.abs(Math.sin(t * 6)) * 0.02;
-  } else if (currentAnim === 'sit') {
-    if (p.legL) p.legL.rotation.x = -Math.PI / 2.5;
-    if (p.legR) p.legR.rotation.x = -Math.PI / 2.5;
-    p.body.position.y -= 0.1;
-  } else if (currentAnim === 'celebrate') {
-    if (p.armL) { p.armL.rotation.x = -0.3; p.armL.rotation.z = -Math.PI * 0.6 + Math.sin(t * 4) * 0.2; }
-    if (p.armR) { p.armR.rotation.x = -0.3; p.armR.rotation.z = Math.PI * 0.6 + Math.sin(t * 4 + 1) * 0.2; }
-    p.body.position.y += Math.abs(Math.sin(t * 5)) * 0.05;
+var axisX=new THREE.Vector3(1,0,0),axisY=new THREE.Vector3(0,1,0),axisZ=new THREE.Vector3(0,0,1);
+
+function animateCharacter(dt){
+  animTime+=dt;
+  var speed=parseFloat(document.getElementById('animSpeed').value)||1;
+  var t=animTime*speed;
+  resetBones();
+  if(charWrapper)charWrapper.position.y=0;
+
+  if(currentAnim==='idle'){
+    applyBoneRot('Spine',axisX,Math.sin(t*1.5)*0.02);
+    applyBoneRot('Head',axisX,Math.sin(t*0.8)*0.03);
+    applyBoneRot('Head',axisY,Math.sin(t*0.5)*0.02);
+    applyBoneRot('LeftArm',axisX,Math.sin(t*0.7)*0.03);
+    applyBoneRot('RightArm',axisX,Math.sin(t*0.7+0.5)*0.03);
+  } else if(currentAnim==='walk'){
+    var wt=t*4,stride=0.4,armSw=0.3;
+    var lL=Math.sin(wt)*stride,lR=Math.sin(wt+Math.PI)*stride;
+    applyBoneRot('LeftUpLeg',axisX,lL);applyBoneRot('RightUpLeg',axisX,lR);
+    applyBoneRot('LeftLeg',axisX,Math.max(0,-lL)*1.2+0.15);applyBoneRot('RightLeg',axisX,Math.max(0,-lR)*1.2+0.15);
+    applyBoneRot('LeftArm',axisX,Math.sin(wt+Math.PI)*armSw-0.2);applyBoneRot('RightArm',axisX,Math.sin(wt)*armSw-0.2);
+    applyBoneRot('LeftForeArm',axisX,-0.3+Math.sin(wt+Math.PI)*0.15);applyBoneRot('RightForeArm',axisX,-0.3+Math.sin(wt)*0.15);
+    applyBoneRot('Spine',axisY,Math.sin(wt)*0.06);applyBoneRot('Head',axisX,Math.sin(wt*2)*0.04);
+    if(charWrapper)charWrapper.position.y=Math.abs(Math.sin(wt))*0.02;
+  } else if(currentAnim==='sit'){
+    applyBoneRot('LeftUpLeg',axisX,-1.3);applyBoneRot('RightUpLeg',axisX,-1.3);
+    applyBoneRot('LeftLeg',axisX,1.5);applyBoneRot('RightLeg',axisX,1.5);
+    applyBoneRot('Spine',axisX,-0.1);applyBoneRot('Spine1',axisX,-0.1);
+    applyBoneRot('LeftArm',axisX,-0.4);applyBoneRot('RightArm',axisX,-0.4);
+    applyBoneRot('LeftForeArm',axisX,-0.6+Math.sin(t*6)*0.05);applyBoneRot('RightForeArm',axisX,-0.6+Math.sin(t*6+1.5)*0.05);
+    applyBoneRot('Head',axisX,0.15);applyBoneRot('Head',axisY,Math.sin(t*0.8)*0.04);
+  } else if(currentAnim==='celebrate'){
+    applyBoneRot('LeftArm',axisZ,-Math.PI*0.55+Math.sin(t*4)*0.15);
+    applyBoneRot('RightArm',axisZ,Math.PI*0.55+Math.sin(t*4+1)*0.15);
+    applyBoneRot('LeftForeArm',axisX,-0.5+Math.sin(t*5)*0.3);applyBoneRot('RightForeArm',axisX,-0.5+Math.sin(t*5+1)*0.3);
+    if(charWrapper)charWrapper.position.y=Math.abs(Math.sin(t*5))*0.06;
+    applyBoneRot('Head',axisZ,Math.sin(t*3)*0.1);applyBoneRot('Spine',axisX,Math.sin(t*3)*0.05);
   }
 }
 
-var clock = new THREE.Clock();
-function animate() {
-  requestAnimationFrame(animate);
-  var dt = clock.getDelta();
-  turntableAngle += 0.5 * dt;
-  charGroup.rotation.y = turntableAngle;
-  applyAnimation(dt);
-  controls.update();
-  renderer.render(scene, camera);
+// === CONTROLS ===
+document.getElementById('animSpeed').addEventListener('input',function(){document.getElementById('animSpeedV').textContent=parseFloat(this.value).toFixed(1);});
+document.getElementById('charScale').addEventListener('input',function(){
+  document.getElementById('charScaleV').textContent=parseFloat(this.value).toFixed(2);
+  if(charWrapper&&charWrapper.children[0])charWrapper.children[0].scale.setScalar(parseFloat(this.value));
+});
+function setBg(c){scene.background=new THREE.Color(c);}
+
+function randomize(){
+  Object.keys(allMeshes).forEach(function(n){allMeshes[n].visible=false;});
+  showMesh('Body_010',true);
+  function pick(a){return a[Math.floor(Math.random()*a.length)];}
+  showMesh(pick(PARTS.emotion),true);showMesh(pick(PARTS.hair),true);showMesh(pick(PARTS.top),true);
+  if(Math.random()>0.5)showMesh(pick(PARTS.outerwear),true);
+  if(Math.random()>0.3)showMesh(pick(PARTS.pants),true);else showMesh(PARTS.shorts[0],true);
+  showMesh(pick(PARTS.shoes),true);
+  if(Math.random()>0.6)showMesh(pick(PARTS.hat),true);
+  if(Math.random()>0.6)showMesh(pick(PARTS.glasses),true);
+  if(Math.random()>0.7)showMesh(pick(PARTS.headphones),true);
+  if(Math.random()>0.8)showMesh(pick(PARTS.moustache),true);
+  if(Math.random()>0.95)showMesh(PARTS.clown_nose[0],true);
+  updateToggleButtons();
 }
 
-window.addEventListener('resize', function() {
-  camera.aspect = container.clientWidth / container.clientHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(container.clientWidth, container.clientHeight);
-});
+function copyConfig(){
+  var config={role:currentRole,visibleMeshes:[],scale:parseFloat(document.getElementById('charScale').value),animation:currentAnim};
+  Object.keys(allMeshes).forEach(function(name){
+    if(allMeshes[name].visible){
+      var assumed=name;Object.keys(nameMap).forEach(function(k){if(nameMap[k]===name)assumed=k;});
+      config.visibleMeshes.push(assumed);
+    }
+  });
+  navigator.clipboard.writeText(JSON.stringify(config,null,2)).then(function(){alert('Character config copied!');});
+}
 
-rebuildCharacter();
+// === RENDER LOOP ===
+var clock=new THREE.Clock(),turntableAngle=0;
+function animate(){
+  requestAnimationFrame(animate);
+  var dt=clock.getDelta();
+  if(document.getElementById('turntable').checked&&charWrapper){turntableAngle+=dt*0.5;charWrapper.rotation.y=turntableAngle;}
+  if(Object.keys(boneMap).length>0)animateCharacter(dt);
+  controls.update();renderer.render(scene,camera);
+}
+window.addEventListener('resize',function(){camera.aspect=container.clientWidth/container.clientHeight;camera.updateProjectionMatrix();renderer.setSize(container.clientWidth,container.clientHeight);});
 animate();
 </script>
 </body>
