@@ -3374,25 +3374,33 @@ function poseGLBCharacterSitting(wrapper) {
     bone.quaternion.multiply(q);
   };
   
-  // Bend upper legs forward (sitting ~90 degrees)
-  addRotX(boneMap['LeftUpLeg'], -1.3);
-  addRotX(boneMap['RightUpLeg'], -1.3);
+  // Z-axis rotation helper (forward/back for this skeleton)
+  var addRotZ = function(bone, angle) {
+    if (!bone) return;
+    var q = new THREE.Quaternion();
+    q.setFromAxisAngle(new THREE.Vector3(0, 0, 1), angle);
+    bone.quaternion.multiply(q);
+  };
   
-  // Bend knees (lower legs hang down)  
-  addRotX(boneMap['LeftLeg'], 1.5);
-  addRotX(boneMap['RightLeg'], 1.5);
+  // Bend upper legs forward — Z axis on this skeleton
+  addRotZ(boneMap['LeftUpLeg'], 1.3);
+  addRotZ(boneMap['RightUpLeg'], 1.3);
   
-  // Slight forward lean (working posture)
+  // Bend knees
+  addRotZ(boneMap['LeftLeg'], -1.5);
+  addRotZ(boneMap['RightLeg'], -1.5);
+  
+  // Slight forward lean
   addRotX(boneMap['Spine'], -0.1);
   addRotX(boneMap['Spine1'], -0.1);
   
-  // Arms: bring forward and bend for typing
-  addRotX(boneMap['LeftArm'], -0.4);
-  addRotX(boneMap['RightArm'], -0.4);
-  addRotX(boneMap['LeftForeArm'], -0.6);
-  addRotX(boneMap['RightForeArm'], -0.6);
+  // Arms forward for typing — Z axis
+  addRotZ(boneMap['LeftArm'], -0.4);
+  addRotZ(boneMap['RightArm'], -0.4);
+  addRotZ(boneMap['LeftForeArm'], 0.6);
+  addRotZ(boneMap['RightForeArm'], 0.6);
   
-  // Head slightly tilted down (looking at screen)
+  // Head slightly tilted down
   addRotX(boneMap['Head'], 0.15);
   
   var posedQuats = {};
@@ -3426,40 +3434,40 @@ function animateGLBWalk(wrapper, phase) {
     bone.quaternion.multiply(qTemp);
   };
   
-  // Legs: opposite phase
+  // Legs: opposite phase — Z axis for forward/back swing on this skeleton
+  var axisZ = new THREE.Vector3(0, 0, 1);
   var legL = Math.sin(t) * stride;
   var legR = Math.sin(t + Math.PI) * stride;
-  applyBone('LeftUpLeg', [axisX, legL]);
-  applyBone('RightUpLeg', [axisX, legR]);
+  applyBone('LeftUpLeg', [axisZ, -legL]);
+  applyBone('RightUpLeg', [axisZ, -legR]);
   
-  // Knees: only bend backward (positive X), more when leg is forward
-  var kneeL = Math.max(0, -legL) * 1.2 + 0.15;
-  var kneeR = Math.max(0, -legR) * 1.2 + 0.15;
-  applyBone('LeftLeg', [axisX, kneeL]);
-  applyBone('RightLeg', [axisX, kneeR]);
+  // Knees: bend when leg is forward
+  var kneeL = Math.max(0, legL) * 1.0 + 0.1;
+  var kneeR = Math.max(0, legR) * 1.0 + 0.1;
+  applyBone('LeftLeg', [axisZ, -kneeL]);
+  applyBone('RightLeg', [axisZ, -kneeR]);
   
-  // Arms: counter-swing to legs
+  // Arms: counter-swing to legs — also Z axis
   var armL = Math.sin(t + Math.PI) * armSwing;
   var armR = Math.sin(t) * armSwing;
-  applyBone('LeftArm', [axisX, armL - 0.2]);
-  applyBone('RightArm', [axisX, armR - 0.2]);
+  applyBone('LeftArm', [axisZ, armL]);
+  applyBone('RightArm', [axisZ, armR]);
   
   // Forearms: slight bend
-  applyBone('LeftForeArm', [axisX, -0.3 + Math.sin(t + Math.PI) * 0.15]);
-  applyBone('RightForeArm', [axisX, -0.3 + Math.sin(t) * 0.15]);
+  applyBone('LeftForeArm', [axisZ, Math.sin(t + Math.PI) * 0.15]);
+  applyBone('RightForeArm', [axisZ, Math.sin(t) * 0.15]);
   
-  // Subtle spine twist (counter-rotation)
-  var spineQ = new THREE.Quaternion();
-  spineQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.sin(t) * 0.06);
+  // Subtle spine twist
   if (bones['Spine'] && rest['Spine']) {
     bones['Spine'].quaternion.copy(rest['Spine']);
-    bones['Spine'].quaternion.multiply(spineQ);
+    qTemp.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.sin(t) * 0.04);
+    bones['Spine'].quaternion.multiply(qTemp);
   }
   
   // Subtle head bob
   if (bones['Head'] && rest['Head']) {
     bones['Head'].quaternion.copy(rest['Head']);
-    qTemp.setFromAxisAngle(axisX, Math.sin(t * 2) * 0.04);
+    qTemp.setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.sin(t * 2) * 0.03);
     bones['Head'].quaternion.multiply(qTemp);
   }
 }
@@ -3483,8 +3491,9 @@ function animateGLBTyping(wrapper, time) {
     bones[name].quaternion.multiply(qTemp);
   };
   
-  applyOn('LeftForeArm', axisX, Math.sin(time * 6) * 0.05);
-  applyOn('RightForeArm', axisX, Math.sin(time * 6 + 1.5) * 0.05);
+  var axisZ = new THREE.Vector3(0, 0, 1);
+  applyOn('LeftForeArm', axisZ, Math.sin(time * 6) * 0.05);
+  applyOn('RightForeArm', axisZ, Math.sin(time * 6 + 1.5) * 0.05);
   applyOn('Head', axisY, Math.sin(time * 0.8) * 0.04);
 }
 
